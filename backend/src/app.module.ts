@@ -1,9 +1,13 @@
-import { Controller, DynamicModule, Get, Module } from '@nestjs/common';
+import { Controller, DynamicModule, Get, Module, Type } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'node:path';
+import { DatabaseModule } from './common/database';
 import configuration from './config/configuration';
 
+/**
+ * Exposes a small health endpoint for liveness checks and deployment probes.
+ */
 @Controller('api/health')
 class HealthController {
   /**
@@ -19,8 +23,9 @@ class HealthController {
   }
 }
 
-const imports: Array<DynamicModule | Promise<DynamicModule>> = [
+const imports: Array<Type<unknown> | DynamicModule | Promise<DynamicModule>> = [
   ConfigModule.forRoot({ load: [configuration], isGlobal: true }),
+  DatabaseModule,
 ];
 
 if (configuration().serveStatic) {
