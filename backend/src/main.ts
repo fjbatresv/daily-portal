@@ -1,12 +1,15 @@
 import { ValidationPipe } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
+import { AppConfiguration } from './config/configuration';
 
 async function bootstrap(): Promise<void> {
   const app = await NestFactory.create(AppModule);
   app.useGlobalPipes(new ValidationPipe({ whitelist: true }));
 
-  const port = Number(process.env.PORT ?? 3000);
+  const config = app.get<ConfigService<AppConfiguration, true>>(ConfigService);
+  const port = config.getOrThrow('port', { infer: true });
   await app.listen(port);
 }
 
