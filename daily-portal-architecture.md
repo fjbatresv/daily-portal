@@ -71,7 +71,7 @@ C4Container
     Container(angular_app, "Angular SPA", "Node build → nginx", "Dashboard web.")
     Container(nestjs_api, "NestJS API", "Node 24 LTS slim", "Backend. Módulos de integración, scheduler, CRUD de recordatorios.")
     ContainerDb(sqlite, "SQLite", "Archivo en volumen", "Recordatorios y log de notificaciones. Sin contenedor propio.")
-    ContainerDb(redis, "Redis", "redis:7-alpine (~15MB)", "Cache de respuestas de APIs externas con TTL.")
+    ContainerDb(redis, "Redis", "redis:8-alpine (~15MB)", "Cache de respuestas de APIs externas con TTL.")
   }
 
   System_Ext(cf, "Cloudflare Tunnel", "Configurado en RPi (cloudflared nativo)")
@@ -481,7 +481,7 @@ version: '3.9'
 
 services:
   redis:
-    image: redis:7-alpine
+    image: redis:8-alpine
     container_name: portal-redis
     restart: unless-stopped
     command: redis-server --save "" --appendonly no
