@@ -13,7 +13,6 @@
     "outDir": "./dist",
     "incremental": true,
     "strict": true,
-    "strictPropertyInitialization": false,
     "skipLibCheck": true,
     "ignoreDeprecations": "6.0"
   },
