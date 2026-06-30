@@ -1,6 +1,6 @@
 import { ConfigService } from '@nestjs/config';
 import { Test } from '@nestjs/testing';
-import { mkdtempSync, rmSync } from 'node:fs';
+import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import * as databaseExports from './index';
@@ -14,6 +14,11 @@ describe('DatabaseService', () => {
   beforeEach(async () => {
     tempDir = mkdtempSync(join(tmpdir(), 'daily-portal-db-'));
     const sqlitePath = join(tempDir, 'portal.db');
+    const schemaPath = join(tempDir, 'schema.sql');
+    writeFileSync(
+      schemaPath,
+      'CREATE TABLE IF NOT EXISTS reminders (id TEXT PRIMARY KEY, text TEXT NOT NULL);\n',
+    );
 
     const moduleRef = await Test.createTestingModule({
       providers: [
@@ -21,7 +26,17 @@ describe('DatabaseService', () => {
         {
           provide: ConfigService,
           useValue: {
-            getOrThrow: jest.fn(() => sqlitePath),
+            getOrThrow: jest.fn((key: string) => {
+              if (key === 'sqlite.path') {
+                return sqlitePath;
+              }
+
+              if (key === 'sqlite.schemaPath') {
+                return schemaPath;
+              }
+
+              throw new Error(`Unexpected config key: ${key}`);
+            }),
           },
         },
       ],
@@ -55,6 +70,38 @@ describe('DatabaseService', () => {
 
   it('allows shutdown before initialization', () => {
     expect(() => service.onModuleDestroy()).not.toThrow();
+  });
+
+  it('throws when the configured schema file is missing', async () => {
+    const sqlitePath = join(tempDir, 'missing-schema.db');
+    const schemaPath = join(tempDir, 'missing-schema.sql');
+    const moduleRef = await Test.createTestingModule({
+      providers: [
+        DatabaseService,
+        {
+          provide: ConfigService,
+          useValue: {
+            getOrThrow: jest.fn((key: string) => {
+              if (key === 'sqlite.path') {
+                return sqlitePath;
+              }
+
+              if (key === 'sqlite.schemaPath') {
+                return schemaPath;
+              }
+
+              throw new Error(`Unexpected config key: ${key}`);
+            }),
+          },
+        },
+      ],
+    }).compile();
+    const missingSchemaService = moduleRef.get(DatabaseService);
+
+    expect(() => missingSchemaService.onModuleInit()).toThrow(
+      `SQLite schema file not found: ${schemaPath}`,
+    );
+    missingSchemaService.onModuleDestroy();
   });
 
   it('exports the database module and service from the barrel', () => {

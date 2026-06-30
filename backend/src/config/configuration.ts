@@ -1,8 +1,11 @@
+import { join } from 'node:path';
+
 export interface AppConfiguration {
   port: number;
   serveStatic: boolean;
   sqlite: {
     path: string;
+    schemaPath: string;
   };
   redis: {
     url: string;
@@ -46,6 +49,7 @@ function configuration(): AppConfiguration {
     serveStatic: (process.env.SERVE_STATIC ?? 'true') === 'true',
     sqlite: {
       path: process.env.SQLITE_PATH ?? '/app/data/portal.db',
+      schemaPath: process.env.SQLITE_SCHEMA_PATH ?? join(process.cwd(), '../db/schema.sql'),
     },
     redis: {
       url: process.env.REDIS_URL ?? 'redis://redis:6379',

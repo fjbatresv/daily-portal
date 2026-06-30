@@ -15,12 +15,15 @@ describe('configuration', () => {
     delete process.env.PORT;
     delete process.env.SERVE_STATIC;
     delete process.env.SQLITE_PATH;
+    delete process.env.SQLITE_SCHEMA_PATH;
     delete process.env.REDIS_URL;
     delete process.env.GOOGLE_CALENDAR_IDS;
     delete process.env.MORNING_DIGEST_CRON;
     delete process.env.TZ;
 
-    expect(configuration()).toMatchObject({
+    const config = configuration();
+
+    expect(config).toMatchObject({
       port: 3000,
       serveStatic: true,
       sqlite: { path: '/app/data/portal.db' },
@@ -31,12 +34,14 @@ describe('configuration', () => {
         timezone: 'America/Guatemala',
       },
     });
+    expect(config.sqlite.schemaPath).toContain('db/schema.sql');
   });
 
   it('maps configured environment variables into typed settings', () => {
     process.env.PORT = '4100';
     process.env.SERVE_STATIC = 'false';
     process.env.SQLITE_PATH = '/tmp/portal.db';
+    process.env.SQLITE_SCHEMA_PATH = '/tmp/schema.sql';
     process.env.REDIS_URL = 'redis://localhost:6379';
     process.env.TELEGRAM_BOT_TOKEN = 'telegram-token';
     process.env.TELEGRAM_CHAT_ID = 'telegram-chat';
@@ -58,7 +63,7 @@ describe('configuration', () => {
     expect(configuration()).toEqual({
       port: 4100,
       serveStatic: false,
-      sqlite: { path: '/tmp/portal.db' },
+      sqlite: { path: '/tmp/portal.db', schemaPath: '/tmp/schema.sql' },
       redis: { url: 'redis://localhost:6379' },
       telegram: {
         botToken: 'telegram-token',

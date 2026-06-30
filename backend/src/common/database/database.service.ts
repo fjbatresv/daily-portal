@@ -2,7 +2,7 @@ import { Injectable, Logger, OnModuleDestroy, OnModuleInit } from '@nestjs/commo
 import { ConfigService } from '@nestjs/config';
 import Database from 'better-sqlite3';
 import { existsSync, mkdirSync, readFileSync } from 'node:fs';
-import { dirname, join } from 'node:path';
+import { dirname } from 'node:path';
 import { AppConfiguration } from '../../config/configuration';
 
 /**
@@ -54,15 +54,14 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
   }
 
   private resolveSchemaPath(): string {
-    const candidates = [
-      join(__dirname, '../../../../db/schema.sql'),
-      join(process.cwd(), 'db/schema.sql'),
-      join(process.cwd(), '../db/schema.sql'),
-    ];
+    const schemaPath = this.config.getOrThrow('sqlite.schemaPath', { infer: true });
 
-    const schemaPath = candidates.find((candidate) => existsSync(candidate));
     if (!schemaPath) {
-      throw new Error(`SQLite schema file not found. Checked: ${candidates.join(', ')}`);
+      throw new Error('SQLite schema path is not configured');
+    }
+
+    if (!existsSync(schemaPath)) {
+      throw new Error(`SQLite schema file not found: ${schemaPath}`);
     }
 
     return schemaPath;
