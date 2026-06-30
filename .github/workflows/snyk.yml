@@ -1,0 +1,54 @@
+name: Snyk Security
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+  schedule:
+    # Run weekly on Monday at 07:00 UTC to catch newly disclosed vulnerabilities
+    - cron: '0 7 * * 1'
+
+permissions:
+  contents: read
+  security-events: write  # required to upload SARIF results to GitHub Security tab
+
+jobs:
+  snyk-dependencies:
+    name: Snyk — Workspace dependencies
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Snyk — test workspace dependencies
+        uses: snyk/actions/node@master
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        with:
+          command: test
+          args: >
+            --all-projects
+            --detection-depth=3
+            --severity-threshold=high
+
+      - name: Snyk — monitor workspace (main only)
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        uses: snyk/actions/node@master
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        with:
+          command: monitor
+          args: >
+            --all-projects
+            --detection-depth=3

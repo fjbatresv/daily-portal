@@ -1,0 +1,78 @@
+version: "2"
+
+language: "en-US"
+
+reviews:
+  # "assertive" raises issues more aggressively; "chill" is more lenient
+  profile: "assertive"
+
+  request_changes_workflow: false
+  high_level_summary: true
+  poem: false
+  review_status: true
+  collapse_walkthrough: false
+
+  auto_review:
+    enabled: true
+    drafts: false
+    base_branches:
+      - main
+      - develop
+
+  path_filters:
+    - "!**/node_modules/**"
+    - "!**/dist/**"
+    - "!**/coverage/**"
+    - "!**/*.lock"
+    - "!**/*.min.js"
+
+  path_instructions:
+    - path: "backend/src/**/*.ts"
+      instructions: |
+        Review for NestJS best practices:
+        - No console.log — use Logger from @nestjs/common
+        - No process.env direct access in services — use ConfigService
+        - All external HTTP calls must check CacheService before calling the API
+        - Errors from external integrations must be caught and return [] (never propagate)
+        - No TypeScript 'any' unless explicitly justified with a comment
+
+    - path: "backend/src/**/*.repository.ts"
+      instructions: |
+        SQLite repository review:
+        - All queries must use better-sqlite3 prepared statements (db.prepare())
+        - No raw string interpolation in SQL — always use ? placeholders
+        - RETURNING * must be used after INSERT/UPDATE to return the row
+        - Booleans stored as 0/1 integers — map correctly in mapRow()
+
+    - path: "frontend/src/**/*.ts"
+      instructions: |
+        Angular review:
+        - Standalone components only — no NgModule declarations
+        - State via signals only — no BehaviorSubject, no NgRx
+        - No hardcoded color values in templates or component styles
+        - Always use Aurora design tokens: CSS vars (var(--color-*)) or Tailwind (aurora-*, status-*, integration-*)
+        - HttpClient calls belong in core/services/, not in components
+
+    - path: "frontend/src/**/*.html"
+      instructions: |
+        Template review:
+        - No inline styles with hardcoded colors (#hex or rgb())
+        - All color styling must use Tailwind utility classes mapped to Aurora tokens
+        - Clickable elements must have aria-label or visible text for accessibility
+
+    - path: ".github/workflows/**"
+      instructions: |
+        GitHub Actions review:
+        - Secrets must use ${{ secrets.SECRET_NAME }} — never hardcoded
+        - Prefer pinned action versions over @latest for security (except trusted first-party actions)
+        - All jobs must have explicit `permissions` blocks
+
+    - path: "docker-compose*.yml"
+      instructions: |
+        Docker Compose review:
+        - Sensitive values must reference environment variables, never hardcoded
+        - Redis must not be exposed to the host network
+        - SQLite data/ volume must be explicitly defined
+
+chat:
+  auto_reply: true
