@@ -11,6 +11,10 @@ import { ThemeService } from '../../core/services/theme.service';
           <button
             type="button"
             class="rounded-lg border border-aurora-border px-3 py-2 text-sm text-aurora-muted"
+            [attr.aria-pressed]="theme.current() === 'dark'"
+            [attr.aria-label]="
+              theme.current() === 'dark' ? 'Cambiar a tema claro' : 'Cambiar a tema oscuro'
+            "
             (click)="theme.toggle()"
           >
             Tema
