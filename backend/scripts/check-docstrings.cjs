@@ -61,6 +61,15 @@ function isPrivate(node) {
   return hasModifier(node, ts.SyntaxKind.PrivateKeyword);
 }
 
+function isDocumentableVariableDeclaration(declaration) {
+  return (
+    ts.isIdentifier(declaration.name) &&
+    declaration.initializer &&
+    (ts.isArrowFunction(declaration.initializer) ||
+      ts.isFunctionExpression(declaration.initializer))
+  );
+}
+
 function inspectFile(path) {
   const sourceText = readFileSync(path, 'utf8');
   const sourceFile = ts.createSourceFile(path, sourceText, ts.ScriptTarget.Latest, true);
@@ -81,7 +90,22 @@ function inspectFile(path) {
       targets.push({ node, name: node.name?.getText(sourceFile) ?? '<anonymous function>' });
     }
 
-    if (parentClassRelevant && ts.isMethodDeclaration(node) && !isPrivate(node)) {
+    if (ts.isVariableStatement(node) && isExported(node)) {
+      for (const declaration of node.declarationList.declarations) {
+        if (isDocumentableVariableDeclaration(declaration)) {
+          targets.push({ node, name: declaration.name.getText(sourceFile) });
+        }
+      }
+    }
+
+    const isPublicClassMember =
+      parentClassRelevant &&
+      (ts.isMethodDeclaration(node) ||
+        ts.isGetAccessorDeclaration(node) ||
+        ts.isSetAccessorDeclaration(node)) &&
+      !isPrivate(node);
+
+    if (isPublicClassMember) {
       targets.push({ node, name: node.name.getText(sourceFile) });
     }
 
