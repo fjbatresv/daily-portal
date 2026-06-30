@@ -16,7 +16,7 @@ export class ThemeService {
   }
 
   private apply(theme: Theme): void {
-    document.documentElement.setAttribute('data-theme', theme);
+    document.documentElement.dataset['theme'] = theme;
     try {
       localStorage.setItem(this.storageKey, theme);
     } catch {
@@ -37,6 +37,6 @@ export class ThemeService {
       return stored;
     }
 
-    return window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+    return globalThis.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
   }
 }

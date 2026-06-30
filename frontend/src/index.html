@@ -7,6 +7,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <script>
       (() => {
+        const systemPrefersLight = globalThis.matchMedia('(prefers-color-scheme: light)').matches;
         let stored = null;
         try {
           stored = localStorage.getItem('aurora-theme');
@@ -14,14 +15,12 @@
           stored = null;
         }
 
-        const theme =
-          stored === 'dark' || stored === 'light'
-            ? stored
-            : window.matchMedia('(prefers-color-scheme: light)').matches
-              ? 'light'
-              : 'dark';
+        let theme = systemPrefersLight ? 'light' : 'dark';
+        if (stored === 'dark' || stored === 'light') {
+          theme = stored;
+        }
 
-        document.documentElement.setAttribute('data-theme', theme);
+        document.documentElement.dataset.theme = theme;
       })();
     </script>
   </head>

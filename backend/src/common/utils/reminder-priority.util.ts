@@ -16,14 +16,15 @@ export function getDaysPending(date: string): number {
 
 export function getEffectivePriority(priority: Priority, date: string): Priority {
   const daysPending = getDaysPending(date);
-  const escalatedRank =
-    priority === 'low' && daysPending >= 5
-      ? 2
-      : priority === 'low' && daysPending >= 2
-        ? 1
-        : priority === 'medium' && daysPending >= 3
-          ? 2
-          : priorityRank[priority];
+  let escalatedRank = priorityRank[priority];
+
+  if (priority === 'low' && daysPending >= 5) {
+    escalatedRank = 2;
+  } else if (priority === 'low' && daysPending >= 2) {
+    escalatedRank = 1;
+  } else if (priority === 'medium' && daysPending >= 3) {
+    escalatedRank = 2;
+  }
 
   return priorities[Math.max(priorityRank[priority], escalatedRank)];
 }
