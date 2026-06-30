@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <title>Daily Portal</title>
+    <base href="/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <script>
+      (() => {
+        const systemPrefersLight = globalThis.matchMedia('(prefers-color-scheme: light)').matches;
+        let stored = null;
+        try {
+          stored = localStorage.getItem('aurora-theme');
+        } catch {
+          stored = null;
+        }
+
+        let theme = systemPrefersLight ? 'light' : 'dark';
+        if (stored === 'dark' || stored === 'light') {
+          theme = stored;
+        }
+
+        document.documentElement.dataset.theme = theme;
+      })();
+    </script>
+  </head>
+  <body>
+    <app-root></app-root>
+  </body>
+</html>
