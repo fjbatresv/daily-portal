@@ -6,6 +6,9 @@ import configuration from './config/configuration';
 
 @Controller('api/health')
 class HealthController {
+  /**
+   * Reports process liveness for Docker and external health checks.
+   */
   @Get()
   getHealth(): { status: 'ok'; timestamp: string; uptime: number } {
     return {
@@ -29,6 +32,9 @@ if (configuration().serveStatic) {
   );
 }
 
+/**
+ * Root NestJS module for the current scaffold.
+ */
 @Module({
   imports,
   controllers: [HealthController],

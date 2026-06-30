@@ -37,6 +37,9 @@ export interface AppConfiguration {
   };
 }
 
+/**
+ * Builds the typed application configuration from environment variables.
+ */
 function configuration(): AppConfiguration {
   return {
     port: Number(process.env.PORT ?? 3000),

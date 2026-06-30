@@ -1,6 +1,9 @@
 import { Component, inject } from '@angular/core';
 import { ThemeService } from '../../core/services/theme.service';
 
+/**
+ * Initial dashboard shell for the Daily Portal frontend.
+ */
 @Component({
   selector: 'app-dashboard',
   template: `

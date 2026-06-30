@@ -9,11 +9,17 @@ const priorityRank: Record<Priority, number> = {
 
 const priorities: Priority[] = ['low', 'medium', 'high'];
 
+/**
+ * Calculates how many calendar days a reminder has been pending.
+ */
 export function getDaysPending(date: string): number {
   const days = differenceInCalendarDays(startOfToday(), parseISO(date));
   return Math.max(days, 0);
 }
 
+/**
+ * Escalates a reminder priority based on how long it has been pending.
+ */
 export function getEffectivePriority(priority: Priority, date: string): Priority {
   const daysPending = getDaysPending(date);
   let escalatedRank = priorityRank[priority];
