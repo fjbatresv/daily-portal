@@ -5,6 +5,25 @@
     <title>Daily Portal</title>
     <base href="/" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <script>
+      (() => {
+        let stored = null;
+        try {
+          stored = localStorage.getItem('aurora-theme');
+        } catch {
+          stored = null;
+        }
+
+        const theme =
+          stored === 'dark' || stored === 'light'
+            ? stored
+            : window.matchMedia('(prefers-color-scheme: light)').matches
+              ? 'light'
+              : 'dark';
+
+        document.documentElement.setAttribute('data-theme', theme);
+      })();
+    </script>
   </head>
   <body>
     <app-root></app-root>
