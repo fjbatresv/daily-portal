@@ -592,7 +592,12 @@ RUN npm ci
 COPY backend backend
 RUN npm run build --workspace backend
 
-# ── Stage 3: Runtime ─────────────────────────────────────────────────────
+# ── Stage 3: Nginx static frontend profile ───────────────────────────────
+FROM nginx:1.29-alpine AS nginx-static
+COPY --from=frontend-builder /workspace/backend/dist/public /usr/share/nginx/html
+COPY nginx/nginx.conf /etc/nginx/conf.d/default.conf
+
+# ── Stage 4: Runtime ─────────────────────────────────────────────────────
 FROM node:24-slim AS final
 ENV NODE_ENV=production
 WORKDIR /app
@@ -618,11 +623,6 @@ EXPOSE 3000
 
 USER node
 CMD ["node", "dist/main.js"]
-
-# ── Stage 4: Nginx static frontend profile ───────────────────────────────
-FROM nginx:1.29-alpine AS nginx-static
-COPY --from=frontend-builder /workspace/backend/dist/public /usr/share/nginx/html
-COPY nginx/nginx.conf /etc/nginx/conf.d/default.conf
 ```
 
 > La imagen final contiene tanto el backend como el frontend. Si no se usa nginx, NestJS sirve los archivos estáticos con `ServeStaticModule`. El perfil nginx construye el target `nginx-static`, que copia el build Angular dentro de `/usr/share/nginx/html`.
