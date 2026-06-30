@@ -41,6 +41,8 @@ El usuario accede al portal desde internet mediante Cloudflare Tunnel → puerto
 8. **Sin `console.log`.** Usar el logger de NestJS: `this.logger = new Logger(NombreClase.name)`.
 9. **Barrel exports** en cada módulo (`index.ts`).
 10. **Tests unitarios** para cada Service con Jest. Mockear dependencias externas.
+11. **Coverage unitario mínimo 80%.** Cada cambio debe mantener al menos 80% de cobertura global en unit tests (`statements`, `branches`, `functions` y `lines`) para el área afectada.
+12. **Coverage de docstrings mínimo 80%.** Al menos 80% de clases, servicios, controladores, funciones y métodos exportados o públicos deben tener docstrings útiles que expliquen intención, entradas/salidas o comportamiento relevante.
 
 ---
 
@@ -587,7 +589,7 @@ Tokens de diseño: `docs/design-tokens.md`
 <claude-mem-context>
 # Memory Context
 
-# [Personal StandUP] recent context, 2026-06-29 11:26pm CST
+# [Personal StandUP] recent context, 2026-06-29 11:43pm CST
 
 No previous sessions found.
 </claude-mem-context>
