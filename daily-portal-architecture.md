@@ -574,45 +574,58 @@ O más simple: poner `SERVE_STATIC=false` en `.env` cuando uses el perfil nginx.
 ```dockerfile
 # ── Stage 1: Build Angular ────────────────────────────────────────────────
 FROM node:24-slim AS frontend-builder
-WORKDIR /frontend
-COPY frontend/package*.json ./
-RUN npm ci --ignore-scripts
-COPY frontend/ ./
-RUN npm run build -- --output-path=dist
+WORKDIR /workspace
+COPY package*.json ./
+COPY frontend/package.json frontend/package.json
+COPY backend/package.json backend/package.json
+RUN npm ci
+COPY frontend frontend
+RUN npm run build --workspace frontend
 
 # ── Stage 2: Build NestJS ────────────────────────────────────────────────
 FROM node:24-slim AS backend-builder
-WORKDIR /app
-COPY backend/package*.json ./
-RUN npm ci --ignore-scripts
-COPY backend/ ./
-RUN npm run build
+WORKDIR /workspace
+COPY package*.json ./
+COPY frontend/package.json frontend/package.json
+COPY backend/package.json backend/package.json
+RUN npm ci
+COPY backend backend
+RUN npm run build --workspace backend
 
 # ── Stage 3: Runtime ─────────────────────────────────────────────────────
 FROM node:24-slim AS final
+ENV NODE_ENV=production
 WORKDIR /app
 
 # Dependencias de producción únicamente
-COPY backend/package*.json ./
-RUN npm ci --omit=dev --ignore-scripts
+COPY package*.json ./
+COPY backend/package.json backend/package.json
+RUN npm ci --omit=dev --workspace backend && npm cache clean --force
 
 # NestJS compilado
-COPY --from=backend-builder /app/dist ./dist
+COPY --chown=node:node --from=backend-builder /workspace/backend/dist ./dist
 
 # Angular build embebido — siempre presente en la imagen
 # SERVE_STATIC controla si NestJS lo sirve o no
-COPY --from=frontend-builder /frontend/dist ./public
+COPY --chown=node:node --from=frontend-builder /workspace/backend/dist/public ./dist/public
+COPY --chown=node:node db ./db
 
 # Volumen de datos (SQLite)
-RUN mkdir -p /app/data
+RUN mkdir -p /app/data && chown -R node:node /app
 
 # Exponer solo el puerto del proceso Node
 EXPOSE 3000
 
+USER node
 CMD ["node", "dist/main.js"]
+
+# ── Stage 4: Nginx static frontend profile ───────────────────────────────
+FROM nginx:1.29-alpine AS nginx-static
+COPY --from=frontend-builder /workspace/backend/dist/public /usr/share/nginx/html
+COPY nginx/nginx.conf /etc/nginx/conf.d/default.conf
 ```
 
-> La imagen resultante contiene tanto el backend como el frontend. El perfil nginx extrae los estáticos del volumen `nginx-static`; si no se usa nginx, NestJS los sirve con `ServeStaticModule`.
+> La imagen final contiene tanto el backend como el frontend. Si no se usa nginx, NestJS sirve los archivos estáticos con `ServeStaticModule`. El perfil nginx construye el target `nginx-static`, que copia el build Angular dentro de `/usr/share/nginx/html`.
 
 ---
 
