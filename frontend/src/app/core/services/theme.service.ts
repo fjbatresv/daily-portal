@@ -17,12 +17,22 @@ export class ThemeService {
 
   private apply(theme: Theme): void {
     document.documentElement.setAttribute('data-theme', theme);
-    localStorage.setItem(this.storageKey, theme);
+    try {
+      localStorage.setItem(this.storageKey, theme);
+    } catch {
+      // Keep theme changes usable even when browser persistence is blocked.
+    }
     this.current.set(theme);
   }
 
   private resolveInitialTheme(): Theme {
-    const stored = localStorage.getItem(this.storageKey);
+    let stored: string | null = null;
+    try {
+      stored = localStorage.getItem(this.storageKey);
+    } catch {
+      stored = null;
+    }
+
     if (stored === 'dark' || stored === 'light') {
       return stored;
     }
