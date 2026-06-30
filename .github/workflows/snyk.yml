@@ -11,7 +11,7 @@ on:
 
 permissions:
   contents: read
-  security-events: write  # required to upload SARIF results to GitHub Security tab
+  security-events: write # required to upload SARIF results to GitHub Security tab
 
 jobs:
   snyk-dependencies:
