@@ -22,8 +22,10 @@ WORKDIR /app
 COPY package*.json ./
 COPY backend/package.json backend/package.json
 RUN npm ci --omit=dev --workspace backend && npm cache clean --force
-COPY --from=backend-builder /workspace/backend/dist ./dist
-COPY --from=frontend-builder /workspace/backend/dist/public ./dist/public
-COPY db ./db
+COPY --chown=node:node --from=backend-builder /workspace/backend/dist ./dist
+COPY --chown=node:node --from=frontend-builder /workspace/backend/dist/public ./dist/public
+COPY --chown=node:node db ./db
+RUN mkdir -p /app/data && chown -R node:node /app
 EXPOSE 3000
+USER node
 CMD ["node", "dist/main.js"]
