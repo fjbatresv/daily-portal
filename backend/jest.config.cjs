@@ -11,7 +11,12 @@ module.exports = {
       },
     ],
   },
-  collectCoverageFrom: ['src/**/*.(t|j)s'],
+  collectCoverageFrom: [
+    'src/**/*.(t|j)s',
+    '!src/main.ts',
+    '!src/app.module.ts',
+    '!src/**/*.types.ts',
+  ],
   coverageDirectory: './coverage',
   testEnvironment: 'node',
 };

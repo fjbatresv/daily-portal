@@ -11,7 +11,8 @@
     "format:check": "prettier --check \"src/**/*.{ts,html,css}\"",
     "lint": "eslint \"src/**/*.{ts,html}\"",
     "start": "ng serve",
-    "test": "ng test --watch=false --browsers=ChromeHeadless"
+    "test": "ng test --watch=false --browsers=ChromeHeadless",
+    "test:cov": "ng test --watch=false --browsers=ChromeHeadless --code-coverage"
   },
   "dependencies": {
     "@angular/common": "22.0.4",

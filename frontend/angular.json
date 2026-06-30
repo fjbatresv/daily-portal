@@ -72,7 +72,8 @@
             "polyfills": ["zone.js", "zone.js/testing"],
             "tsConfig": "tsconfig.spec.json",
             "styles": ["src/styles/globals.css"],
-            "scripts": []
+            "scripts": [],
+            "karmaConfig": "karma.conf.cjs"
           }
         }
       }

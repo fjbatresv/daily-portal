@@ -37,6 +37,10 @@ jobs:
           SQLITE_PATH: ':memory:'
         continue-on-error: false
 
+      - name: Run frontend tests with coverage
+        run: npm run test:cov --workspace frontend
+        continue-on-error: false
+
       - name: SonarCloud Scan
         uses: SonarSource/sonarcloud-github-action@master
         env:
