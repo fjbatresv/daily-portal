@@ -9,10 +9,11 @@
   "scripts": {
     "format": "prettier --write \"{backend,frontend}/**/*.{ts,html,css,mjs,cjs,json,js}\" \"*.json\" \".github/**/*.yml\" \"docker-compose*.yml\"",
     "format:check": "prettier --check \"{backend,frontend}/**/*.{ts,html,css,mjs,cjs,json,js}\" \"*.json\" \".github/**/*.yml\" \"docker-compose*.yml\"",
+    "docstrings:check": "npm run docstrings:check --workspace backend",
     "lint": "npm run lint --workspace backend && npm run lint --workspace frontend",
     "test": "npm run test --workspace backend && npm run test --workspace frontend",
     "build": "npm run build --workspace backend && npm run build --workspace frontend",
-    "ci": "npm run format:check && npm run lint && npm run test && npm run build"
+    "ci": "npm run format:check && npm run docstrings:check && npm run lint && npm run test && npm run build"
   },
   "workspaces": [
     "backend",

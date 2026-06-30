@@ -18,5 +18,13 @@ module.exports = {
     '!src/**/*.types.ts',
   ],
   coverageDirectory: './coverage',
+  coverageThreshold: {
+    global: {
+      statements: 80,
+      branches: 80,
+      functions: 80,
+      lines: 80,
+    },
+  },
   testEnvironment: 'node',
 };
