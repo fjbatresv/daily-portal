@@ -44,6 +44,10 @@ El usuario accede al portal desde internet mediante Cloudflare Tunnel → puerto
 11. **Coverage unitario mínimo 80%.** Cada cambio debe mantener al menos 80% de cobertura global en unit tests (`statements`, `branches`, `functions` y `lines`) para el área afectada.
 12. **Coverage de docstrings mínimo 80%.** Al menos 80% de clases, servicios, controladores, funciones y métodos exportados o públicos deben tener docstrings útiles que expliquen intención, entradas/salidas o comportamiento relevante.
 
+## Reglas de Pull Request — OBLIGATORIAS
+
+1. Al crear un Pull Request, debe abrirse listo para revisión. **No crear PRs en draft** salvo que el usuario lo pida explícitamente.
+
 ---
 
 ## Estructura del proyecto
@@ -589,7 +593,7 @@ Tokens de diseño: `docs/design-tokens.md`
 <claude-mem-context>
 # Memory Context
 
-# [Personal StandUP] recent context, 2026-06-29 11:43pm CST
+# [Personal StandUP] recent context, 2026-06-30 12:10pm CST
 
 No previous sessions found.
 </claude-mem-context>

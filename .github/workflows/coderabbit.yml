@@ -3,14 +3,8 @@ name: CodeRabbit Config
 on:
   pull_request:
     branches: [main, develop]
-    paths:
-      - '.coderabbit.yaml'
-      - '.github/workflows/coderabbit.yml'
   push:
     branches: [main, develop]
-    paths:
-      - '.coderabbit.yaml'
-      - '.github/workflows/coderabbit.yml'
 
 permissions:
   contents: read

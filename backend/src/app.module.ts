@@ -2,6 +2,7 @@ import { Controller, DynamicModule, Get, Module, Type } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'node:path';
+import { CacheModule } from './common/cache';
 import { DatabaseModule } from './common/database';
 import configuration from './config/configuration';
 
@@ -25,6 +26,7 @@ class HealthController {
 
 const imports: Array<Type<unknown> | DynamicModule | Promise<DynamicModule>> = [
   ConfigModule.forRoot({ load: [configuration], isGlobal: true }),
+  CacheModule,
   DatabaseModule,
 ];
 
