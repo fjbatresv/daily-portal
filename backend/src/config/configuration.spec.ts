@@ -1,4 +1,7 @@
+import { ConfigService } from '@nestjs/config';
+import { Test } from '@nestjs/testing';
 import configuration from './configuration';
+import { AppModule } from '../app.module';
 
 describe('configuration', () => {
   const originalEnv = process.env;
@@ -94,5 +97,20 @@ describe('configuration', () => {
         timezone: 'America/Guatemala',
       },
     });
+  });
+
+  it('exposes sqlite.path through ConfigService', async () => {
+    process.env.SERVE_STATIC = 'false';
+    process.env.SQLITE_PATH = '/tmp/config-service-portal.db';
+
+    const moduleRef = await Test.createTestingModule({
+      imports: [AppModule],
+    }).compile();
+
+    const configService = moduleRef.get(ConfigService);
+
+    expect(configService.get('sqlite.path')).toBe('/tmp/config-service-portal.db');
+
+    await moduleRef.close();
   });
 });

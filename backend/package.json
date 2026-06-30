@@ -10,7 +10,7 @@
     "build": "nest build",
     "docstrings:check": "node scripts/check-docstrings.cjs",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
-    "format:check": "prettier --check \"src/**/*.ts\" \"test/**/*.ts\"",
+    "format:check": "prettier --check --no-error-on-unmatched-pattern \"src/**/*.ts\" \"test/**/*.ts\"",
     "lint": "eslint \"{src,test}/**/*.ts\"",
     "start": "node dist/main.js",
     "start:dev": "nest start --watch",
