@@ -20,7 +20,7 @@ const imports: Array<DynamicModule | Promise<DynamicModule>> = [
   ConfigModule.forRoot({ load: [configuration], isGlobal: true }),
 ];
 
-if ((process.env.SERVE_STATIC ?? 'true') === 'true') {
+if (configuration().serveStatic) {
   imports.unshift(
     ServeStaticModule.forRoot({
       rootPath: join(__dirname, 'public'),
