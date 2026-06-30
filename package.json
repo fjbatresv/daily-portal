@@ -1,0 +1,32 @@
+{
+  "name": "daily-portal-workspace",
+  "version": "0.1.0",
+  "private": true,
+  "engines": {
+    "node": ">=24 <25",
+    "npm": ">=10"
+  },
+  "scripts": {
+    "format": "prettier --write \"{backend,frontend}/**/*.{ts,html,css,mjs,json,js}\" \"*.json\" \".github/**/*.yml\" \"docker-compose*.yml\"",
+    "format:check": "prettier --check \"{backend,frontend}/**/*.{ts,html,css,mjs,json,js}\" \"*.json\" \".github/**/*.yml\" \"docker-compose*.yml\"",
+    "lint": "npm run lint --workspace backend && npm run lint --workspace frontend",
+    "test": "npm run test --workspace backend && npm run test --workspace frontend",
+    "build": "npm run build --workspace backend && npm run build --workspace frontend",
+    "ci": "npm run format:check && npm run lint && npm run test && npm run build"
+  },
+  "workspaces": [
+    "backend",
+    "frontend"
+  ],
+  "overrides": {
+    "@angular/build": {
+      "@babel/core": "7.29.7"
+    },
+    "@nestjs/platform-express": {
+      "multer": "2.2.0"
+    }
+  },
+  "devDependencies": {
+    "prettier": "3.9.4"
+  }
+}

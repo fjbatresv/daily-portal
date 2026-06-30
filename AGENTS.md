@@ -19,11 +19,11 @@ El usuario accede al portal desde internet mediante Cloudflare Tunnel → puerto
 
 | Capa | Tecnología | Versión |
 |---|---|---|
-| Backend | NestJS | 10.x |
-| Runtime | Node.js | 20 LTS |
-| Frontend | Angular | 17.x (standalone components) |
+| Backend | NestJS | 11.x |
+| Runtime | Node.js | 24 LTS |
+| Frontend | Angular | 22.x (standalone components) |
 | Base de datos | SQLite | via `better-sqlite3` (sin ORM) |
-| Cache | Redis | 7 alpine |
+| Cache | Redis | 8 alpine |
 | Contenedores | Docker Compose | v5.x |
 | Lenguaje | TypeScript | 5.x estricto |
 
@@ -587,7 +587,7 @@ Tokens de diseño: `docs/design-tokens.md`
 <claude-mem-context>
 # Memory Context
 
-# [Personal StandUP] recent context, 2026-06-29 10:38pm CST
+# [Personal StandUP] recent context, 2026-06-29 10:59pm CST
 
 No previous sessions found.
 </claude-mem-context>

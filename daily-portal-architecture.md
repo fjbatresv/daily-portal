@@ -9,10 +9,10 @@
 
 | Capa | Tecnología | Nota |
 |---|---|---|
-| Frontend | Angular 17+ (standalone components) | |
+| Frontend | Angular 22+ (standalone components) | |
 | Backend | NestJS (Node.js) | |
 | Base de datos | SQLite 3 | Archivo en volumen Docker, sin contenedor separado |
-| Cache | Redis 7 (alpine) | ~15 MB RAM idle, evita rate limiting en APIs externas |
+| Cache | Redis 8 (alpine) | ~15 MB RAM idle, evita rate limiting en APIs externas |
 | Notificaciones | Telegram Bot API | Bot creado con @BotFather |
 | Infra | Docker Compose | Sin Compose Watch, Raspberry Pi OS |
 | Túnel | Cloudflare Tunnel | Configurado en la RPi; solo expone el puerto **8080** |
@@ -69,7 +69,7 @@ C4Container
   System_Boundary(rpi, "Raspberry Pi — Docker") {
     Container(nginx, "nginx", "nginx:alpine", "Reverse proxy. Sirve Angular en / y redirige /api/* al backend. Expone :8080.")
     Container(angular_app, "Angular SPA", "Node build → nginx", "Dashboard web.")
-    Container(nestjs_api, "NestJS API", "Node 20 LTS alpine", "Backend. Módulos de integración, scheduler, CRUD de recordatorios.")
+    Container(nestjs_api, "NestJS API", "Node 24 LTS slim", "Backend. Módulos de integración, scheduler, CRUD de recordatorios.")
     ContainerDb(sqlite, "SQLite", "Archivo en volumen", "Recordatorios y log de notificaciones. Sin contenedor propio.")
     ContainerDb(redis, "Redis", "redis:7-alpine (~15MB)", "Cache de respuestas de APIs externas con TTL.")
   }
@@ -289,8 +289,8 @@ graph TB
     direction TB
     NGINX[nginx:alpine<br/>puerto expuesto: 8090<br/>← Cloudflare apunta aquí]
     ANGULAR[Angular build<br/>archivos estáticos<br/>servidos por nginx]
-    NESTJS[NestJS API<br/>node:20-alpine<br/>:3000 interno]
-    REDIS[(Redis 7 alpine<br/>:6379 interno<br/>~15MB RAM)]
+    NESTJS[NestJS API<br/>node:24-slim<br/>:3000 interno]
+    REDIS[(Redis 8 alpine<br/>:6379 interno<br/>~15MB RAM)]
     SQLITE[(SQLite<br/>volumen: ./data/portal.db<br/>sin contenedor propio)]
   end
 
@@ -437,8 +437,8 @@ graph TB
   end
 
   subgraph RPi - Docker portal-net
-    NESTJS[NestJS + Angular<br/>node:20-alpine<br/>SERVE_STATIC=true<br/>HOST_PORT:3000]
-    REDIS[(Redis 7 alpine)]
+    NESTJS[NestJS + Angular<br/>node:24-slim<br/>SERVE_STATIC=true<br/>HOST_PORT:3000]
+    REDIS[(Redis 8 alpine)]
     SQLITE[(SQLite volumen)]
   end
 
@@ -461,7 +461,7 @@ graph TB
   subgraph RPi - Docker portal-net
     NGINX[nginx:alpine<br/>HOST_PORT:80<br/>perfil nginx]
     NESTJS[NestJS<br/>:3000 interno<br/>SERVE_STATIC=false]
-    REDIS[(Redis 7 alpine)]
+    REDIS[(Redis 8 alpine)]
     SQLITE[(SQLite volumen)]
   end
 
@@ -573,7 +573,7 @@ O más simple: poner `SERVE_STATIC=false` en `.env` cuando uses el perfil nginx.
 
 ```dockerfile
 # ── Stage 1: Build Angular ────────────────────────────────────────────────
-FROM node:20-alpine AS frontend-builder
+FROM node:24-slim AS frontend-builder
 WORKDIR /frontend
 COPY frontend/package*.json ./
 RUN npm ci --ignore-scripts
@@ -581,7 +581,7 @@ COPY frontend/ ./
 RUN npm run build -- --output-path=dist
 
 # ── Stage 2: Build NestJS ────────────────────────────────────────────────
-FROM node:20-alpine AS backend-builder
+FROM node:24-slim AS backend-builder
 WORKDIR /app
 COPY backend/package*.json ./
 RUN npm ci --ignore-scripts
@@ -589,7 +589,7 @@ COPY backend/ ./
 RUN npm run build
 
 # ── Stage 3: Runtime ─────────────────────────────────────────────────────
-FROM node:20-alpine AS final
+FROM node:24-slim AS final
 WORKDIR /app
 
 # Dependencias de producción únicamente

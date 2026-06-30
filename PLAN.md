@@ -27,11 +27,11 @@ Cada fase produce código funcional y testeable antes de avanzar a la siguiente.
 **Objetivo:** Crear la estructura de carpetas completa y los archivos de configuración raíz.
 
 **Archivos a crear:**
-- `backend/package.json` — dependencias NestJS 10.x + better-sqlite3 + ioredis + googleapis + class-validator + date-fns
+- `backend/package.json` — dependencias NestJS 11.x + better-sqlite3 + ioredis + googleapis + class-validator + date-fns
 - `backend/tsconfig.json` — strict: true, target: ES2022, decorators habilitados
 - `backend/src/main.ts` — bootstrap NestJS en el puerto 3000 + `ValidationPipe({ whitelist: true })`
 - `backend/src/app.module.ts` — AppModule vacío por ahora (módulos se agregan en tasks siguientes). **ServeStaticModule si SERVE_STATIC=true.**
-- `frontend/package.json` — Angular 17.x + TailwindCSS + tabler-icons
+- `frontend/package.json` — Angular 22.x + TailwindCSS + tabler-icons
 - `frontend/angular.json` — outputPath: `../backend/dist/public`
 - `frontend/tailwind.config.js` — tokens Aurora (ver `docs/design-tokens.md`)
 - `frontend/src/styles/globals.scss` — CSS custom properties dark/light (copiar de `docs/design-tokens.md`)
@@ -453,7 +453,7 @@ Cada fase produce código funcional y testeable antes de avanzar a la siguiente.
 **Criterios de aceptación:**
 - Stage `frontend-builder`: `npm ci` + `ng build` → output en `/frontend/dist/daily-portal/`
 - Stage `backend-builder`: `npm ci` + `npm run build` → output en `/app/dist/`
-- Stage `final`: imagen Node 20 slim; copia `dist/` del backend y el build de Angular a `/app/public/`
+- Stage `final`: imagen Node 24 slim; copia `dist/` del backend y el build de Angular a `/app/public/`
 - `docker build -t daily-portal .` termina sin errores (build context en raíz)
 - `docker run -e SERVE_STATIC=true daily-portal` sirve el frontend en `http://localhost:3000`
 - `docker run -e SERVE_STATIC=false daily-portal` expone solo `/api/*`
