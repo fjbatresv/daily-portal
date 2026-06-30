@@ -61,27 +61,40 @@ export class CacheService implements ICacheService, OnModuleInit, OnModuleDestro
    * Reads and deserializes a cached JSON value, returning null for cache misses.
    */
   async get<T>(key: string): Promise<T | null> {
-    const rawValue = await this.redis.get(key);
+    try {
+      const rawValue = await this.redis.get(key);
 
-    if (rawValue === null) {
+      if (rawValue === null) {
+        return null;
+      }
+
+      return JSON.parse(rawValue) as T;
+    } catch (error) {
+      this.logCacheError('get', key, error);
       return null;
     }
-
-    return JSON.parse(rawValue) as T;
   }
 
   /**
    * Serializes and stores a value with a TTL in seconds.
    */
   async set<T>(key: string, value: T, ttlSeconds: number): Promise<void> {
-    await this.redis.set(key, JSON.stringify(value), 'EX', ttlSeconds);
+    try {
+      await this.redis.set(key, JSON.stringify(value), 'EX', ttlSeconds);
+    } catch (error) {
+      this.logCacheError('set', key, error);
+    }
   }
 
   /**
    * Deletes a cached value by key.
    */
   async del(key: string): Promise<void> {
-    await this.redis.del(key);
+    try {
+      await this.redis.del(key);
+    } catch (error) {
+      this.logCacheError('delete', key, error);
+    }
   }
 
   private get redis(): Redis {
@@ -90,5 +103,12 @@ export class CacheService implements ICacheService, OnModuleInit, OnModuleDestro
     }
 
     return this.client;
+  }
+
+  private logCacheError(operation: 'delete' | 'get' | 'set', key: string, error: unknown): void {
+    this.logger.error(
+      `Redis cache ${operation} failed for key "${key}"`,
+      error instanceof Error ? error.stack : undefined,
+    );
   }
 }

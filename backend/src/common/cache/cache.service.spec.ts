@@ -1,3 +1,4 @@
+import { Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Test } from '@nestjs/testing';
 import Redis from 'ioredis';
@@ -22,8 +23,10 @@ describe('CacheService', () => {
   const redisConstructor = jest.mocked(Redis);
   let redisClient: RedisMock;
   let service: CacheService;
+  let loggerErrorSpy: jest.SpiedFunction<Logger['error']>;
 
   beforeEach(async () => {
+    loggerErrorSpy = jest.spyOn(Logger.prototype, 'error').mockImplementation(() => undefined);
     redisClient = {
       get: jest.fn<Promise<string | null>, [string]>(),
       set: jest.fn<Promise<'OK'>, [string, string, 'EX', number]>(),
@@ -56,6 +59,7 @@ describe('CacheService', () => {
   });
 
   afterEach(() => {
+    loggerErrorSpy.mockRestore();
     jest.clearAllMocks();
   });
 
@@ -84,6 +88,20 @@ describe('CacheService', () => {
     await expect(service.get<{ ok: boolean }>('test')).resolves.toEqual({ ok: true });
   });
 
+  it('returns null when Redis get fails', async () => {
+    service.onModuleInit();
+    redisClient.get.mockRejectedValue(new Error('Redis unavailable'));
+
+    await expect(service.get<{ ok: boolean }>('test')).resolves.toBeNull();
+  });
+
+  it('returns null when cached JSON cannot be parsed', async () => {
+    service.onModuleInit();
+    redisClient.get.mockResolvedValue('{bad-json');
+
+    await expect(service.get<{ ok: boolean }>('test')).resolves.toBeNull();
+  });
+
   it('serializes values with the provided TTL', async () => {
     service.onModuleInit();
     redisClient.set.mockResolvedValue('OK');
@@ -93,6 +111,13 @@ describe('CacheService', () => {
     expect(redisClient.set).toHaveBeenCalledWith('test', '{"ok":true}', 'EX', 5);
   });
 
+  it('swallows Redis set failures after logging', async () => {
+    service.onModuleInit();
+    redisClient.set.mockRejectedValue(new Error('Redis unavailable'));
+
+    await expect(service.set('test', { ok: true }, 5)).resolves.toBeUndefined();
+  });
+
   it('deletes cache keys', async () => {
     service.onModuleInit();
     redisClient.del.mockResolvedValue(1);
@@ -100,6 +125,13 @@ describe('CacheService', () => {
     await service.del('test');
 
     expect(redisClient.del).toHaveBeenCalledWith('test');
+  });
+
+  it('swallows Redis delete failures after logging', async () => {
+    service.onModuleInit();
+    redisClient.del.mockRejectedValue(new Error('Redis unavailable'));
+
+    await expect(service.del('test')).resolves.toBeUndefined();
   });
 
   it('closes Redis on module destroy after initialization', async () => {
@@ -115,8 +147,8 @@ describe('CacheService', () => {
     await expect(service.onModuleDestroy()).resolves.toBeUndefined();
   });
 
-  it('throws when used before initialization', async () => {
-    await expect(service.get('test')).rejects.toThrow('CacheService has not been initialized');
+  it('fails open when read before initialization', async () => {
+    await expect(service.get('test')).resolves.toBeNull();
   });
 
   it('exports the cache module and service from the barrel', () => {
