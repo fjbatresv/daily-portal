@@ -29,3 +29,7 @@ RUN mkdir -p /app/data && chown -R node:node /app
 EXPOSE 3000
 USER node
 CMD ["node", "dist/main.js"]
+
+FROM nginx:1.29-alpine AS nginx-static
+COPY --from=frontend-builder /workspace/backend/dist/public /usr/share/nginx/html
+COPY nginx/nginx.conf /etc/nginx/conf.d/default.conf
