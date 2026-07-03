@@ -27,6 +27,13 @@ El usuario accede al portal desde internet mediante Cloudflare Tunnel → puerto
 | Contenedores | Docker Compose | v5.x |
 | Lenguaje | TypeScript | 5.x estricto |
 
+**Runtime local obligatorio:** usar siempre el Node.js gestionado por `nvm` para comandos locales (`npm install`, `npm test`, `npm run build`, `ng`, etc.). Antes de ejecutar comandos Node/NPM, cargar `nvm` si hace falta:
+
+```bash
+source ~/.nvm/nvm.sh
+nvm use
+```
+
 ---
 
 ## Reglas de código — OBLIGATORIAS
