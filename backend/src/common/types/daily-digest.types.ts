@@ -50,6 +50,7 @@ export interface Reminder {
   priority: Priority;
   completed: boolean;
   createdAt: string;
+  updatedAt: string;
 }
 
 export interface TodoItem {

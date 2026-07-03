@@ -1,6 +1,7 @@
 import { join } from 'node:path';
 
 export interface AppConfiguration {
+  nodeEnv: string;
   port: number;
   serveStatic: boolean;
   sqlite: {
@@ -45,6 +46,7 @@ export interface AppConfiguration {
  */
 function configuration(): AppConfiguration {
   return {
+    nodeEnv: process.env.NODE_ENV ?? 'development',
     port: Number(process.env.PORT ?? 3000),
     serveStatic: (process.env.SERVE_STATIC ?? 'true') === 'true',
     sqlite: {

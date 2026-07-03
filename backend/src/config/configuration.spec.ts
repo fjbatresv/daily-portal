@@ -27,6 +27,7 @@ describe('configuration', () => {
     const config = configuration();
 
     expect(config).toMatchObject({
+      nodeEnv: 'test',
       port: 3000,
       serveStatic: true,
       sqlite: { path: '/app/data/portal.db' },
@@ -64,6 +65,7 @@ describe('configuration', () => {
     process.env.TZ = 'America/Guatemala';
 
     expect(configuration()).toEqual({
+      nodeEnv: 'test',
       port: 4100,
       serveStatic: false,
       sqlite: { path: '/tmp/portal.db', schemaPath: '/tmp/schema.sql' },

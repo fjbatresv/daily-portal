@@ -1,10 +1,14 @@
 import { Controller, DynamicModule, Get, Module, Type } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { ServeStaticModule } from '@nestjs/serve-static';
+import { ScheduleModule } from '@nestjs/schedule';
 import { join } from 'node:path';
 import { CacheModule } from './common/cache';
 import { DatabaseModule } from './common/database';
 import configuration from './config/configuration';
+import { RemindersModule } from './reminders';
+import { SchedulerModule } from './scheduler';
+import { TelegramModule } from './telegram';
 
 /**
  * Exposes a small health endpoint for liveness checks and deployment probes.
@@ -26,8 +30,12 @@ class HealthController {
 
 const imports: Array<Type<unknown> | DynamicModule | Promise<DynamicModule>> = [
   ConfigModule.forRoot({ load: [configuration], isGlobal: true }),
+  ScheduleModule.forRoot(),
   CacheModule,
   DatabaseModule,
+  RemindersModule,
+  TelegramModule,
+  SchedulerModule,
 ];
 
 if (configuration().serveStatic) {
