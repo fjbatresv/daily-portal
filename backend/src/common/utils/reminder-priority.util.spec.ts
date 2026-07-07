@@ -1,5 +1,5 @@
 import { format, subDays, addDays } from 'date-fns';
-import { getEffectivePriority } from './reminder-priority.util';
+import { getDaysPending, getEffectivePriority } from './reminder-priority.util';
 
 const toDate = (date: Date): string => format(date, 'yyyy-MM-dd');
 
@@ -26,5 +26,15 @@ describe('getEffectivePriority', () => {
 
   it('keeps original priority for future dates', () => {
     expect(getEffectivePriority('medium', toDate(addDays(new Date(), 1)))).toBe('medium');
+  });
+});
+
+describe('getDaysPending', () => {
+  it('returns the number of calendar days since the reminder date', () => {
+    expect(getDaysPending(toDate(subDays(new Date(), 3)))).toBe(3);
+  });
+
+  it('returns zero for future dates', () => {
+    expect(getDaysPending(toDate(addDays(new Date(), 2)))).toBe(0);
   });
 });
