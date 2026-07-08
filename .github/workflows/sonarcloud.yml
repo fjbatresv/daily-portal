@@ -8,7 +8,8 @@ on:
 
 permissions:
   contents: read
-  pull-requests: read
+  issues: write
+  pull-requests: write
 
 jobs:
   sonarcloud:
@@ -42,7 +43,25 @@ jobs:
         continue-on-error: false
 
       - name: SonarCloud Scan
+        id: sonar
         uses: SonarSource/sonarcloud-github-action@master
+        continue-on-error: true
+        with:
+          args: >
+            -Dsonar.qualitygate.wait=true
+            -Dsonar.qualitygate.timeout=300
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
+      - name: Comment SonarCloud result on PR
+        if: always() && github.event_name == 'pull_request'
+        run: node .github/scripts/comment-sonarcloud-result.mjs
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_SCAN_OUTCOME: ${{ steps.sonar.outcome }}
+
+      - name: Fail when SonarCloud scan failed
+        if: steps.sonar.outcome == 'failure'
+        run: exit 1
