@@ -1,15 +1,13 @@
 import {
   IsBoolean,
+  IsDateString,
   IsEnum,
   IsOptional,
   IsString,
-  Matches,
   MaxLength,
   MinLength,
 } from 'class-validator';
-import { Priority } from '../common/types/daily-digest.types';
-
-const priorities = ['low', 'medium', 'high'] as const;
+import { priorities, Priority } from '../common/types/daily-digest.types';
 
 /**
  * Partial payload used to update a persisted reminder.
@@ -22,7 +20,7 @@ export class UpdateReminderDto {
   text?: string;
 
   @IsOptional()
-  @Matches(/^\d{4}-\d{2}-\d{2}$/)
+  @IsDateString({ strict: true })
   date?: string;
 
   @IsOptional()

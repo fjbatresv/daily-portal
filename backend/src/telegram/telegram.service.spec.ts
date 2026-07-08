@@ -1,8 +1,8 @@
 import { Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { DatabaseService } from '../common/database';
 import { DailyDigest } from '../common/types/daily-digest.types';
 import { AppConfiguration } from '../config/configuration';
+import { NotificationLogsRepository } from './notification-logs.repository';
 import { TelegramFormatter } from './telegram-formatter.service';
 import { TelegramService } from './telegram.service';
 
@@ -19,14 +19,16 @@ const digest: DailyDigest = {
 
 describe('TelegramService', () => {
   let fetchMock: jest.MockedFunction<typeof fetch>;
-  let run: jest.Mock<void, ['success' | 'error', string | null]>;
+  let notificationLogs: jest.Mocked<NotificationLogsRepository>;
   let service: TelegramService;
   let loggerErrorSpy: jest.SpiedFunction<Logger['error']>;
 
   beforeEach(() => {
     fetchMock = jest.fn<ReturnType<typeof fetch>, Parameters<typeof fetch>>();
     global.fetch = fetchMock;
-    run = jest.fn<void, ['success' | 'error', string | null]>();
+    notificationLogs = {
+      create: jest.fn(),
+    } as unknown as jest.Mocked<NotificationLogsRepository>;
     loggerErrorSpy = jest.spyOn(Logger.prototype, 'error').mockImplementation(() => undefined);
 
     const config = {
@@ -36,13 +38,7 @@ describe('TelegramService', () => {
         return undefined;
       }),
     } as unknown as ConfigService<AppConfiguration, true>;
-    const db = {
-      instance: {
-        prepare: jest.fn(() => ({ run })),
-      },
-    } as unknown as DatabaseService;
-
-    service = new TelegramService(config, new TelegramFormatter(), db);
+    service = new TelegramService(config, new TelegramFormatter(), notificationLogs);
   });
 
   afterEach(() => {
@@ -61,7 +57,7 @@ describe('TelegramService', () => {
         headers: { 'Content-Type': 'application/json' },
       }),
     );
-    expect(run).toHaveBeenCalledWith('success', null);
+    expect(notificationLogs.create.mock.calls).toEqual([['success', undefined]]);
   });
 
   it('logs errors and does not throw when Telegram fails', async () => {
@@ -69,7 +65,7 @@ describe('TelegramService', () => {
 
     await expect(service.sendMorningDigest(digest)).resolves.toBeUndefined();
 
-    expect(run).toHaveBeenCalledWith('error', 'Telegram API returned 400');
+    expect(notificationLogs.create.mock.calls).toEqual([['error', 'Telegram API returned 400']]);
     expect(loggerErrorSpy).toHaveBeenCalled();
   });
 
@@ -79,23 +75,20 @@ describe('TelegramService', () => {
     await service.sendTestMessage('Hello!');
 
     expect(fetchMock).toHaveBeenCalled();
-    expect(run).not.toHaveBeenCalled();
+    expect(notificationLogs.create.mock.calls).toHaveLength(0);
   });
 
   it('logs errors when credentials are missing', async () => {
     const config = {
       get: jest.fn(() => undefined),
     } as unknown as ConfigService<AppConfiguration, true>;
-    const db = {
-      instance: {
-        prepare: jest.fn(() => ({ run })),
-      },
-    } as unknown as DatabaseService;
-    service = new TelegramService(config, new TelegramFormatter(), db);
+    service = new TelegramService(config, new TelegramFormatter(), notificationLogs);
 
     await expect(service.sendMorningDigest(digest)).resolves.toBeUndefined();
 
-    expect(run).toHaveBeenCalledWith('error', 'Telegram credentials are not configured');
+    expect(notificationLogs.create.mock.calls).toEqual([
+      ['error', 'Telegram credentials are not configured'],
+    ]);
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
@@ -113,5 +106,13 @@ describe('TelegramService', () => {
     }
     const body = JSON.parse(init.body) as { text: string };
     expect(body.text.length).toBeLessThanOrEqual(4096);
+  });
+
+  it('logs timeout failures without throwing', async () => {
+    fetchMock.mockRejectedValue(new DOMException('The operation timed out', 'TimeoutError'));
+
+    await expect(service.sendMorningDigest(digest)).resolves.toBeUndefined();
+
+    expect(notificationLogs.create.mock.calls).toEqual([['error', 'The operation timed out']]);
   });
 });

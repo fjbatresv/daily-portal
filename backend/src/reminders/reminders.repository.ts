@@ -35,7 +35,14 @@ export class RemindersRepository {
       .prepare(
         `SELECT * FROM reminders
          WHERE date = ? AND completed = 0
-         ORDER BY priority DESC, created_at ASC`,
+         ORDER BY
+           CASE priority
+             WHEN 'high' THEN 3
+             WHEN 'medium' THEN 2
+             WHEN 'low' THEN 1
+             ELSE 0
+           END DESC,
+           created_at ASC`,
       )
       .all(date) as ReminderRow[];
   }

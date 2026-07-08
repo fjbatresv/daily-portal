@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { DatabaseModule } from '../common/database';
+import { NotificationLogsRepository } from './notification-logs.repository';
 import { TelegramFormatter } from './telegram-formatter.service';
 import { TelegramService } from './telegram.service';
 
@@ -8,7 +9,7 @@ import { TelegramService } from './telegram.service';
  */
 @Module({
   imports: [DatabaseModule],
-  providers: [TelegramService, TelegramFormatter],
+  providers: [TelegramService, TelegramFormatter, NotificationLogsRepository],
   exports: [TelegramService],
 })
 export class TelegramModule {}

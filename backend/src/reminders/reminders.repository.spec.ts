@@ -30,6 +30,18 @@ describe('RemindersRepository', () => {
     expect(repository.findAll()).toHaveLength(1);
   });
 
+  it('orders reminders by priority rank before creation time', () => {
+    repository.create({ text: 'Low note', date: '2026-06-30', priority: 'low' });
+    repository.create({ text: 'High note', date: '2026-06-30', priority: 'high' });
+    repository.create({ text: 'Medium note', date: '2026-06-30', priority: 'medium' });
+
+    expect(repository.findByDate('2026-06-30').map((reminder) => reminder.priority)).toEqual([
+      'high',
+      'medium',
+      'low',
+    ]);
+  });
+
   it('updates each supported field', () => {
     const reminder = repository.create({ text: 'Send note', date: '2026-06-30' });
 

@@ -38,13 +38,13 @@ export class TelegramFormatter {
    * Escapes user-controlled text for Telegram MarkdownV2.
    */
   escape(text: string): string {
-    return text.replace(/[_*[\]()~`>#+\-=|{}.!]/g, '\\$&');
+    return text.replace(/[\\_*[\]()~`>#+\-=|{}.!]/g, '\\$&');
   }
 
   private formatTasks(tasks: JiraTask[]): string {
     return this.formatSection(
       `Tareas Jira (${tasks.length} activas)`,
-      tasks.slice(0, maxSectionItems).map((task) => `- [${task.key}] ${task.summary}`),
+      tasks.slice(0, maxSectionItems).map((task) => `[${task.key}] ${task.summary}`),
       tasks.length,
     );
   }
@@ -70,9 +70,10 @@ export class TelegramFormatter {
       events.slice(0, maxSectionItems).map((event) => {
         const time = event.isAllDay ? 'Todo el dia' : this.formatTime(event.startTime);
         const meet = event.meetUrl ? ` [Meet](${this.escapeUrl(event.meetUrl)})` : '';
-        return `${time} ${event.title}${meet}`;
+        return `${this.escape(`${time} ${event.title}`)}${meet}`;
       }),
       events.length,
+      { preformattedItems: true },
     );
   }
 
@@ -109,14 +110,22 @@ export class TelegramFormatter {
     return [`*${this.escape('TODO del dia')}*`, ...visibleItems, ...suffix].join('\n');
   }
 
-  private formatSection(title: string, rawItems: string[], totalCount: number): string {
+  private formatSection(
+    title: string,
+    rawItems: string[],
+    totalCount: number,
+    options: { preformattedItems?: boolean } = {},
+  ): string {
     const heading = `*${this.escape(title)}*`;
 
     if (rawItems.length === 0) {
       return `${heading}\n_${this.escape('Sin elementos')}_`;
     }
 
-    const items = rawItems.map((item) => `\\- ${this.escape(item)}`);
+    const items = rawItems.map((item) => {
+      const text = options.preformattedItems ? item : this.escape(item);
+      return `\\- ${text}`;
+    });
     const hiddenCount = totalCount - rawItems.length;
     if (hiddenCount > 0) {
       items.push(this.escape(`... y ${hiddenCount} mas`));

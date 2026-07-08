@@ -1,8 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { DatabaseService } from '../common/database';
 import { DailyDigest } from '../common/types/daily-digest.types';
 import { AppConfiguration } from '../config/configuration';
+import { NotificationLogsRepository } from './notification-logs.repository';
 import { TelegramFormatter } from './telegram-formatter.service';
 
 interface TelegramSendMessageBody {
@@ -18,11 +18,12 @@ interface TelegramSendMessageBody {
 @Injectable()
 export class TelegramService {
   private readonly logger = new Logger(TelegramService.name);
+  private readonly requestTimeoutMs = 10_000;
 
   constructor(
     private readonly config: ConfigService<AppConfiguration, true>,
     private readonly formatter: TelegramFormatter,
-    private readonly db: DatabaseService,
+    private readonly notificationLogs: NotificationLogsRepository,
   ) {}
 
   /**
@@ -60,6 +61,7 @@ export class TelegramService {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
+        signal: AbortSignal.timeout(this.requestTimeoutMs),
       });
 
       if (!response.ok) {
@@ -70,7 +72,7 @@ export class TelegramService {
         this.insertLog('success');
       }
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Unknown Telegram error';
+      const message = this.getErrorMessage(error);
       this.logger.error(`Telegram message failed: ${message}`);
 
       if (logNotification) {
@@ -80,9 +82,15 @@ export class TelegramService {
   }
 
   private insertLog(status: 'success' | 'error', errorMsg?: string): void {
-    this.db.instance
-      .prepare('INSERT INTO notification_logs (status, error_msg) VALUES (?, ?)')
-      .run(status, errorMsg ?? null);
+    this.notificationLogs.create(status, errorMsg);
+  }
+
+  private getErrorMessage(error: unknown): string {
+    if (error && typeof error === 'object' && 'message' in error) {
+      return String(error.message);
+    }
+
+    return 'Unknown Telegram error';
   }
 
   private truncate(message: string): string {

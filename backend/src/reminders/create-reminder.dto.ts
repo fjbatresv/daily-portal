@@ -1,7 +1,5 @@
-import { IsEnum, IsOptional, IsString, Matches, MaxLength, MinLength } from 'class-validator';
-import { Priority } from '../common/types/daily-digest.types';
-
-const priorities = ['low', 'medium', 'high'] as const;
+import { IsDateString, IsEnum, IsOptional, IsString, MaxLength, MinLength } from 'class-validator';
+import { priorities, Priority } from '../common/types/daily-digest.types';
 
 /**
  * Payload required to create a reminder.
@@ -12,7 +10,7 @@ export class CreateReminderDto {
   @MaxLength(500)
   text!: string;
 
-  @Matches(/^\d{4}-\d{2}-\d{2}$/)
+  @IsDateString({ strict: true })
   date!: string;
 
   @IsOptional()

@@ -52,7 +52,6 @@ export class RemindersService {
    * Updates an existing reminder.
    */
   update(id: string, dto: UpdateReminderDto): ReminderResponse {
-    this.assertExists(id);
     const row = this.repository.update(id, dto);
     if (!row) {
       throw new NotFoundException(`Reminder not found: ${id}`);
@@ -78,12 +77,6 @@ export class RemindersService {
    */
   delete(id: string): void {
     if (!this.repository.delete(id)) {
-      throw new NotFoundException(`Reminder not found: ${id}`);
-    }
-  }
-
-  private assertExists(id: string): void {
-    if (!this.repository.findById(id)) {
       throw new NotFoundException(`Reminder not found: ${id}`);
     }
   }

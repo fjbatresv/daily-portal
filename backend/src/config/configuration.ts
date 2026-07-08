@@ -2,6 +2,7 @@ import { join } from 'node:path';
 
 export interface AppConfiguration {
   nodeEnv: string;
+  morningDigestCron: string;
   port: number;
   serveStatic: boolean;
   sqlite: {
@@ -39,6 +40,7 @@ export interface AppConfiguration {
     cron: string;
     timezone: string;
   };
+  tz: string;
 }
 
 /**
@@ -47,6 +49,7 @@ export interface AppConfiguration {
 function configuration(): AppConfiguration {
   return {
     nodeEnv: process.env.NODE_ENV ?? 'development',
+    morningDigestCron: process.env.MORNING_DIGEST_CRON ?? '0 8 * * *',
     port: Number(process.env.PORT ?? 3000),
     serveStatic: (process.env.SERVE_STATIC ?? 'true') === 'true',
     sqlite: {
@@ -87,6 +90,7 @@ function configuration(): AppConfiguration {
       cron: process.env.MORNING_DIGEST_CRON ?? '0 8 * * *',
       timezone: process.env.TZ ?? 'America/Guatemala',
     },
+    tz: process.env.TZ ?? 'America/Guatemala',
   };
 }
 

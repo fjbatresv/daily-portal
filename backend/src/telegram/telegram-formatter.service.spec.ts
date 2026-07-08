@@ -93,9 +93,19 @@ describe('TelegramFormatter', () => {
   });
 
   it('escapes Telegram MarkdownV2 special characters', () => {
-    expect(formatter.escape('_*[]()~`>#+-=|{}.!')).toBe(
-      '\\_\\*\\[\\]\\(\\)\\~\\`\\>\\#\\+\\-\\=\\|\\{\\}\\.\\!',
+    expect(formatter.escape('\\_*[]()~`>#+-=|{}.!')).toBe(
+      '\\\\\\_\\*\\[\\]\\(\\)\\~\\`\\>\\#\\+\\-\\=\\|\\{\\}\\.\\!',
     );
+  });
+
+  it('keeps Meet links valid while escaping event text', () => {
+    const message = formatter.format({
+      ...digest,
+      events: [{ ...digest.events[0], title: 'Review [draft]!' }],
+    });
+
+    expect(message).toContain('Review \\[draft\\]\\!');
+    expect(message).toContain('[Meet](https://meet.google.com/abc-defg-hij)');
   });
 
   it('limits long sections to five items', () => {

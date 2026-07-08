@@ -89,20 +89,18 @@ describe('RemindersService', () => {
   });
 
   it('throws NotFoundException when updating a missing reminder', () => {
-    repository.findById.mockReturnValue(undefined);
+    repository.update.mockReturnValue(undefined);
 
     expect(() => service.update('missing', { text: 'Updated' })).toThrow(NotFoundException);
   });
 
   it('updates existing reminders', () => {
-    repository.findById.mockReturnValue(row());
     repository.update.mockReturnValue(row({ text: 'Updated' }));
 
     expect(service.update('reminder-1', { text: 'Updated' })).toMatchObject({ text: 'Updated' });
   });
 
   it('throws NotFoundException when repository update returns undefined', () => {
-    repository.findById.mockReturnValue(row());
     repository.update.mockReturnValue(undefined);
 
     expect(() => service.update('reminder-1', { text: 'Updated' })).toThrow(NotFoundException);
@@ -124,5 +122,11 @@ describe('RemindersService', () => {
     repository.delete.mockReturnValue(false);
 
     expect(() => service.delete('missing')).toThrow(NotFoundException);
+  });
+
+  it('deletes existing reminders without returning a value', () => {
+    repository.delete.mockReturnValue(true);
+
+    expect(service.delete('reminder-1')).toBeUndefined();
   });
 });

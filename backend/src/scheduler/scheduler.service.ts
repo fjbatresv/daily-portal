@@ -1,32 +1,68 @@
-import { Inject, Injectable, Logger, Optional, ServiceUnavailableException } from '@nestjs/common';
+import {
+  Inject,
+  Injectable,
+  Logger,
+  OnModuleDestroy,
+  OnModuleInit,
+  Optional,
+  ServiceUnavailableException,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { Cron } from '@nestjs/schedule';
+import { SchedulerRegistry } from '@nestjs/schedule';
+import { CronJob } from 'cron';
 import { DailyDigest } from '../common/types/daily-digest.types';
 import { AppConfiguration } from '../config/configuration';
 import { TelegramService } from '../telegram';
 import { DAILY_DIGEST_BUILDER, DailyDigestBuilder } from './daily-digest-builder';
 
+const morningDigestJobName = 'morning-digest';
+
 /**
  * Runs the configured morning digest workflow and manual dev trigger.
  */
 @Injectable()
-export class SchedulerService {
+export class SchedulerService implements OnModuleInit, OnModuleDestroy {
   private readonly logger = new Logger(SchedulerService.name);
 
   constructor(
     private readonly telegram: TelegramService,
     private readonly config: ConfigService<AppConfiguration, true>,
+    private readonly schedulerRegistry: SchedulerRegistry,
     @Optional()
     @Inject(DAILY_DIGEST_BUILDER)
     private readonly aggregator?: DailyDigestBuilder,
   ) {}
 
   /**
-   * Executes the morning digest cron without allowing failures to crash the process.
+   * Registers the configured morning digest cron job.
    */
-  @Cron(process.env.MORNING_DIGEST_CRON ?? '0 8 * * *', {
-    timeZone: process.env.TZ ?? 'America/Guatemala',
-  })
+  onModuleInit(): void {
+    const job = CronJob.from({
+      cronTime: this.config.get('morningDigestCron', { infer: true }),
+      onTick: () => {
+        void this.runMorningDigest();
+      },
+      start: false,
+      timeZone: this.config.get('tz', { infer: true }),
+    });
+
+    this.schedulerRegistry.addCronJob(morningDigestJobName, job);
+    job.start();
+  }
+
+  /**
+   * Removes the registered cron job during shutdown.
+   */
+  async onModuleDestroy(): Promise<void> {
+    if (this.schedulerRegistry.doesExist('cron', morningDigestJobName)) {
+      await this.schedulerRegistry.getCronJob(morningDigestJobName).stop();
+      this.schedulerRegistry.deleteCronJob(morningDigestJobName);
+    }
+  }
+
+  /**
+   * Executes the morning digest workflow without allowing failures to crash the process.
+   */
   async runMorningDigest(): Promise<void> {
     this.logger.log('Starting morning digest...');
 
