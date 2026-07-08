@@ -80,7 +80,11 @@ describe('RemindersService', () => {
     repository.create.mockReturnValue(row({ priority: 'low' }));
 
     expect(
-      service.create({ text: 'Send note', date: dateString(addDays(new Date(), 1)), priority: 'low' }),
+      service.create({
+        text: 'Send note',
+        date: dateString(addDays(new Date(), 1)),
+        priority: 'low',
+      }),
     ).toMatchObject({ text: 'Follow up', priority: 'low', escalatedPriority: 'low' });
   });
 

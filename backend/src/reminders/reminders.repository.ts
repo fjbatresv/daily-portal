@@ -15,7 +15,10 @@ export interface ReminderRow {
 }
 
 type ReminderUpdateValue = string | 0 | 1;
-type ReminderUpdateEntry = readonly [keyof Pick<ReminderRow, 'text' | 'date' | 'priority' | 'completed'>, ReminderUpdateValue];
+type ReminderUpdateEntry = readonly [
+  keyof Pick<ReminderRow, 'text' | 'date' | 'priority' | 'completed'>,
+  ReminderUpdateValue,
+];
 
 /**
  * Encapsulates all SQLite queries for persisted reminders.
@@ -51,8 +54,7 @@ export class RemindersRepository {
    */
   findById(id: string): ReminderRow | undefined {
     return this.db.instance.prepare('SELECT * FROM reminders WHERE id = ?').get(id) as
-      | ReminderRow
-      | undefined;
+      ReminderRow | undefined;
   }
 
   /**
