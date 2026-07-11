@@ -5,6 +5,7 @@ import { CreateReminderDto } from './create-reminder.dto';
 import { ReminderResponse } from './reminder-response.types';
 import { RemindersController } from './reminders.controller';
 import { RemindersService } from './reminders.service';
+import { UpdateReminderDto } from './update-reminder.dto';
 
 const reminder: ReminderResponse = {
   id: 'reminder-1',
@@ -84,5 +85,17 @@ describe('RemindersController', () => {
     const errors = await validate(dto);
     expect(errors).toHaveLength(2);
     expect(new ValidationPipe({ whitelist: true })).toBeDefined();
+  });
+
+  it('rejects impossible calendar dates in reminder DTOs', async () => {
+    const createDto = new CreateReminderDto();
+    createDto.text = 'Follow up';
+    createDto.date = '2026-02-30';
+
+    const updateDto = new UpdateReminderDto();
+    updateDto.date = '2026-02-30';
+
+    await expect(validate(createDto)).resolves.toHaveLength(1);
+    await expect(validate(updateDto)).resolves.toHaveLength(1);
   });
 });
