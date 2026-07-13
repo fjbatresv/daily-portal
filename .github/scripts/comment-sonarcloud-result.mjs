@@ -55,9 +55,11 @@ function buildBody({ dashboardUrl, projectStatus, scanOutcome }) {
 
   const conditionsTable =
     conditions.length > 0
-      ? ['| Metric | Status | Actual | Threshold |', '| --- | --- | ---: | ---: |', conditionRows].join(
-          '\n',
-        )
+      ? [
+          '| Metric | Status | Actual | Threshold |',
+          '| --- | --- | ---: | ---: |',
+          conditionRows,
+        ].join('\n')
       : conditionRows;
 
   return `${marker}
@@ -127,4 +129,5 @@ await main().catch((error) => {
     'SonarCloud comment script failed:',
     error instanceof Error ? error.message : error,
   );
+  process.exitCode = 1;
 });

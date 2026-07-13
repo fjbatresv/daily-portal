@@ -100,7 +100,10 @@ describe('JiraService', () => {
     expect(searchUrl.searchParams.get('jql')).toBe(
       'project=TEMP AND assignee=currentUser() AND statusCategory in ("In Progress","To Do") ORDER BY updated DESC',
     );
-    expect(cache.set.mock.calls).toEqual([['jira:tasks', [mappedTask], 900]]);
+    expect(cache.set.mock.calls).toEqual([
+      ['jira:tasks', [mappedTask], 900],
+      ['jira:tasks:last-success', [mappedTask], 86400],
+    ]);
   });
 
   it('returns an empty list and logs when the Jira API fails', async () => {
@@ -114,7 +117,7 @@ describe('JiraService', () => {
     await expect(service.getTasks()).resolves.toEqual([]);
 
     expect(loggerErrorSpy).toHaveBeenCalledWith('Jira API returned 500: Internal error');
-    expect(cache.set.mock.calls).toHaveLength(0);
+    expect(cache.set.mock.calls).toEqual([['jira:tasks', [], 30]]);
   });
 
   it('uses a fallback message when the Jira error body cannot be read', async () => {
@@ -130,6 +133,7 @@ describe('JiraService', () => {
     expect(loggerErrorSpy).toHaveBeenCalledWith(
       'Jira API returned 503: Unable to read Jira error response',
     );
+    expect(cache.set.mock.calls).toEqual([['jira:tasks', [], 30]]);
   });
 
   it('returns an empty list when the Jira request rejects with an Error', async () => {
@@ -139,6 +143,7 @@ describe('JiraService', () => {
     await expect(service.getTasks()).resolves.toEqual([]);
 
     expect(loggerErrorSpy).toHaveBeenCalledWith('Jira request failed: Network failed');
+    expect(cache.set.mock.calls).toEqual([['jira:tasks', [], 30]]);
   });
 
   it('uses a fallback message when the Jira request rejects with a non-Error value', async () => {
@@ -148,6 +153,7 @@ describe('JiraService', () => {
     await expect(service.getTasks()).resolves.toEqual([]);
 
     expect(loggerErrorSpy).toHaveBeenCalledWith('Jira request failed: Unknown Jira error');
+    expect(cache.set.mock.calls).toEqual([['jira:tasks', [], 30]]);
   });
 
   it('maps missing priority to an explicit fallback value', async () => {
@@ -189,15 +195,27 @@ describe('JiraService', () => {
     await expect(service.getTasks()).resolves.toEqual([]);
 
     expect(loggerErrorSpy).toHaveBeenCalledWith('Jira: credenciales inválidas');
+    expect(cache.set.mock.calls).toEqual([['jira:tasks', [], 30]]);
   });
 
-  it('returns cached data on rate limit when available', async () => {
+  it('returns fallback cached data on rate limit when available', async () => {
     cache.get.mockResolvedValueOnce(null).mockResolvedValueOnce([mappedTask]);
     fetchMock.mockResolvedValue({ ok: false, status: 429 } as Response);
 
     await expect(service.getTasks()).resolves.toEqual([mappedTask]);
 
     expect(loggerErrorSpy).toHaveBeenCalledWith('Jira: rate limit');
+    expect(cache.get.mock.calls).toEqual([['jira:tasks'], ['jira:tasks:last-success']]);
+  });
+
+  it('negative-caches an empty result when rate limit has no fallback data', async () => {
+    cache.get.mockResolvedValueOnce(null).mockResolvedValueOnce(null);
+    fetchMock.mockResolvedValue({ ok: false, status: 429 } as Response);
+
+    await expect(service.getTasks()).resolves.toEqual([]);
+
+    expect(loggerErrorSpy).toHaveBeenCalledWith('Jira: rate limit');
+    expect(cache.set.mock.calls).toEqual([['jira:tasks', [], 30]]);
   });
 
   it('does not call Jira when configuration is incomplete', async () => {
@@ -214,5 +232,6 @@ describe('JiraService', () => {
 
     expect(fetchMock).not.toHaveBeenCalled();
     expect(loggerErrorSpy).toHaveBeenCalledWith('Jira: configuration is incomplete');
+    expect(cache.set.mock.calls).toEqual([['jira:tasks', [], 30]]);
   });
 });

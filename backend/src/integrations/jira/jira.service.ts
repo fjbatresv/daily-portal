@@ -19,7 +19,10 @@ interface JiraConfig {
 export class JiraService {
   private readonly logger = new Logger(JiraService.name);
   private readonly cacheKey = 'jira:tasks';
+  private readonly fallbackCacheKey = 'jira:tasks:last-success';
   private readonly cacheTtlSeconds = 15 * 60;
+  private readonly fallbackCacheTtlSeconds = 24 * 60 * 60;
+  private readonly negativeCacheTtlSeconds = 30;
   private readonly requestTimeoutMs = 10_000;
 
   constructor(
@@ -39,6 +42,7 @@ export class JiraService {
 
     const jiraConfig = this.getJiraConfig();
     if (!jiraConfig) {
+      await this.cacheEmptyTasks();
       return [];
     }
 
@@ -59,10 +63,12 @@ export class JiraService {
       const payload = (await response.json()) as JiraSearchResponse;
       const tasks = payload.issues.map((issue) => this.mapIssue(issue, jiraConfig.baseUrl));
       await this.cache.set(this.cacheKey, tasks, this.cacheTtlSeconds);
+      await this.cache.set(this.fallbackCacheKey, tasks, this.fallbackCacheTtlSeconds);
 
       return tasks;
     } catch (error) {
       this.logger.error(`Jira request failed: ${this.getErrorMessage(error)}`);
+      await this.cacheEmptyTasks();
       return [];
     }
   }
@@ -106,18 +112,31 @@ export class JiraService {
   private async handleHttpError(response: Response): Promise<JiraTask[]> {
     if (response.status === 401) {
       this.logger.error('Jira: credenciales inválidas');
+      await this.cacheEmptyTasks();
       return [];
     }
 
     if (response.status === 429) {
       this.logger.error('Jira: rate limit');
-      return (await this.cache.get<JiraTask[]>(this.cacheKey)) ?? [];
+      const fallbackTasks = await this.cache.get<JiraTask[]>(this.fallbackCacheKey);
+
+      if (fallbackTasks) {
+        return fallbackTasks;
+      }
+
+      await this.cacheEmptyTasks();
+      return [];
     }
 
     this.logger.error(
       `Jira API returned ${response.status}: ${await this.readResponseText(response)}`,
     );
+    await this.cacheEmptyTasks();
     return [];
+  }
+
+  private async cacheEmptyTasks(): Promise<void> {
+    await this.cache.set(this.cacheKey, [], this.negativeCacheTtlSeconds);
   }
 
   private mapIssue(issue: JiraApiIssue, baseUrl: string): JiraTask {
