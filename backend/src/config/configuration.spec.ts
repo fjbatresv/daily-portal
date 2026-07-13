@@ -22,11 +22,14 @@ describe('configuration', () => {
     delete process.env.REDIS_URL;
     delete process.env.GOOGLE_CALENDAR_IDS;
     delete process.env.MORNING_DIGEST_CRON;
+    delete process.env.NODE_ENV;
     delete process.env.TZ;
 
     const config = configuration();
 
     expect(config).toMatchObject({
+      nodeEnv: 'development',
+      morningDigestCron: '0 8 * * *',
       port: 3000,
       serveStatic: true,
       sqlite: { path: '/app/data/portal.db' },
@@ -36,6 +39,7 @@ describe('configuration', () => {
         cron: '0 8 * * *',
         timezone: 'America/Guatemala',
       },
+      tz: 'America/Guatemala',
     });
     expect(config.sqlite.schemaPath).toContain('db/schema.sql');
   });
@@ -61,9 +65,12 @@ describe('configuration', () => {
     process.env.SLACK_USER_TOKEN = 'slack-token';
     process.env.SLACK_USER_ID = 'U123';
     process.env.MORNING_DIGEST_CRON = '5 8 * * *';
+    process.env.NODE_ENV = 'test';
     process.env.TZ = 'America/Guatemala';
 
     expect(configuration()).toEqual({
+      nodeEnv: 'test',
+      morningDigestCron: '5 8 * * *',
       port: 4100,
       serveStatic: false,
       sqlite: { path: '/tmp/portal.db', schemaPath: '/tmp/schema.sql' },
@@ -96,6 +103,7 @@ describe('configuration', () => {
         cron: '5 8 * * *',
         timezone: 'America/Guatemala',
       },
+      tz: 'America/Guatemala',
     });
   });
 

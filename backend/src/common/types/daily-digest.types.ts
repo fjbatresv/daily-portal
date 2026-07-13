@@ -1,4 +1,6 @@
-export type Priority = 'high' | 'medium' | 'low';
+export const priorities = ['low', 'medium', 'high'] as const;
+
+export type Priority = (typeof priorities)[number];
 export type PRStatus = 'open' | 'merged' | 'closed' | 'draft';
 export type CheckStatus = 'success' | 'failure' | 'pending' | 'error';
 
@@ -50,6 +52,7 @@ export interface Reminder {
   priority: Priority;
   completed: boolean;
   createdAt: string;
+  updatedAt: string;
 }
 
 export interface TodoItem {

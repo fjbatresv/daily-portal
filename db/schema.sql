@@ -13,9 +13,7 @@ CREATE INDEX IF NOT EXISTS idx_reminders_date_completed
 
 CREATE TABLE IF NOT EXISTS notification_logs (
   id TEXT PRIMARY KEY DEFAULT (lower(hex(randomblob(16)))),
-  channel TEXT NOT NULL,
-  status TEXT NOT NULL CHECK (status IN ('sent', 'failed')),
-  message TEXT,
-  error TEXT,
+  status TEXT NOT NULL CHECK (status IN ('success', 'error')),
+  error_msg TEXT,
   sent_at TEXT DEFAULT (datetime('now'))
 );

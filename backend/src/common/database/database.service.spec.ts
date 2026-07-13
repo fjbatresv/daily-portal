@@ -64,6 +64,76 @@ describe('DatabaseService', () => {
     expect(reminderTable).toEqual({ name: 'reminders' });
   });
 
+  it('migrates legacy notification logs to the current shape', async () => {
+    const sqlitePath = join(tempDir, 'legacy-portal.db');
+    const schemaPath = join(tempDir, 'legacy-schema.sql');
+    writeFileSync(
+      schemaPath,
+      `
+      CREATE TABLE IF NOT EXISTS notification_logs (
+        id TEXT PRIMARY KEY DEFAULT (lower(hex(randomblob(16)))),
+        status TEXT NOT NULL CHECK (status IN ('success', 'error')),
+        error_msg TEXT,
+        sent_at TEXT DEFAULT (datetime('now'))
+      );
+      `,
+    );
+    const legacyService = await Test.createTestingModule({
+      providers: [
+        DatabaseService,
+        {
+          provide: ConfigService,
+          useValue: {
+            getOrThrow: jest.fn((key: string) => {
+              if (key === 'sqlite.path') {
+                return sqlitePath;
+              }
+
+              if (key === 'sqlite.schemaPath') {
+                return schemaPath;
+              }
+
+              throw new Error(`Unexpected config key: ${key}`);
+            }),
+          },
+        },
+      ],
+    }).compile();
+    const database = legacyService.get(DatabaseService);
+    database.onModuleInit();
+    database.instance.exec(`
+      DROP TABLE notification_logs;
+      CREATE TABLE notification_logs (
+        id TEXT PRIMARY KEY,
+        channel TEXT NOT NULL,
+        status TEXT NOT NULL CHECK (status IN ('sent', 'failed')),
+        message TEXT,
+        error TEXT,
+        sent_at TEXT DEFAULT (datetime('now'))
+      );
+      INSERT INTO notification_logs (id, channel, status, error, sent_at)
+      VALUES ('log-1', 'telegram', 'failed', 'Bad chat', '2026-06-29 08:00:00');
+      INSERT INTO notification_logs (id, channel, status, error, sent_at)
+      VALUES ('log-2', 'telegram', 'sent', NULL, '2026-06-29 09:00:00');
+    `);
+    database.onModuleDestroy();
+
+    database.onModuleInit();
+
+    expect(
+      database.instance
+        .prepare('SELECT status, error_msg FROM notification_logs WHERE id = ?')
+        .get('log-1'),
+    ).toEqual({ status: 'error', error_msg: 'Bad chat' });
+    expect(
+      database.instance
+        .prepare('SELECT status, error_msg FROM notification_logs WHERE id = ?')
+        .get('log-2'),
+    ).toEqual({ status: 'success', error_msg: null });
+    database.onModuleDestroy();
+    await legacyService.close();
+  });
+
   it('throws when the database handle is read before initialization', () => {
     expect(() => service.instance).toThrow('DatabaseService has not been initialized');
   });
