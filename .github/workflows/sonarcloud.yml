@@ -8,13 +8,14 @@ on:
 
 permissions:
   contents: read
-  issues: write
-  pull-requests: write
 
 jobs:
   sonarcloud:
     name: Static Analysis
     runs-on: ubuntu-latest
+    permissions:
+      contents: read # checkout repository and run the scanner
+      issues: write # upsert the SonarCloud summary comment on pull requests
 
     steps:
       - name: Checkout (full history)
@@ -44,7 +45,7 @@ jobs:
 
       - name: SonarCloud Scan
         id: sonar
-        uses: SonarSource/sonarcloud-github-action@master
+        uses: SonarSource/sonarqube-scan-action@59db25f34e16620e48ab4bb9e4a5dce155cb5432
         continue-on-error: true
         with:
           args: >

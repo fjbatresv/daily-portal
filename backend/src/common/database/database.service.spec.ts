@@ -113,6 +113,8 @@ describe('DatabaseService', () => {
       );
       INSERT INTO notification_logs (id, channel, status, error, sent_at)
       VALUES ('log-1', 'telegram', 'failed', 'Bad chat', '2026-06-29 08:00:00');
+      INSERT INTO notification_logs (id, channel, status, error, sent_at)
+      VALUES ('log-2', 'telegram', 'sent', NULL, '2026-06-29 09:00:00');
     `);
     database.onModuleDestroy();
 
@@ -123,6 +125,11 @@ describe('DatabaseService', () => {
         .prepare('SELECT status, error_msg FROM notification_logs WHERE id = ?')
         .get('log-1'),
     ).toEqual({ status: 'error', error_msg: 'Bad chat' });
+    expect(
+      database.instance
+        .prepare('SELECT status, error_msg FROM notification_logs WHERE id = ?')
+        .get('log-2'),
+    ).toEqual({ status: 'success', error_msg: null });
     database.onModuleDestroy();
     await legacyService.close();
   });

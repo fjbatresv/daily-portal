@@ -11,12 +11,14 @@ on:
 
 permissions:
   contents: read
-  security-events: write # required to upload SARIF results to GitHub Security tab
 
 jobs:
   snyk-dependencies:
     name: Snyk — Workspace dependencies
     runs-on: ubuntu-latest
+    permissions:
+      contents: read # checkout repository and inspect manifests
+      issues: write # upsert the Snyk summary comment on pull requests
 
     steps:
       - name: Checkout
@@ -32,7 +34,9 @@ jobs:
         run: npm ci
 
       - name: Snyk — test workspace dependencies
-        uses: snyk/actions/node@master
+        id: snyk
+        uses: snyk/actions/node@8e119fbb6c251787721d34ba683ed48eba792766
+        continue-on-error: true
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         with:
@@ -41,10 +45,22 @@ jobs:
             --all-projects
             --detection-depth=3
             --severity-threshold=high
+            --json-file-output=snyk-results.json
+
+      - name: Comment Snyk result on PR
+        if: always() && github.event_name == 'pull_request'
+        run: node .github/scripts/comment-snyk-result.mjs
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SNYK_SCAN_OUTCOME: ${{ steps.snyk.outcome }}
+
+      - name: Fail when Snyk scan failed
+        if: steps.snyk.outcome == 'failure'
+        run: exit 1
 
       - name: Snyk — monitor workspace (main only)
         if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-        uses: snyk/actions/node@master
+        uses: snyk/actions/node@8e119fbb6c251787721d34ba683ed48eba792766
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         with:

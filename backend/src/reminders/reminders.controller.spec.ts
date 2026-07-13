@@ -1,4 +1,3 @@
-import { ValidationPipe } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { validate } from 'class-validator';
 import { CreateReminderDto } from './create-reminder.dto';
@@ -84,7 +83,6 @@ describe('RemindersController', () => {
 
     const errors = await validate(dto);
     expect(errors).toHaveLength(2);
-    expect(new ValidationPipe({ whitelist: true })).toBeDefined();
   });
 
   it('rejects impossible calendar dates in reminder DTOs', async () => {

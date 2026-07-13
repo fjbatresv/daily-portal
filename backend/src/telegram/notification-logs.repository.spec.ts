@@ -28,4 +28,11 @@ describe('NotificationLogsRepository', () => {
       error_msg: 'Telegram failed',
     });
   });
+
+  it('inserts a success log without an error message', () => {
+    expect(repository.create('success')).toMatchObject({
+      status: 'success',
+      error_msg: null,
+    });
+  });
 });
