@@ -19,6 +19,7 @@ jobs:
     permissions:
       contents: read # checkout repository and inspect manifests
       issues: write # upsert the Snyk summary comment on pull requests
+      pull-requests: write # allow PR comment writes when repository settings require it
 
     steps:
       - name: Checkout
@@ -49,6 +50,7 @@ jobs:
 
       - name: Comment Snyk result on PR
         if: always() && github.event_name == 'pull_request'
+        continue-on-error: true
         run: node .github/scripts/comment-snyk-result.mjs
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
