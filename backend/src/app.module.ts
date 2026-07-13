@@ -6,6 +6,7 @@ import { join } from 'node:path';
 import { CacheModule } from './common/cache';
 import { DatabaseModule } from './common/database';
 import configuration from './config/configuration';
+import { JiraModule } from './integrations/jira';
 import { RemindersModule } from './reminders';
 import { SchedulerModule } from './scheduler';
 import { TelegramModule } from './telegram';
@@ -33,6 +34,7 @@ const imports: Array<Type<unknown> | DynamicModule | Promise<DynamicModule>> = [
   ScheduleModule.forRoot(),
   CacheModule,
   DatabaseModule,
+  JiraModule,
   RemindersModule,
   TelegramModule,
   SchedulerModule,
