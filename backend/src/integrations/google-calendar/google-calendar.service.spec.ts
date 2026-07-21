@@ -52,6 +52,17 @@ const mappedPrimaryEvent: CalendarEvent = {
   meetUrl: 'https://meet.google.com/abc-defg-hij',
 };
 
+function expectedTodayBounds(): { timeMax: string; timeMin: string } {
+  const now = new Date('2026-07-20T12:00:00.000Z');
+  const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0);
+  const endOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59);
+
+  return {
+    timeMin: startOfDay.toISOString(),
+    timeMax: endOfDay.toISOString(),
+  };
+}
+
 describe('GoogleCalendarService', () => {
   let cache: jest.Mocked<CacheService>;
   let config: ConfigService<AppConfiguration, true>;
@@ -146,8 +157,7 @@ describe('GoogleCalendarService', () => {
     ]);
     expect(calendarApi.events.list).toHaveBeenCalledWith({
       calendarId: 'primary',
-      timeMin: '2026-07-20T06:00:00.000Z',
-      timeMax: '2026-07-21T05:59:59.000Z',
+      ...expectedTodayBounds(),
       singleEvents: true,
       orderBy: 'startTime',
       maxResults: 20,
