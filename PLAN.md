@@ -326,7 +326,7 @@ Cada fase produce código funcional y testeable antes de avanzar a la siguiente.
 
 
 
-### T12 · DailyAggregatorService + DashboardController
+### ~~T12 · DailyAggregatorService + DashboardController~~
 
 **Objetivo:** Orquestar todas las integraciones en paralelo, construir el TODO list priorizado y exponer el API REST.
 
