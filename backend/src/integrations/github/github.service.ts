@@ -115,6 +115,7 @@ export class GitHubService {
       const fallbackPRs = await this.cache.get<GitHubPR[]>(this.fallbackCacheKey);
 
       if (fallbackPRs) {
+        await this.cache.set(this.cacheKey, fallbackPRs, this.negativeCacheTtlSeconds);
         return fallbackPRs;
       }
 

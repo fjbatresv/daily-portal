@@ -278,6 +278,7 @@ describe('GitHubService', () => {
 
     expect(loggerErrorSpy).toHaveBeenCalledWith('GitHub: rate limit or forbidden response');
     expect(cache.get.mock.calls).toEqual([['github:prs'], ['github:prs:last-success']]);
+    expect(cache.set.mock.calls).toEqual([['github:prs', [mappedPR], 30]]);
   });
 
   it('negative-caches an empty result when rate limit has no fallback data', async () => {

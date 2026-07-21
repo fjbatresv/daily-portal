@@ -601,7 +601,7 @@ Tokens de diseño: `docs/design-tokens.md`
 <claude-mem-context>
 # Memory Context
 
-# [Personal StandUP] recent context, 2026-07-20 6:10pm CST
+# [Personal StandUP] recent context, 2026-07-20 6:20pm CST
 
 Legend: 🎯session 🔴bugfix 🟣feature 🔄refactor ✅change 🔵discovery ⚖️decision 🚨security_alert 🔐security_note
 Format: ID TIME TYPE TITLE
@@ -609,7 +609,8 @@ Fetch details: get_observations([IDs]) | Search: mem-search skill
 
 Stats: 1 obs (314t read) | 8,080t work | 96% savings
 
-### Jul 20, 2026
+## Jul 20, 2026
+
 405 5:38p ⚖️ Task Completion Convention: Strike-Through Completed Tasks in PLAN.md
 
 Access 8k tokens of past work via get_observations([IDs]) or mem-search skill.

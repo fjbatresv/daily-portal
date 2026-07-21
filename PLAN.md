@@ -206,7 +206,7 @@ Cada fase produce código funcional y testeable antes de avanzar a la siguiente.
 **Criterios de aceptación:**
 
 - El cron usa la expresión de `MORNING_DIGEST_CRON` (default `0 8 * * *`)
-- El cron usa `process.env.MORNING_DIGEST_CRON` directamente (excepción documentada a la regla de ConfigService)
+- El cron recibe `MORNING_DIGEST_CRON` a través de `ConfigService`; la lectura de variables de entorno queda confinada a la capa de configuración
 - Envuelve la ejecución en try/catch → errores logueados, no propagados
 - El endpoint `POST /api/scheduler/trigger` dispara el digest manualmente (solo en dev)
 
