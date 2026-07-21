@@ -9,6 +9,7 @@ import configuration from './config/configuration';
 import { GitHubModule } from './integrations/github';
 import { GoogleCalendarModule } from './integrations/google-calendar';
 import { JiraModule } from './integrations/jira';
+import { SlackModule } from './integrations/slack';
 import { RemindersModule } from './reminders';
 import { SchedulerModule } from './scheduler';
 import { TelegramModule } from './telegram';
@@ -39,6 +40,7 @@ const imports: Array<Type<unknown> | DynamicModule | Promise<DynamicModule>> = [
   GitHubModule,
   GoogleCalendarModule,
   JiraModule,
+  SlackModule,
   RemindersModule,
   TelegramModule,
   SchedulerModule,
