@@ -54,6 +54,7 @@ nvm use
 ## Reglas de Pull Request — OBLIGATORIAS
 
 1. Al crear un Pull Request, debe abrirse listo para revisión. **No crear PRs en draft** salvo que el usuario lo pida explícitamente.
+2. Cuando una tarea del `PLAN.md` se completa porque ya se abrió su PR correspondiente, marcar esa tarea como completada tachando su número y título en `PLAN.md` con Markdown (`### ~~T08 · JiraModule~~`).
 
 ---
 
@@ -600,7 +601,16 @@ Tokens de diseño: `docs/design-tokens.md`
 <claude-mem-context>
 # Memory Context
 
-# [Personal StandUP] recent context, 2026-07-12 10:24pm CST
+# [Personal StandUP] recent context, 2026-07-20 6:10pm CST
 
-No previous sessions found.
+Legend: 🎯session 🔴bugfix 🟣feature 🔄refactor ✅change 🔵discovery ⚖️decision 🚨security_alert 🔐security_note
+Format: ID TIME TYPE TITLE
+Fetch details: get_observations([IDs]) | Search: mem-search skill
+
+Stats: 1 obs (314t read) | 8,080t work | 96% savings
+
+### Jul 20, 2026
+405 5:38p ⚖️ Task Completion Convention: Strike-Through Completed Tasks in PLAN.md
+
+Access 8k tokens of past work via get_observations([IDs]) or mem-search skill.
 </claude-mem-context>

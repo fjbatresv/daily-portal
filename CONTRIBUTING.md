@@ -63,6 +63,7 @@ The full list is in `AGENTS.md §Reglas de código`. Key points:
 3. Make sure `npm run build` passes for both backend and frontend
 4. Run tests: `npm test` in the `backend/` directory
 5. Open a PR against `main` with a clear description of what changed and why
+6. If the PR completes a task from `PLAN.md`, mark that task as done by striking through its number and title in `PLAN.md`
 
 ---
 
