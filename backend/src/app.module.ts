@@ -7,6 +7,7 @@ import { CacheModule } from './common/cache';
 import { DatabaseModule } from './common/database';
 import configuration from './config/configuration';
 import { GitHubModule } from './integrations/github';
+import { GoogleCalendarModule } from './integrations/google-calendar';
 import { JiraModule } from './integrations/jira';
 import { RemindersModule } from './reminders';
 import { SchedulerModule } from './scheduler';
@@ -36,6 +37,7 @@ const imports: Array<Type<unknown> | DynamicModule | Promise<DynamicModule>> = [
   CacheModule,
   DatabaseModule,
   GitHubModule,
+  GoogleCalendarModule,
   JiraModule,
   RemindersModule,
   TelegramModule,
