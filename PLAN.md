@@ -273,7 +273,7 @@ Cada fase produce código funcional y testeable antes de avanzar a la siguiente.
 
 
 
-### T10 · GoogleCalendarModule
+### ~~T10 · GoogleCalendarModule~~
 
 **Objetivo:** Obtener eventos del día de 2 calendarios de Google Calendar.
 
