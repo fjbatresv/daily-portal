@@ -298,7 +298,7 @@ Cada fase produce código funcional y testeable antes de avanzar a la siguiente.
 
 
 
-### T11 · SlackModule
+### ~~T11 · SlackModule~~
 
 **Objetivo:** Obtener menciones del usuario en los últimos 24h usando User OAuth Token.
 
