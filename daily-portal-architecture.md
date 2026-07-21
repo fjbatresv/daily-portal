@@ -349,8 +349,9 @@ daily-portal/
 │       │   │   ├── github.module.ts
 │       │   │   └── github.service.ts      # GraphQL queries
 │       │   ├── google-calendar/
-│       │   │   ├── gcal.module.ts
-│       │   │   └── gcal.service.ts        # OAuth2 + 2 calendarios
+│       │   │   ├── google-calendar.module.ts
+│       │   │   ├── google-calendar.service.ts  # OAuth2 + calendarios configurados
+│       │   │   └── google-calendar.types.ts
 │       │   ├── slack/
 │       │   │   ├── slack.module.ts
 │       │   │   └── slack.service.ts       # User token xoxp-
