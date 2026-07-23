@@ -7,8 +7,8 @@
     "npm": ">=10"
   },
   "scripts": {
-    "format": "prettier --write \"{backend,frontend}/**/*.{ts,html,css,mjs,cjs,json,js}\" \"*.json\" \".github/**/*.yml\" \"docker-compose*.yml\"",
-    "format:check": "prettier --check \"{backend,frontend}/**/*.{ts,html,css,mjs,cjs,json,js}\" \"*.json\" \".github/**/*.yml\" \"docker-compose*.yml\"",
+    "format": "prettier --write \"{backend,frontend,scripts}/**/*.{ts,html,css,mjs,cjs,json,js}\" \"*.json\" \".github/**/*.yml\" \"docker-compose*.yml\"",
+    "format:check": "prettier --check \"{backend,frontend,scripts}/**/*.{ts,html,css,mjs,cjs,json,js}\" \"*.json\" \".github/**/*.yml\" \"docker-compose*.yml\"",
     "docstrings:check": "npm run docstrings:check --workspace backend",
     "lint": "npm run lint --workspace backend && npm run lint --workspace frontend",
     "test": "npm run test --workspace backend && npm run test --workspace frontend",
