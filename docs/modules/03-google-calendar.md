@@ -8,18 +8,19 @@ Obtener los eventos del día actual de **2 calendarios configurados** usando la 
 
 ```
 backend/src/integrations/google-calendar/
-├── gcal.module.ts
-├── gcal.service.ts
-└── gcal.types.ts
+├── google-calendar.module.ts
+├── google-calendar.service.ts
+├── google-calendar.types.ts
+└── index.ts
 ```
 
 ## Configuración requerida
 
 ```typescript
-googleCalendar.clientId       // OAuth2 Client ID
-googleCalendar.clientSecret   // OAuth2 Client Secret
-googleCalendar.refreshToken   // Refresh token obtenido con OAuth2 Playground
-googleCalendar.calendarIds    // string[] — exactamente 2 IDs
+googleCalendar.clientId; // OAuth2 Client ID
+googleCalendar.clientSecret; // OAuth2 Client Secret
+googleCalendar.refreshToken; // Refresh token obtenido con OAuth2 Playground
+googleCalendar.calendarIds; // string[] — IDs separados por coma; T10 valida 2 calendarios
 // Ejemplo: ['primary', 'xxx@group.calendar.google.com']
 ```
 
@@ -28,6 +29,7 @@ googleCalendar.calendarIds    // string[] — exactamente 2 IDs
 No hay flujo interactivo. Al inicializar el servicio, usar el refresh token para obtener un access token. El access token expira cada ~1 hora, por lo que se debe refrescar automáticamente.
 
 **Librería recomendada:** `googleapis` (oficial de Google)
+
 ```bash
 npm install googleapis
 ```
@@ -35,7 +37,7 @@ npm install googleapis
 ```typescript
 import { google } from 'googleapis';
 
-// En el constructor del servicio:
+// En onModuleInit del servicio:
 const auth = new google.auth.OAuth2(
   config.get('googleCalendar.clientId'),
   config.get('googleCalendar.clientSecret'),
@@ -56,13 +58,13 @@ const calendar = google.calendar({ version: 'v3', auth });
 ```typescript
 const now = new Date();
 const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0);
-const endOfDay   = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59);
+const endOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59);
 
 const response = await calendar.events.list({
-  calendarId: calendarId,          // iterar por cada uno de los 2 IDs
+  calendarId: calendarId, // iterar por cada uno de los 2 IDs
   timeMin: startOfDay.toISOString(),
   timeMax: endOfDay.toISOString(),
-  singleEvents: true,              // expande eventos recurrentes
+  singleEvents: true, // expande eventos recurrentes
   orderBy: 'startTime',
   maxResults: 20,
 });
@@ -83,18 +85,22 @@ export class GoogleCalendarService {
     private readonly cache: CacheService,
   ) {}
 
-  onModuleInit(): void
+  onModuleInit(): void;
   // Inicializar OAuth2 client y google.calendar aquí
 
-  async getEvents(): Promise<CalendarEvent[]>
+  async getEvents(): Promise<CalendarEvent[]>;
   // 1. cache.get(CACHE_KEY)
   // 2. Para cada calendarId: calendar.events.list(...)
-  //    → Usar Promise.all para los 2 calendarios en paralelo
+  //    → Usar Promise.allSettled para conservar datos parciales
   // 3. Flatten y ordenar por startTime
   // 4. cache.set(CACHE_KEY, events, CACHE_TTL)
   // 5. Si falla: log + retornar []
 
-  private mapEvent(event: calendar_v3.Schema$Event, calendarId: string, calendarName: string): CalendarEvent
+  private mapEvent(
+    event: calendar_v3.Schema$Event,
+    calendarId: string,
+    calendarName: string,
+  ): CalendarEvent;
 }
 ```
 
@@ -107,21 +113,21 @@ const meta = await calendar.calendars.get({ calendarId });
 const calendarName = meta.data.summary ?? calendarId;
 ```
 
-Cachear este mapping `calendarId → name` en el constructor (no cambia).
+Cachear este mapping `calendarId → name` en memoria de forma lazy (no cambia durante la ejecución).
 
 ## Tipo de retorno (mapeo)
 
 ```typescript
 // Desde daily-digest.types.ts
 interface CalendarEvent {
-  id: string;           // event.id
-  title: string;        // event.summary ?? '(sin título)'
-  startTime: string;    // event.start.dateTime ?? event.start.date + 'T00:00:00'
-  endTime: string;      // event.end.dateTime ?? event.end.date + 'T23:59:59'
+  id: string; // event.id
+  title: string; // event.summary ?? '(sin título)'
+  startTime: string; // event.start.dateTime ?? event.start.date + 'T00:00:00'
+  endTime: string; // event.end.dateTime ?? fecha inclusiva derivada de end.date exclusivo + 'T23:59:59'
   calendarId: string;
   calendarName: string;
-  isAllDay: boolean;    // !!event.start.date && !event.start.dateTime
-  meetUrl?: string;     // event.hangoutLink ?? extraer de event.description
+  isAllDay: boolean; // !!event.start.date && !event.start.dateTime
+  meetUrl?: string; // event.hangoutLink ?? conferenceData.entryPoints video
 }
 ```
 
@@ -129,10 +135,9 @@ interface CalendarEvent {
 
 ```typescript
 // Primero buscar el campo nativo
-const meetUrl = event.hangoutLink
-  ?? event.conferenceData?.entryPoints
-       ?.find(ep => ep.entryPointType === 'video')
-       ?.uri;
+const meetUrl =
+  event.hangoutLink ??
+  event.conferenceData?.entryPoints?.find((ep) => ep.entryPointType === 'video')?.uri;
 ```
 
 ## GoogleCalendarModule
@@ -152,9 +157,10 @@ export class GoogleCalendarModule {}
 - Error de red: log + retornar `[]`
 - Si un calendario falla pero el otro funciona: incluir los eventos del que funcionó, log del error del que falló.
 
-## Test unitario (gcal.service.spec.ts)
+## Test unitario (google-calendar.service.spec.ts)
 
 Casos a cubrir:
+
 - Cache hit → sin llamada a API
 - 2 calendarios OK → eventos de ambos mezclados y ordenados por startTime
 - Un calendario falla → eventos del otro + log del error

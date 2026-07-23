@@ -1,0 +1,70 @@
+name: SonarCloud Analysis
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+permissions:
+  contents: read
+
+jobs:
+  sonarcloud:
+    name: Static Analysis
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read # checkout repository and run the scanner
+      issues: write # upsert the SonarCloud summary comment on pull requests
+      pull-requests: write # allow PR comment writes when repository settings require it
+
+    steps:
+      - name: Checkout (full history)
+        uses: actions/checkout@v6
+        with:
+          # SonarCloud needs full git history to compute blame annotations and new-code detection
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run backend tests with coverage
+        run: npm run test:cov --workspace backend
+        env:
+          SQLITE_PATH: ':memory:'
+        continue-on-error: false
+
+      - name: Run frontend tests with coverage
+        run: npm run test:cov --workspace frontend
+        continue-on-error: false
+
+      - name: SonarCloud Scan
+        id: sonar
+        uses: SonarSource/sonarqube-scan-action@59db25f34e16620e48ab4bb9e4a5dce155cb5432
+        continue-on-error: true
+        with:
+          args: >
+            -Dsonar.qualitygate.wait=true
+            -Dsonar.qualitygate.timeout=300
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
+      - name: Comment SonarCloud result on PR
+        if: always() && github.event_name == 'pull_request'
+        continue-on-error: true
+        run: node .github/scripts/comment-sonarcloud-result.mjs
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_SCAN_OUTCOME: ${{ steps.sonar.outcome }}
+
+      - name: Fail when SonarCloud scan failed
+        if: steps.sonar.outcome == 'failure'
+        run: exit 1

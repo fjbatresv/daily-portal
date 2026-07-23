@@ -1,0 +1,17 @@
+services:
+  backend:
+    environment:
+      SERVE_STATIC: 'false'
+    ports: !reset []
+
+  nginx:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+      target: nginx-static
+    profiles:
+      - nginx
+    ports:
+      - '${HOST_PORT:-8090}:80'
+    depends_on:
+      - backend

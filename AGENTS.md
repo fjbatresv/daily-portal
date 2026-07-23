@@ -19,13 +19,20 @@ El usuario accede al portal desde internet mediante Cloudflare Tunnel → puerto
 
 | Capa | Tecnología | Versión |
 |---|---|---|
-| Backend | NestJS | 10.x |
-| Runtime | Node.js | 20 LTS |
-| Frontend | Angular | 17.x (standalone components) |
+| Backend | NestJS | 11.x |
+| Runtime | Node.js | 24 LTS |
+| Frontend | Angular | 22.x (standalone components) |
 | Base de datos | SQLite | via `better-sqlite3` (sin ORM) |
-| Cache | Redis | 7 alpine |
+| Cache | Redis | 8 alpine |
 | Contenedores | Docker Compose | v5.x |
 | Lenguaje | TypeScript | 5.x estricto |
+
+**Runtime local obligatorio:** usar siempre el Node.js gestionado por `nvm` para comandos locales (`npm install`, `npm test`, `npm run build`, `ng`, etc.). Antes de ejecutar comandos Node/NPM, cargar `nvm` si hace falta:
+
+```bash
+source ~/.nvm/nvm.sh
+nvm use
+```
 
 ---
 
@@ -41,6 +48,13 @@ El usuario accede al portal desde internet mediante Cloudflare Tunnel → puerto
 8. **Sin `console.log`.** Usar el logger de NestJS: `this.logger = new Logger(NombreClase.name)`.
 9. **Barrel exports** en cada módulo (`index.ts`).
 10. **Tests unitarios** para cada Service con Jest. Mockear dependencias externas.
+11. **Coverage unitario mínimo 80%.** Cada cambio debe mantener al menos 80% de cobertura global en unit tests (`statements`, `branches`, `functions` y `lines`) para el área afectada.
+12. **Coverage de docstrings mínimo 80%.** Al menos 80% de clases, servicios, controladores, funciones y métodos exportados o públicos deben tener docstrings útiles que expliquen intención, entradas/salidas o comportamiento relevante.
+
+## Reglas de Pull Request — OBLIGATORIAS
+
+1. Al crear un Pull Request, debe abrirse listo para revisión. **No crear PRs en draft** salvo que el usuario lo pida explícitamente.
+2. Cuando una tarea del `PLAN.md` se completa porque ya se abrió su PR correspondiente, marcar esa tarea como completada tachando su número y título en `PLAN.md` con Markdown (`### ~~T08 · JiraModule~~`).
 
 ---
 
@@ -587,7 +601,47 @@ Tokens de diseño: `docs/design-tokens.md`
 <claude-mem-context>
 # Memory Context
 
-# [Personal StandUP] recent context, 2026-06-29 10:38pm CST
+# [Personal StandUP] recent context, 2026-07-22 11:11pm CST
 
-No previous sessions found.
+Legend: 🎯session 🔴bugfix 🟣feature 🔄refactor ✅change 🔵discovery ⚖️decision 🚨security_alert 🔐security_note
+Format: ID TIME TYPE TITLE
+Fetch details: get_observations([IDs]) | Search: mem-search skill
+
+Stats: 32 obs (10,120t read) | 589,508t work | 98% savings
+
+### Jul 20, 2026
+405 5:38p ⚖️ Task Completion Convention: Strike-Through Completed Tasks in PLAN.md
+406 7:02p 🟣 Slack Integration Module Implemented
+407 " 🔴 Slack Spec Timestamp Corrected
+408 " ⚖️ Branch-First Git Workflow Enforced for Task 11
+409 7:12p 🔵 Task 11 Staged on `develop` Branch — Feature Branch Missing
+410 " ✅ Feature Branch `codex/t11-slack-module` Created and Staged
+411 " ✅ Task 11 Committed and Marked Complete in PLAN.md
+412 7:13p 🔵 Repo Default Branch is `main`; Feature Branches Target `develop`
+413 " 🟣 PR #9 Opened for Task 11 Slack Integration
+414 " 🔵 daily-portal CI Pipeline Has 5 Required Checks on PRs
+415 7:24p ✅ Task 12 Backend Work Initiated — Branch Creation
+416 " 🔵 Project State Confirmed — T01–T11 Complete, T12 Is Next
+417 " ⚖️ T12 Implementation Spec: DailyAggregatorService + DashboardController
+418 7:25p 🔵 Critical Interface Details Found Before T12 Implementation
+419 7:26p 🟣 T12: DashboardModule + DailyAggregatorService Created
+420 " 🟣 T12 Unit Tests Added for DailyAggregatorService and DashboardController
+421 " 🔴 Prettier Format Check Fails on Two New Dashboard Files
+423 7:27p ✅ User Confirmed T12 Commit and Push ("Hazlo")
+424 7:35p 🟣 supertest and @types/supertest Installed for Dashboard E2E Tests
+426 " 🔵 Primary Session Restarted — Re-reading Module Files Before Writing Integration Tests
+425 " 🔵 DashboardModule Dependency Graph for Integration Testing
+428 7:36p 🔵 Completed file changes in this batch — summary of all successful patches
+430 7:39p 🔵 tsconfig.json exclude updated — e2e-spec excluded from main build
+432 " 🔵 Two test fixes applied — root cause of reminders failure was timezone mismatch
+437 7:43p 🔵 Ready to commit and push — gh authenticated, 16 files staged, AGENTS.md has unstaged changes
+442 7:47p 🔵 SonarCloud quality gate failed on coverage for PR #10
+443 " 🔵 PR #10 final CI check results — only SonarCloud failed
+444 7:48p 🔵 SonarCloud quality gate root cause: new-code coverage below threshold
+445 " 🔴 SonarCloud new-code coverage 63% fixed by adding e2e-spec to exclusions and test inclusions
+446 " ✅ Local CI pipeline re-run after sonar-project.properties fix — passing so far
+447 " ✅ Local CI fully passes after sonar-project.properties fix — ready to commit
+448 7:49p 🔴 SonarCloud fix committed and pushed — commit 840c57c4
+
+Access 590k tokens of past work via get_observations([IDs]) or mem-search skill.
 </claude-mem-context>
