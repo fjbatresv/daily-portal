@@ -1,0 +1,111 @@
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_type:
+        description: Semantic version bump to publish
+        required: true
+        default: patch
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+
+permissions:
+  contents: write
+  packages: write
+
+concurrency:
+  group: release-main
+  cancel-in-progress: false
+
+jobs:
+  release:
+    name: Version, tag, release and package
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Validate project
+        run: npm run ci
+        env:
+          SQLITE_PATH: ':memory:'
+
+      - name: Configure Git author
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Prepare release files
+        id: release
+        run: node scripts/prepare-release.mjs "${{ inputs.release_type }}"
+
+      - name: Update package lock
+        run: npm install --package-lock-only --ignore-scripts
+
+      - name: Ensure tag does not exist
+        run: |
+          if git rev-parse "${{ steps.release.outputs.tag_name }}" >/dev/null 2>&1; then
+            echo "Tag ${{ steps.release.outputs.tag_name }} already exists"
+            exit 1
+          fi
+
+      - name: Commit version bump and changelog
+        run: |
+          git add CHANGELOG.md package.json package-lock.json backend/package.json frontend/package.json
+          git commit -m "chore(release): ${{ steps.release.outputs.tag_name }}"
+
+      - name: Create tag
+        run: git tag -a "${{ steps.release.outputs.tag_name }}" -m "${{ steps.release.outputs.tag_name }}"
+
+      - name: Push release commit and tag
+        run: git push origin HEAD:main "${{ steps.release.outputs.tag_name }}"
+
+      - name: Create GitHub release
+        run: gh release create "${{ steps.release.outputs.tag_name }}" --title "${{ steps.release.outputs.tag_name }}" --notes-file release-notes.md
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract Docker metadata
+        id: meta
+        uses: docker/metadata-action@v6
+        with:
+          images: ghcr.io/${{ github.repository }}
+          tags: |
+            type=raw,value=latest
+            type=raw,value=${{ steps.release.outputs.tag_name }}
+            type=sha
+
+      - name: Build and publish Docker image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: backend/Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
