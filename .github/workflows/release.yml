@@ -13,10 +13,6 @@ on:
           - minor
           - major
 
-permissions:
-  contents: write
-  packages: write
-
 concurrency:
   group: release-main
   cancel-in-progress: false
@@ -26,6 +22,11 @@ jobs:
     name: Version, tag, release and package
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'
+    permissions:
+      # Needed to push the release commit/tag and create or update the GitHub Release.
+      contents: write
+      # Needed to publish the versioned container image to GHCR.
+      packages: write
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -37,6 +38,33 @@ jobs:
         with:
           node-version: 24
           cache: npm
+
+      - name: Plan release
+        id: release
+        env:
+          RELEASE_TYPE: ${{ inputs.release_type }}
+        run: node scripts/prepare-release.mjs "$RELEASE_TYPE" --dry-run > /tmp/release-notes.preview.md
+
+      - name: Resume existing release tag
+        id: resume
+        env:
+          NEXT_VERSION: ${{ steps.release.outputs.next_version }}
+          TAG_NAME: ${{ steps.release.outputs.tag_name }}
+        run: |
+          git fetch --tags origin
+          if git rev-parse --verify --quiet "refs/tags/$TAG_NAME"; then
+            tag_commit="$(git rev-list -n 1 "$TAG_NAME")"
+            echo "found=true" >> "$GITHUB_OUTPUT"
+            echo "commit=$tag_commit" >> "$GITHUB_OUTPUT"
+            git checkout "$tag_commit"
+            release_version="$(node -p "require('./package.json').version")"
+            if [ "$release_version" != "$NEXT_VERSION" ]; then
+              echo "Tag $TAG_NAME points to version $release_version, expected $NEXT_VERSION"
+              exit 1
+            fi
+          else
+            echo "found=false" >> "$GITHUB_OUTPUT"
+          fi
 
       - name: Install dependencies
         run: npm ci
@@ -52,40 +80,70 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
       - name: Prepare release files
-        id: release
-        run: node scripts/prepare-release.mjs "${{ inputs.release_type }}"
+        if: steps.resume.outputs.found != 'true'
+        env:
+          RELEASE_TYPE: ${{ inputs.release_type }}
+        run: node scripts/prepare-release.mjs "$RELEASE_TYPE"
 
       - name: Update package lock
+        if: steps.resume.outputs.found != 'true'
         run: npm install --package-lock-only --ignore-scripts
 
-      - name: Ensure tag does not exist
-        run: |
-          if git rev-parse "${{ steps.release.outputs.tag_name }}" >/dev/null 2>&1; then
-            echo "Tag ${{ steps.release.outputs.tag_name }} already exists"
-            exit 1
-          fi
-
       - name: Commit version bump and changelog
+        if: steps.resume.outputs.found != 'true'
+        env:
+          TAG_NAME: ${{ steps.release.outputs.tag_name }}
         run: |
           git add CHANGELOG.md package.json package-lock.json backend/package.json frontend/package.json
-          git commit -m "chore(release): ${{ steps.release.outputs.tag_name }}"
+          git commit -m "chore(release): $TAG_NAME"
 
       - name: Create tag
-        run: git tag -a "${{ steps.release.outputs.tag_name }}" -m "${{ steps.release.outputs.tag_name }}"
+        if: steps.resume.outputs.found != 'true'
+        env:
+          TAG_NAME: ${{ steps.release.outputs.tag_name }}
+        run: git tag -a "$TAG_NAME" -m "$TAG_NAME"
 
       - name: Push release commit and tag
-        run: git push origin HEAD:main "${{ steps.release.outputs.tag_name }}"
+        if: steps.resume.outputs.found != 'true'
+        env:
+          TAG_NAME: ${{ steps.release.outputs.tag_name }}
+        run: git push origin HEAD:main "$TAG_NAME"
+
+      - name: Restore release notes from changelog
+        if: steps.resume.outputs.found == 'true'
+        env:
+          TAG_NAME: ${{ steps.release.outputs.tag_name }}
+        run: |
+          awk -v tag="$TAG_NAME" '
+            $0 ~ "^## " tag "([[:space:]]|-)" { in_section = 1 }
+            in_section && /^## v/ && $0 !~ "^## " tag "([[:space:]]|-)" { exit }
+            in_section { print }
+          ' CHANGELOG.md > release-notes.md
+          test -s release-notes.md
 
       - name: Create GitHub release
-        run: gh release create "${{ steps.release.outputs.tag_name }}" --title "${{ steps.release.outputs.tag_name }}" --notes-file release-notes.md
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG_NAME: ${{ steps.release.outputs.tag_name }}
+        run: |
+          if gh release view "$TAG_NAME" >/dev/null 2>&1; then
+            gh release edit "$TAG_NAME" --title "$TAG_NAME" --notes-file release-notes.md
+          else
+            gh release create "$TAG_NAME" --title "$TAG_NAME" --notes-file release-notes.md
+          fi
+
+      - name: Verify resumed tag target
+        if: steps.resume.outputs.found == 'true'
+        env:
+          TAG_NAME: ${{ steps.release.outputs.tag_name }}
+          RESUMED_COMMIT: ${{ steps.resume.outputs.commit }}
+        run: test "$(git rev-list -n 1 "$TAG_NAME")" = "$RESUMED_COMMIT"
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v4
+        uses: docker/setup-buildx-action@bb05f3f5519dd87d3ba754cc423b652a5edd6d2c
 
       - name: Log in to GitHub Container Registry
-        uses: docker/login-action@v4
+        uses: docker/login-action@af1e73f918a031802d376d3c8bbc3fe56130a9b0
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
@@ -93,7 +151,7 @@ jobs:
 
       - name: Extract Docker metadata
         id: meta
-        uses: docker/metadata-action@v6
+        uses: docker/metadata-action@dc802804100637a589fabce1cb79ff13a1411302
         with:
           images: ghcr.io/${{ github.repository }}
           tags: |
@@ -102,7 +160,7 @@ jobs:
             type=sha
 
       - name: Build and publish Docker image
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8
         with:
           context: .
           file: backend/Dockerfile
