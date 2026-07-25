@@ -1,7 +1,9 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import axios from 'axios';
 import { CacheService } from '../../common/cache';
 import { SlackMention } from '../../common/types/daily-digest.types';
+import { stringifyIntegrationResponseData } from '../../common/utils/http-response.util';
 import { AppConfiguration } from '../../config/configuration';
 import { SlackApiMatch, SlackSearchResponse } from './slack.types';
 
@@ -43,24 +45,30 @@ export class SlackService {
     }
 
     try {
-      const response = await fetch(this.buildSearchUrl(slackConfig.userId), {
-        method: 'GET',
-        headers: {
-          Authorization: `Bearer ${slackConfig.userToken}`,
-          'Content-Type': 'application/json',
+      const response = await axios.get<SlackSearchResponse>(
+        this.buildSearchUrl(slackConfig.userId),
+        {
+          headers: {
+            Authorization: `Bearer ${slackConfig.userToken}`,
+            'Content-Type': 'application/json',
+          },
+          timeout: this.requestTimeoutMs,
+          validateStatus: () => true,
         },
-        signal: AbortSignal.timeout(this.requestTimeoutMs),
-      });
+      );
 
-      if (!response.ok) {
+      if (response.status < 200 || response.status >= 300) {
         this.logger.error(
-          `Slack API returned ${response.status}: ${await this.readResponseText(response)}`,
+          `Slack API returned ${response.status}: ${stringifyIntegrationResponseData(
+            response.data,
+            'Slack',
+          )}`,
         );
         await this.cacheEmptyMentions();
         return [];
       }
 
-      const payload = (await response.json()) as SlackSearchResponse;
+      const payload = response.data;
       if (!payload.ok) {
         this.logger.error(`Slack API error: ${payload.error ?? 'unknown_error'}`);
         await this.cacheEmptyMentions();
@@ -123,14 +131,6 @@ export class SlackService {
 
   private async cacheEmptyMentions(): Promise<void> {
     await this.cache.set(this.cacheKey, [], this.negativeCacheTtlSeconds);
-  }
-
-  private async readResponseText(response: Response): Promise<string> {
-    try {
-      return await response.text();
-    } catch {
-      return 'Unable to read Slack error response';
-    }
   }
 
   private getErrorMessage(error: unknown): string {

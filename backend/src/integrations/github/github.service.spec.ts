@@ -3,8 +3,11 @@ import { ConfigService } from '@nestjs/config';
 import { CacheService } from '../../common/cache';
 import { GitHubPR } from '../../common/types/daily-digest.types';
 import { AppConfiguration } from '../../config/configuration';
+import { AxiosPostMock, axiosResponse, getAxiosMock } from '../../../test/axios-test-utils';
 import { GitHubGraphQlResponse, GitHubPRNode } from './github.types';
 import { GitHubService } from './github.service';
+
+jest.mock('axios');
 
 const mappedPR: GitHubPR = {
   id: 42,
@@ -68,7 +71,7 @@ const githubResponse: GitHubGraphQlResponse = {
 describe('GitHubService', () => {
   let cache: jest.Mocked<CacheService>;
   let config: ConfigService<AppConfiguration, true>;
-  let fetchMock: jest.MockedFunction<typeof fetch>;
+  let axiosPostMock: AxiosPostMock;
   let loggerErrorSpy: jest.SpiedFunction<Logger['error']>;
   let service: GitHubService;
 
@@ -86,8 +89,8 @@ describe('GitHubService', () => {
         return undefined;
       }),
     } as unknown as ConfigService<AppConfiguration, true>;
-    fetchMock = jest.fn<ReturnType<typeof fetch>, Parameters<typeof fetch>>();
-    global.fetch = fetchMock;
+    axiosPostMock = getAxiosMock('post').post;
+    axiosPostMock.mockReset();
     loggerErrorSpy = jest.spyOn(Logger.prototype, 'error').mockImplementation(() => undefined);
     service = new GitHubService(config, cache);
   });
@@ -102,38 +105,33 @@ describe('GitHubService', () => {
 
     await expect(service.getPRs()).resolves.toEqual([mappedPR]);
 
-    expect(fetchMock).not.toHaveBeenCalled();
+    expect(axiosPostMock).not.toHaveBeenCalled();
     expect(cache.set.mock.calls).toHaveLength(0);
   });
 
   it('fetches, maps, and caches GitHub PRs on cache miss', async () => {
     cache.get.mockResolvedValue(null);
-    fetchMock.mockResolvedValue({
-      ok: true,
-      status: 200,
-      json: jest.fn().mockResolvedValue(githubResponse),
-    } as unknown as Response);
+    axiosPostMock.mockResolvedValue(axiosResponse(200, githubResponse));
 
     await expect(service.getPRs()).resolves.toEqual([mappedPR]);
 
-    expect(fetchMock).toHaveBeenCalledWith(
+    expect(axiosPostMock).toHaveBeenCalledWith(
       'https://api.github.com/graphql',
       expect.objectContaining({
-        method: 'POST',
+        variables: { query: 'is:pr is:open author:octocat' },
+      }),
+      expect.objectContaining({
         headers: {
           Authorization: 'Bearer github-token',
           'Content-Type': 'application/json',
         },
+        timeout: 10_000,
       }),
     );
-    const [, requestInit] = fetchMock.mock.calls[0];
-    if (typeof requestInit?.body !== 'string') {
-      throw new Error('Expected GitHub request body to be a string');
+    const [, requestBody] = axiosPostMock.mock.calls[0];
+    if (!isGitHubRequestBody(requestBody)) {
+      throw new Error('Expected GitHub request body to match the GraphQL payload');
     }
-    const requestBody = JSON.parse(requestInit.body) as {
-      query: string;
-      variables: { query: string };
-    };
     expect(requestBody.query).toContain('query SearchAssignedPRs');
     expect(requestBody.variables.query).toBe('is:pr is:open author:octocat');
     expect(cache.set.mock.calls).toEqual([
@@ -144,10 +142,8 @@ describe('GitHubService', () => {
 
   it('maps merge conflicts, draft status, failing checks, and review comments', async () => {
     cache.get.mockResolvedValue(null);
-    fetchMock.mockResolvedValue({
-      ok: true,
-      status: 200,
-      json: jest.fn().mockResolvedValue({
+    axiosPostMock.mockResolvedValue(
+      axiosResponse(200, {
         data: {
           search: {
             nodes: [
@@ -189,7 +185,7 @@ describe('GitHubService', () => {
           },
         },
       } satisfies GitHubGraphQlResponse),
-    } as unknown as Response);
+    );
 
     await expect(service.getPRs()).resolves.toEqual([
       {
@@ -205,10 +201,8 @@ describe('GitHubService', () => {
 
   it('maps absent check status and old self-authored comments to pending without new comments', async () => {
     cache.get.mockResolvedValue(null);
-    fetchMock.mockResolvedValue({
-      ok: true,
-      status: 200,
-      json: jest.fn().mockResolvedValue({
+    axiosPostMock.mockResolvedValue(
+      axiosResponse(200, {
         data: {
           search: {
             nodes: [
@@ -233,7 +227,7 @@ describe('GitHubService', () => {
           },
         },
       } satisfies GitHubGraphQlResponse),
-    } as unknown as Response);
+    );
 
     await expect(service.getPRs()).resolves.toEqual([
       {
@@ -246,13 +240,11 @@ describe('GitHubService', () => {
 
   it('returns an empty list and logs when GitHub GraphQL returns errors', async () => {
     cache.get.mockResolvedValue(null);
-    fetchMock.mockResolvedValue({
-      ok: true,
-      status: 200,
-      json: jest.fn().mockResolvedValue({
+    axiosPostMock.mockResolvedValue(
+      axiosResponse(200, {
         errors: [{ message: 'Bad credentials' }],
       } satisfies GitHubGraphQlResponse),
-    } as unknown as Response);
+    );
 
     await expect(service.getPRs()).resolves.toEqual([]);
 
@@ -262,7 +254,7 @@ describe('GitHubService', () => {
 
   it('returns an empty list for invalid credentials', async () => {
     cache.get.mockResolvedValue(null);
-    fetchMock.mockResolvedValue({ ok: false, status: 401 } as Response);
+    axiosPostMock.mockResolvedValue(axiosResponse(401, undefined));
 
     await expect(service.getPRs()).resolves.toEqual([]);
 
@@ -272,7 +264,7 @@ describe('GitHubService', () => {
 
   it('returns fallback cached data on rate limit when available', async () => {
     cache.get.mockResolvedValueOnce(null).mockResolvedValueOnce([mappedPR]);
-    fetchMock.mockResolvedValue({ ok: false, status: 403 } as Response);
+    axiosPostMock.mockResolvedValue(axiosResponse(403, undefined));
 
     await expect(service.getPRs()).resolves.toEqual([mappedPR]);
 
@@ -283,7 +275,7 @@ describe('GitHubService', () => {
 
   it('negative-caches an empty result when rate limit has no fallback data', async () => {
     cache.get.mockResolvedValueOnce(null).mockResolvedValueOnce(null);
-    fetchMock.mockResolvedValue({ ok: false, status: 403 } as Response);
+    axiosPostMock.mockResolvedValue(axiosResponse(403, undefined));
 
     await expect(service.getPRs()).resolves.toEqual([]);
 
@@ -293,11 +285,7 @@ describe('GitHubService', () => {
 
   it('returns an empty list and logs when the GitHub API fails', async () => {
     cache.get.mockResolvedValue(null);
-    fetchMock.mockResolvedValue({
-      ok: false,
-      status: 500,
-      text: jest.fn().mockResolvedValue('Internal error'),
-    } as unknown as Response);
+    axiosPostMock.mockResolvedValue(axiosResponse(500, 'Internal error'));
 
     await expect(service.getPRs()).resolves.toEqual([]);
 
@@ -305,25 +293,21 @@ describe('GitHubService', () => {
     expect(cache.set.mock.calls).toEqual([['github:prs', [], 30]]);
   });
 
-  it('uses a fallback message when the GitHub error body cannot be read', async () => {
+  it('logs serialized GitHub error bodies', async () => {
     cache.get.mockResolvedValue(null);
-    fetchMock.mockResolvedValue({
-      ok: false,
-      status: 503,
-      text: jest.fn().mockRejectedValue(new Error('Body stream failed')),
-    } as unknown as Response);
+    axiosPostMock.mockResolvedValue(axiosResponse(503, { message: 'Service unavailable' }));
 
     await expect(service.getPRs()).resolves.toEqual([]);
 
     expect(loggerErrorSpy).toHaveBeenCalledWith(
-      'GitHub API returned 503: Unable to read GitHub error response',
+      'GitHub API returned 503: {"message":"Service unavailable"}',
     );
     expect(cache.set.mock.calls).toEqual([['github:prs', [], 30]]);
   });
 
   it('returns an empty list when the GitHub request rejects with an Error', async () => {
     cache.get.mockResolvedValue(null);
-    fetchMock.mockRejectedValue(new Error('Network failed'));
+    axiosPostMock.mockRejectedValue(new Error('Network failed'));
 
     await expect(service.getPRs()).resolves.toEqual([]);
 
@@ -333,7 +317,7 @@ describe('GitHubService', () => {
 
   it('uses a fallback message when the GitHub request rejects with a non-Error value', async () => {
     cache.get.mockResolvedValue(null);
-    fetchMock.mockRejectedValue('boom');
+    axiosPostMock.mockRejectedValue('boom');
 
     await expect(service.getPRs()).resolves.toEqual([]);
 
@@ -353,8 +337,25 @@ describe('GitHubService', () => {
 
     await expect(service.getPRs()).resolves.toEqual([]);
 
-    expect(fetchMock).not.toHaveBeenCalled();
+    expect(axiosPostMock).not.toHaveBeenCalled();
     expect(loggerErrorSpy).toHaveBeenCalledWith('GitHub: configuration is incomplete');
     expect(cache.set.mock.calls).toEqual([['github:prs', [], 30]]);
   });
 });
+
+function isGitHubRequestBody(value: unknown): value is {
+  query: string;
+  variables: { query: string };
+} {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    'query' in value &&
+    'variables' in value &&
+    typeof value.query === 'string' &&
+    typeof value.variables === 'object' &&
+    value.variables !== null &&
+    'query' in value.variables &&
+    typeof value.variables.query === 'string'
+  );
+}
