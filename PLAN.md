@@ -19,6 +19,7 @@ Cada fase produce código funcional y testeable antes de avanzar a la siguiente.
 | 5    | Frontend Angular       | T13–T18 |
 | 6    | Docker y despliegue    | T19–T20 |
 | 7    | Refactors técnicos     | T21     |
+| 8    | Portal de documentación | T22–T26 |
 
 
 ---
@@ -581,7 +582,7 @@ Cada fase produce código funcional y testeable antes de avanzar a la siguiente.
 
 
 
-### T21 · Migrar HTTP client de integraciones a axios
+### ~~T21 · Migrar HTTP client de integraciones a axios~~
 
 **Objetivo:** Reemplazar el uso directo de `fetch` en servicios de integración por `axios` con manejo consistente de timeout, headers, errores HTTP y errores de red.
 
@@ -601,6 +602,117 @@ Cada fase produce código funcional y testeable antes de avanzar a la siguiente.
 - Los timeouts se configuran con opciones de `axios`, sin `AbortSignal.timeout`.
 - Los tests unitarios mockean `axios` y mantienen la cobertura mínima requerida.
 - El comportamiento externo no cambia: cache first, fallbacks, logs y retorno `[]` ante errores se mantienen.
+
+---
+
+
+
+## Fase 8 — Portal de documentación
+
+> Referencia de enfoque: `fjbatresv/sdg19-final` usa Starlight como sitio principal, Compodoc para frontend, TypeDoc para backend y una API reference/playground generado desde OpenAPI.
+
+---
+
+
+
+### T22 · Sitio principal de documentación con Astro Starlight
+
+**Objetivo:** Crear un sitio estático de documentación en `docs-site/` que sirva como entrada principal para arquitectura, módulos, operación local y despliegue.
+
+**Archivos a crear/modificar:**
+
+- `docs-site/` — proyecto Astro Starlight
+- `docs-site/src/content/docs/` — páginas iniciales del portal
+- `package.json` — scripts `docs:dev`, `docs:build`, `docs:preview` y `docs:check`
+- `.gitignore` — ignorar artefactos generados de documentación
+
+**Criterios de aceptación:**
+
+- `npm run docs:dev` levanta Starlight localmente.
+- `npm run docs:build` genera un sitio estático sin errores.
+- El sidebar enlaza las guías principales, Compodoc, TypeDoc y API reference/playground.
+- La documentación existente en `docs/` queda enlazada o migrada sin duplicar contenido innecesario.
+
+---
+
+
+
+### T23 · Compodoc para documentación del frontend Angular
+
+**Objetivo:** Integrar Compodoc para generar documentación del frontend Angular standalone.
+
+**Archivos a crear/modificar:**
+
+- `.compodocrc.json`
+- `frontend/tsconfig.compodoc.json` si hace falta aislar el scope documental
+- `package.json` — scripts `docs:frontend`, `docs:frontend:coverage` y `docs:frontend:check`
+
+**Criterios de aceptación:**
+
+- Compodoc genera documentación en un directorio estático enlazable desde Starlight.
+- El comando de coverage documental falla si baja del 80%.
+- Standalone components, services, stores y modelos públicos relevantes tienen docstrings útiles.
+
+---
+
+
+
+### T24 · TypeDoc para documentación del backend NestJS
+
+**Objetivo:** Integrar TypeDoc para generar referencia técnica del backend.
+
+**Archivos a crear/modificar:**
+
+- `typedoc.json`
+- `typedoc.tsconfig.json`
+- `package.json` — scripts `docs:backend` y `docs:backend:check`
+
+**Criterios de aceptación:**
+
+- TypeDoc genera documentación del backend excluyendo tests, dist y dependencias externas.
+- La salida queda enlazada desde Starlight.
+- La configuración respeta TypeScript estricto y no requiere relajar tipos.
+
+---
+
+
+
+### T25 · API reference y playground desde OpenAPI
+
+**Objetivo:** Publicar una referencia navegable y playground de API usando `openapi.yaml` como contrato fuente.
+
+**Archivos a crear/modificar:**
+
+- `docs-site/src/content/docs/api-reference.*`
+- `docs-site/src/content/docs/api-playground.*`
+- Script de sincronización si el sitio necesita copiar o transformar `openapi.yaml`
+
+**Criterios de aceptación:**
+
+- El contrato publicado se deriva de `openapi.yaml`, sin duplicar endpoints manualmente.
+- El sitio permite inspeccionar endpoints, schemas, request bodies y responses.
+- El playground puede configurarse para apuntar a una URL base local o desplegada.
+
+---
+
+
+
+### T26 · Guías de setup y operación en español e inglés
+
+**Objetivo:** Agregar guías bilingües para desarrollo local, variables de entorno, Docker, Raspberry Pi y Cloudflare Tunnel.
+
+**Archivos a crear/modificar:**
+
+- `docs-site/src/content/docs/setup/es.md`
+- `docs-site/src/content/docs/setup/en.md`
+- `docs-site/src/content/docs/deploy/es.md`
+- `docs-site/src/content/docs/deploy/en.md`
+
+**Criterios de aceptación:**
+
+- Las guías cubren prerequisitos, instalación con `nvm`, configuración de `.env`, ejecución local y despliegue Docker.
+- Las guías explican los modos `SERVE_STATIC=true` y `SERVE_STATIC=false` con nginx.
+- La documentación no incluye secretos reales ni valores privados.
 
 ---
 

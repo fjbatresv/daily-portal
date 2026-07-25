@@ -1,5 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import axios from 'axios';
 import { CacheService } from '../../common/cache';
 import { SlackMention } from '../../common/types/daily-digest.types';
 import { AppConfiguration } from '../../config/configuration';
@@ -43,24 +44,27 @@ export class SlackService {
     }
 
     try {
-      const response = await fetch(this.buildSearchUrl(slackConfig.userId), {
-        method: 'GET',
-        headers: {
-          Authorization: `Bearer ${slackConfig.userToken}`,
-          'Content-Type': 'application/json',
+      const response = await axios.get<SlackSearchResponse>(
+        this.buildSearchUrl(slackConfig.userId),
+        {
+          headers: {
+            Authorization: `Bearer ${slackConfig.userToken}`,
+            'Content-Type': 'application/json',
+          },
+          timeout: this.requestTimeoutMs,
+          validateStatus: () => true,
         },
-        signal: AbortSignal.timeout(this.requestTimeoutMs),
-      });
+      );
 
-      if (!response.ok) {
+      if (response.status < 200 || response.status >= 300) {
         this.logger.error(
-          `Slack API returned ${response.status}: ${await this.readResponseText(response)}`,
+          `Slack API returned ${response.status}: ${this.stringifyResponseData(response.data)}`,
         );
         await this.cacheEmptyMentions();
         return [];
       }
 
-      const payload = (await response.json()) as SlackSearchResponse;
+      const payload = response.data;
       if (!payload.ok) {
         this.logger.error(`Slack API error: ${payload.error ?? 'unknown_error'}`);
         await this.cacheEmptyMentions();
@@ -125,19 +129,27 @@ export class SlackService {
     await this.cache.set(this.cacheKey, [], this.negativeCacheTtlSeconds);
   }
 
-  private async readResponseText(response: Response): Promise<string> {
-    try {
-      return await response.text();
-    } catch {
-      return 'Unable to read Slack error response';
-    }
-  }
-
   private getErrorMessage(error: unknown): string {
     if (error && typeof error === 'object' && 'message' in error) {
       return String(error.message);
     }
 
     return 'Unknown Slack error';
+  }
+
+  private stringifyResponseData(data: unknown): string {
+    if (typeof data === 'string') {
+      return data;
+    }
+
+    if (data === undefined) {
+      return 'No Slack error response body';
+    }
+
+    try {
+      return JSON.stringify(data);
+    } catch {
+      return 'Unable to serialize Slack error response';
+    }
   }
 }

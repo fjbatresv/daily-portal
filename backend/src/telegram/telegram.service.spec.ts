@@ -1,10 +1,15 @@
 import { Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import axios, { AxiosResponse } from 'axios';
 import { DailyDigest } from '../common/types/daily-digest.types';
 import { AppConfiguration } from '../config/configuration';
 import { NotificationLogsRepository } from './notification-logs.repository';
 import { TelegramFormatter } from './telegram-formatter.service';
 import { TelegramService } from './telegram.service';
+
+jest.mock('axios');
+
+type AxiosPostMock = jest.Mock<Promise<AxiosResponse<unknown>>, [string, unknown?, unknown?]>;
 
 const digest: DailyDigest = {
   date: '2026-06-29',
@@ -18,14 +23,14 @@ const digest: DailyDigest = {
 };
 
 describe('TelegramService', () => {
-  let fetchMock: jest.MockedFunction<typeof fetch>;
+  let axiosPostMock: AxiosPostMock;
   let notificationLogs: jest.Mocked<NotificationLogsRepository>;
   let service: TelegramService;
   let loggerErrorSpy: jest.SpiedFunction<Logger['error']>;
 
   beforeEach(() => {
-    fetchMock = jest.fn<ReturnType<typeof fetch>, Parameters<typeof fetch>>();
-    global.fetch = fetchMock;
+    axiosPostMock = getAxiosMock().post;
+    axiosPostMock.mockReset();
     notificationLogs = {
       create: jest.fn(),
     } as unknown as jest.Mocked<NotificationLogsRepository>;
@@ -46,22 +51,26 @@ describe('TelegramService', () => {
   });
 
   it('sends morning digest messages and logs success', async () => {
-    fetchMock.mockResolvedValue({ ok: true, status: 200 } as Response);
+    axiosPostMock.mockResolvedValue(axiosResponse(200, { ok: true }));
 
     await service.sendMorningDigest(digest);
 
-    expect(fetchMock).toHaveBeenCalledWith(
+    expect(axiosPostMock).toHaveBeenCalledWith(
       'https://api.telegram.org/botbot-token/sendMessage',
       expect.objectContaining({
-        method: 'POST',
+        chat_id: 'chat-id',
+        parse_mode: 'MarkdownV2',
+      }),
+      expect.objectContaining({
         headers: { 'Content-Type': 'application/json' },
+        timeout: 10_000,
       }),
     );
     expect(notificationLogs.create.mock.calls).toEqual([['success', undefined]]);
   });
 
   it('logs errors and does not throw when Telegram fails', async () => {
-    fetchMock.mockResolvedValue({ ok: false, status: 400 } as Response);
+    axiosPostMock.mockResolvedValue(axiosResponse(400, { ok: false }));
 
     await expect(service.sendMorningDigest(digest)).resolves.toBeUndefined();
 
@@ -70,11 +79,11 @@ describe('TelegramService', () => {
   });
 
   it('sends escaped test messages without inserting notification logs', async () => {
-    fetchMock.mockResolvedValue({ ok: true, status: 200 } as Response);
+    axiosPostMock.mockResolvedValue(axiosResponse(200, { ok: true }));
 
     await service.sendTestMessage('Hello!');
 
-    expect(fetchMock).toHaveBeenCalled();
+    expect(axiosPostMock).toHaveBeenCalled();
     expect(notificationLogs.create.mock.calls).toHaveLength(0);
   });
 
@@ -89,30 +98,43 @@ describe('TelegramService', () => {
     expect(notificationLogs.create.mock.calls).toEqual([
       ['error', 'Telegram credentials are not configured'],
     ]);
-    expect(fetchMock).not.toHaveBeenCalled();
+    expect(axiosPostMock).not.toHaveBeenCalled();
   });
 
   it('truncates messages longer than the Telegram limit', async () => {
-    fetchMock.mockResolvedValue({ ok: true, status: 200 } as Response);
+    axiosPostMock.mockResolvedValue(axiosResponse(200, { ok: true }));
 
     await service.sendMorningDigest({
       ...digest,
       todoList: [{ source: 'reminder', priority: 'low', text: 'x'.repeat(5000) }],
     });
 
-    const [, init] = fetchMock.mock.calls[0];
-    if (!init || typeof init.body !== 'string') {
-      throw new Error('Expected Telegram request body to be a JSON string');
+    const [, body] = axiosPostMock.mock.calls[0];
+    if (!isTelegramBody(body)) {
+      throw new Error('Expected Telegram request body to match the sendMessage payload');
     }
-    const body = JSON.parse(init.body) as { text: string };
     expect(body.text.length).toBeLessThanOrEqual(4096);
   });
 
   it('logs timeout failures without throwing', async () => {
-    fetchMock.mockRejectedValue(new DOMException('The operation timed out', 'TimeoutError'));
+    axiosPostMock.mockRejectedValue(new Error('timeout of 10000ms exceeded'));
 
     await expect(service.sendMorningDigest(digest)).resolves.toBeUndefined();
 
-    expect(notificationLogs.create.mock.calls).toEqual([['error', 'The operation timed out']]);
+    expect(notificationLogs.create.mock.calls).toEqual([['error', 'timeout of 10000ms exceeded']]);
   });
 });
+
+function axiosResponse<T>(status: number, data: T): AxiosResponse<T> {
+  return { status, data } as unknown as AxiosResponse<T>;
+}
+
+function getAxiosMock(): { post: AxiosPostMock } {
+  return axios as unknown as { post: AxiosPostMock };
+}
+
+function isTelegramBody(value: unknown): value is { text: string } {
+  return (
+    typeof value === 'object' && value !== null && 'text' in value && typeof value.text === 'string'
+  );
+}

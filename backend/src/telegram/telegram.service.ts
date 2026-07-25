@@ -1,5 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import axios from 'axios';
 import { DailyDigest } from '../common/types/daily-digest.types';
 import { AppConfiguration } from '../config/configuration';
 import { NotificationLogsRepository } from './notification-logs.repository';
@@ -57,14 +58,17 @@ export class TelegramService {
         disable_web_page_preview: true,
       };
 
-      const response = await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body),
-        signal: AbortSignal.timeout(this.requestTimeoutMs),
-      });
+      const response = await axios.post(
+        `https://api.telegram.org/bot${botToken}/sendMessage`,
+        body,
+        {
+          headers: { 'Content-Type': 'application/json' },
+          timeout: this.requestTimeoutMs,
+          validateStatus: () => true,
+        },
+      );
 
-      if (!response.ok) {
+      if (response.status < 200 || response.status >= 300) {
         throw new Error(`Telegram API returned ${response.status}`);
       }
 

@@ -1,5 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import axios, { AxiosResponse } from 'axios';
 import { CacheService } from '../../common/cache';
 import { CheckStatus, GitHubPR, PRStatus } from '../../common/types/daily-digest.types';
 import { AppConfiguration } from '../../config/configuration';
@@ -51,24 +52,27 @@ export class GitHubService {
     }
 
     try {
-      const response = await fetch('https://api.github.com/graphql', {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${githubConfig.token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
+      const response = await axios.post<GitHubGraphQlResponse>(
+        'https://api.github.com/graphql',
+        {
           query: SEARCH_PRS_QUERY,
           variables: { query: `is:pr is:open author:${githubConfig.username}` },
-        }),
-        signal: AbortSignal.timeout(this.requestTimeoutMs),
-      });
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${githubConfig.token}`,
+            'Content-Type': 'application/json',
+          },
+          timeout: this.requestTimeoutMs,
+          validateStatus: () => true,
+        },
+      );
 
-      if (!response.ok) {
+      if (response.status < 200 || response.status >= 300) {
         return await this.handleHttpError(response);
       }
 
-      const payload = (await response.json()) as GitHubGraphQlResponse;
+      const payload = response.data;
       if (payload.errors?.length) {
         this.logger.error(
           `GitHub GraphQL error: ${payload.errors.map((error) => error.message).join('; ')}`,
@@ -103,7 +107,9 @@ export class GitHubService {
     return { token, username };
   }
 
-  private async handleHttpError(response: Response): Promise<GitHubPR[]> {
+  private async handleHttpError(
+    response: AxiosResponse<GitHubGraphQlResponse>,
+  ): Promise<GitHubPR[]> {
     if (response.status === 401) {
       this.logger.error('GitHub: token invalido o expirado');
       await this.cacheEmptyPRs();
@@ -124,7 +130,7 @@ export class GitHubService {
     }
 
     this.logger.error(
-      `GitHub API returned ${response.status}: ${await this.readResponseText(response)}`,
+      `GitHub API returned ${response.status}: ${this.stringifyResponseData(response.data)}`,
     );
     await this.cacheEmptyPRs();
     return [];
@@ -150,7 +156,6 @@ export class GitHubService {
       updatedAt: node.updatedAt,
     };
   }
-
   private mapPRStatus(state: GitHubApiPrState, isDraft: boolean): PRStatus {
     if (isDraft) {
       return 'draft';
@@ -192,19 +197,27 @@ export class GitHubService {
     });
   }
 
-  private async readResponseText(response: Response): Promise<string> {
-    try {
-      return await response.text();
-    } catch {
-      return 'Unable to read GitHub error response';
-    }
-  }
-
   private getErrorMessage(error: unknown): string {
     if (error && typeof error === 'object' && 'message' in error) {
       return String(error.message);
     }
 
     return 'Unknown GitHub error';
+  }
+
+  private stringifyResponseData(data: unknown): string {
+    if (typeof data === 'string') {
+      return data;
+    }
+
+    if (data === undefined) {
+      return 'No GitHub error response body';
+    }
+
+    try {
+      return JSON.stringify(data);
+    } catch {
+      return 'Unable to serialize GitHub error response';
+    }
   }
 }
