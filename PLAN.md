@@ -416,7 +416,7 @@ Cada fase produce código funcional y testeable antes de avanzar a la siguiente.
 
 
 
-### T15 · DashboardComponent + DashboardStore + Header + Tabs
+### ~~T15 · DashboardComponent + DashboardStore + Header + Tabs~~
 
 **Objetivo:** Shell del portal con header siempre visible y dos tabs (Hoy / Fuentes).
 
@@ -441,7 +441,7 @@ Cada fase produce código funcional y testeable antes de avanzar a la siguiente.
 
 
 
-### T16 · TodoListComponent (tab Hoy)
+### ~~T16 · TodoListComponent (tab Hoy)~~
 
 **Objetivo:** Lista de tareas del día con checkboxes, movimiento a sección "atendidos" y persistencia.
 
@@ -469,7 +469,7 @@ Cada fase produce código funcional y testeable antes de avanzar a la siguiente.
 
 
 
-### T17 · SourcesComponent (tab Fuentes — secciones sin Recordatorios)
+### ~~T17 · SourcesComponent (tab Fuentes — secciones sin Recordatorios)~~
 
 **Objetivo:** Vista detallada de Jira, GitHub, Calendar y Slack.
 
@@ -496,7 +496,7 @@ Cada fase produce código funcional y testeable antes de avanzar a la siguiente.
 
 
 
-### T18 · RemindersSectionComponent + ReminderFormComponent
+### ~~T18 · RemindersSectionComponent + ReminderFormComponent~~
 
 **Objetivo:** Sección de recordatorios con escalación visual y formulario de creación inline.
 

@@ -1,39 +1,52 @@
-import { Component, inject } from '@angular/core';
+import { AfterViewInit, Component, effect, inject, OnInit } from '@angular/core';
 import { ThemeService } from '../../core/services/theme.service';
+import { AppIconComponent } from '../../shared/app-icon.component';
+import { SourcesComponent } from '../sources/sources.component';
+import { TodoListComponent } from '../todo/todo-list.component';
+import { DashboardStore } from './dashboard.store';
+import { SummaryChipsComponent } from './summary-chips.component';
 
 /**
- * Initial dashboard shell for the Daily Portal frontend.
+ * Main Daily Portal shell with global actions, tab navigation, and dashboard content.
  */
 @Component({
   selector: 'app-dashboard',
-  template: `
-    <main class="min-h-screen bg-aurora-bg text-aurora-text">
-      <header class="border-b border-aurora-border bg-aurora-surface">
-        <div class="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
-          <h1 class="text-lg font-semibold">Daily Portal</h1>
-          <button
-            type="button"
-            class="rounded-lg border border-aurora-border px-3 py-2 text-sm text-aurora-muted"
-            [attr.aria-pressed]="theme.current() === 'dark'"
-            [attr.aria-label]="
-              theme.current() === 'dark' ? 'Cambiar a tema claro' : 'Cambiar a tema oscuro'
-            "
-            (click)="theme.toggle()"
-          >
-            Tema
-          </button>
-        </div>
-      </header>
-
-      <section class="mx-auto max-w-6xl px-6 py-8">
-        <h2 class="text-2xl font-semibold">Hoy</h2>
-        <p class="mt-2 max-w-2xl text-sm text-aurora-muted">
-          Scaffolding inicial listo para conectar los módulos del plan.
-        </p>
-      </section>
-    </main>
-  `,
+  imports: [AppIconComponent, SummaryChipsComponent, SourcesComponent, TodoListComponent],
+  templateUrl: './dashboard.component.html',
 })
-export class DashboardComponent {
+export class DashboardComponent implements OnInit, AfterViewInit {
+  readonly store = inject(DashboardStore);
   readonly theme = inject(ThemeService);
+  readonly todayLabel = new Intl.DateTimeFormat('es-GT', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  }).format(new Date());
+
+  private viewReady = false;
+
+  constructor() {
+    effect(() => {
+      if (this.viewReady && this.store.activeTab() === 'fuentes' && this.store.reminderFormOpen()) {
+        window.setTimeout(() =>
+          document.getElementById('recordatorios')?.scrollIntoView({ behavior: 'smooth' }),
+        );
+      }
+    });
+  }
+
+  /**
+   * Loads the first digest and starts five-minute auto-refresh.
+   */
+  ngOnInit(): void {
+    this.store.load();
+  }
+
+  /**
+   * Enables scroll effects after the dashboard view exists.
+   */
+  ngAfterViewInit(): void {
+    this.viewReady = true;
+  }
 }

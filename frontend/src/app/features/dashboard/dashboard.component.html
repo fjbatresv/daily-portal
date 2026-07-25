@@ -1,0 +1,101 @@
+<main class="min-h-screen bg-aurora-bg text-aurora-text">
+  <header
+    class="sticky top-0 z-20 border-b border-aurora-border bg-aurora-surface/95 backdrop-blur"
+  >
+    <div
+      class="mx-auto flex max-w-6xl flex-col gap-4 px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6"
+    >
+      <div>
+        <h1 class="text-xl font-semibold">Daily Portal</h1>
+        <p class="mt-1 text-sm capitalize text-aurora-muted">{{ todayLabel }}</p>
+      </div>
+
+      <div class="flex flex-wrap items-center gap-2">
+        <button
+          type="button"
+          class="inline-flex items-center gap-2 rounded-md bg-aurora-primary px-3 py-2 text-sm font-medium text-aurora-bg transition hover:opacity-90"
+          (click)="store.openReminderForm()"
+        >
+          <app-icon name="plus" />
+          Recordatorio
+        </button>
+        <button
+          type="button"
+          class="inline-flex items-center gap-2 rounded-md border border-aurora-border px-3 py-2 text-sm text-aurora-muted transition hover:border-aurora-primary hover:text-aurora-text"
+          [disabled]="store.refreshing()"
+          (click)="store.refresh()"
+        >
+          <app-icon name="refresh" [spin]="store.refreshing()" />
+          Refrescar
+        </button>
+        <button
+          type="button"
+          class="inline-flex h-9 w-9 items-center justify-center rounded-md border border-aurora-border text-aurora-muted transition hover:border-aurora-primary hover:text-aurora-text"
+          [attr.aria-pressed]="theme.current() === 'dark'"
+          [attr.aria-label]="
+            theme.current() === 'dark' ? 'Cambiar a tema claro' : 'Cambiar a tema oscuro'
+          "
+          (click)="theme.toggle()"
+        >
+          <app-icon [name]="theme.current() === 'light' ? 'moon' : 'sun'" />
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <section class="mx-auto max-w-6xl px-4 py-6 sm:px-6">
+    <nav
+      class="mb-6 grid grid-cols-2 gap-2 rounded-md border border-aurora-border bg-aurora-surface p-1"
+      aria-label="Tabs"
+    >
+      <button
+        type="button"
+        class="rounded-sm px-4 py-2 text-sm font-medium transition"
+        [class.bg-aurora-elevated]="store.activeTab() === 'hoy'"
+        [class.text-aurora-text]="store.activeTab() === 'hoy'"
+        [class.text-aurora-muted]="store.activeTab() !== 'hoy'"
+        (click)="store.activeTab.set('hoy')"
+      >
+        Hoy
+        <span
+          class="ml-2 rounded-full bg-[var(--color-primary-muted)] px-2 py-0.5 text-xs text-aurora-primary"
+        >
+          {{ store.pendingTodoCount() }}
+        </span>
+      </button>
+      <button
+        type="button"
+        class="rounded-sm px-4 py-2 text-sm font-medium transition"
+        [class.bg-aurora-elevated]="store.activeTab() === 'fuentes'"
+        [class.text-aurora-text]="store.activeTab() === 'fuentes'"
+        [class.text-aurora-muted]="store.activeTab() !== 'fuentes'"
+        (click)="store.activeTab.set('fuentes')"
+      >
+        Fuentes
+      </button>
+    </nav>
+
+    @if (store.error(); as error) {
+      <div
+        class="mb-4 rounded-md border border-[var(--color-error)] bg-[var(--color-error-subtle)] p-4 text-sm text-[var(--color-error-text)]"
+        role="status"
+      >
+        {{ error }}
+      </div>
+    }
+
+    @if (store.loading() && store.digest() === null) {
+      <div class="flex min-h-80 items-center justify-center text-aurora-muted">
+        <app-icon name="loader" className="mr-2 h-5 w-5" [spin]="true" />
+        Cargando dashboard
+      </div>
+    } @else if (store.digest(); as digest) {
+      @if (store.activeTab() === 'hoy') {
+        <app-summary-chips [digest]="digest" />
+        <app-todo-list />
+      } @else {
+        <app-sources [digest]="digest" />
+      }
+    }
+  </section>
+</main>
