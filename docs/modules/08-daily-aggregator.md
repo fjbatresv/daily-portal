@@ -29,9 +29,9 @@ export class DailyAggregatorService {
     private readonly cache: CacheService,
   ) {}
 
-  async buildDailyDigest(): Promise<DailyDigest>
+  async buildDailyDigest(): Promise<DailyDigest>;
 
-  async invalidateCache(): Promise<void>
+  async invalidateCache(): Promise<void>;
   // Borra todas las claves de cache de integraciones
   // Llamado por POST /api/dashboard/refresh
 
@@ -41,7 +41,7 @@ export class DailyAggregatorService {
     events: CalendarEvent[],
     mentions: SlackMention[],
     reminders: Reminder[],
-  ): TodoItem[]
+  ): TodoItem[];
 }
 ```
 
@@ -104,6 +104,7 @@ El objetivo es generar una lista ordenada de acciones concretas para el día.
 ### Reglas de prioridad
 
 **ALTA (high):**
+
 - PR con `hasConflicts: true` → "Resolver conflictos de merge en {repo}"
 - PR con `checkStatus: 'failure'` → "Checks fallando en {repo}"
 - PR con `hasNewComments: true` → "Revisar comentarios en PR: {title}"
@@ -111,12 +112,14 @@ El objetivo es generar una lista ordenada de acciones concretas para el día.
 - Evento en los próximos 30 minutos (si es horario de 8 AM)
 
 **MEDIA (medium):**
+
 - Tarea Jira con status `In Progress`
 - Mención en Slack → "Responder mención en #{channel}: {texto truncado a 50 chars}"
 - Recordatorio con `priority: 'medium'`
 - Evento del día (todos los no-urgentes)
 
 **BAJA (low):**
+
 - Tarea Jira con status `To Do`
 - PR abierto sin problemas (solo para visibilidad)
 - Recordatorio con `priority: 'low'`
@@ -233,7 +236,7 @@ export class DashboardController {
   ],
   controllers: [DashboardController],
   providers: [DailyAggregatorService],
-  exports: [DailyAggregatorService],  // exportado para SchedulerModule
+  exports: [DailyAggregatorService], // exportado para SchedulerModule
 })
 export class DashboardModule {}
 ```
@@ -241,6 +244,7 @@ export class DashboardModule {}
 ## Test unitario (daily-aggregator.service.spec.ts)
 
 Casos a cubrir:
+
 - Todas las integraciones OK → DailyDigest con todos los datos
 - Una integración falla → DailyDigest con esa sección vacía, el resto normal
 - Todas las integraciones fallan → DailyDigest con todas las secciones vacías (no lanza error)

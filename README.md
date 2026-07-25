@@ -200,9 +200,7 @@ SQLite data persists in `./data/portal.db` (volume-mounted). Cloudflare Tunnel s
 The default homelab mode is:
 
 ```bash
-SERVE_STATIC=true
-HOST_PORT=8090
-docker compose up -d --build
+SERVE_STATIC=true HOST_PORT=8090 docker compose up -d --build
 ```
 
 Point your reverse proxy or Cloudflare Tunnel to `http://localhost:8090`.

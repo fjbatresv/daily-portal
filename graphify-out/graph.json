@@ -3,7 +3,6 @@
   "multigraph": true,
   "graph": {
     "generated_by": "scripts/generate-agent-graph.cjs",
-    "generated_at": "2026-07-25T20:54:23.655Z",
     "source": "."
   },
   "nodes": [
@@ -981,6 +980,13 @@
       "community": "Architecture Decisions"
     },
     {
+      "id": "file:docs/agent-context.md",
+      "label": "docs/agent-context.md",
+      "file_type": "document",
+      "source_file": "docs/agent-context.md",
+      "community": "Project Documentation"
+    },
+    {
       "id": "file:docs/design-tokens.md",
       "label": "docs/design-tokens.md",
       "file_type": "document",
@@ -1447,6 +1453,13 @@
       "label": "scripts/check-docstrings.cjs",
       "file_type": "code",
       "source_file": "scripts/check-docstrings.cjs",
+      "community": "Repository Root"
+    },
+    {
+      "id": "file:scripts/generate-agent-graph.cjs",
+      "label": "scripts/generate-agent-graph.cjs",
+      "file_type": "code",
+      "source_file": "scripts/generate-agent-graph.cjs",
       "community": "Repository Root"
     },
     {
@@ -4689,6 +4702,15 @@
     },
     {
       "source": "file:README.md",
+      "target": "file:docs/agent-context.md",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1,
+      "source_file": "README.md",
+      "weight": 1
+    },
+    {
+      "source": "file:README.md",
       "target": "file:CONTRIBUTING.md",
       "relation": "references",
       "confidence": "EXTRACTED",
@@ -4807,6 +4829,15 @@
     {
       "source": "file:package.json",
       "target": "file:scripts/check-docstrings.cjs",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1,
+      "source_file": "package.json",
+      "weight": 1
+    },
+    {
+      "source": "file:package.json",
+      "target": "file:scripts/generate-agent-graph.cjs",
       "relation": "references",
       "confidence": "EXTRACTED",
       "confidence_score": 1,
@@ -5564,6 +5595,7 @@
       "file:package-lock.json",
       "file:package.json",
       "file:scripts/check-docstrings.cjs",
+      "file:scripts/generate-agent-graph.cjs",
       "file:scripts/prepare-release.mjs",
       "file:scripts/sync-openapi-docs.cjs",
       "file:sonar-project.properties",
@@ -5724,6 +5756,7 @@
       "file:docs/adr/README.md"
     ],
     "Project Documentation": [
+      "file:docs/agent-context.md",
       "file:docs/design-tokens.md",
       "file:docs/layout.md",
       "file:docs/modules/01-jira.md",

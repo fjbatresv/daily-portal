@@ -17,8 +17,8 @@ backend/src/integrations/github/
 ## Configuración requerida
 
 ```typescript
-github.token     // Personal Access Token
-github.username  // username de GitHub
+github.token; // Personal Access Token
+github.username; // username de GitHub
 ```
 
 ## Autenticación
@@ -38,11 +38,7 @@ Content-Type: application/json
 ```graphql
 # Guardar en github.queries.ts como constante SEARCH_PRS_QUERY
 query SearchAssignedPRs($username: String!) {
-  search(
-    query: "is:pr is:open author:$username"
-    type: ISSUE
-    first: 20
-  ) {
+  search(query: "is:pr is:open author:$username", type: ISSUE, first: 20) {
     nodes {
       ... on PullRequest {
         id
@@ -51,16 +47,16 @@ query SearchAssignedPRs($username: String!) {
         url
         isDraft
         updatedAt
-        mergeable        # CONFLICTING | MERGEABLE | UNKNOWN
+        mergeable # CONFLICTING | MERGEABLE | UNKNOWN
         repository {
-          nameWithOwner  # "org/repo"
+          nameWithOwner # "org/repo"
         }
-        state            # OPEN | MERGED | CLOSED
+        state # OPEN | MERGED | CLOSED
         commits(last: 1) {
           nodes {
             commit {
               statusCheckRollup {
-                state    # SUCCESS | FAILURE | PENDING | ERROR
+                state # SUCCESS | FAILURE | PENDING | ERROR
               }
             }
           }
@@ -69,14 +65,18 @@ query SearchAssignedPRs($username: String!) {
           totalCount
           nodes {
             createdAt
-            author { login }
+            author {
+              login
+            }
           }
         }
         reviews(last: 5, states: [COMMENTED, CHANGES_REQUESTED]) {
           totalCount
           nodes {
             createdAt
-            author { login }
+            author {
+              login
+            }
           }
         }
       }
@@ -91,11 +91,8 @@ Un PR tiene comentarios nuevos si existe algún comentario o review con `created
 
 ```typescript
 const cutoff = new Date(Date.now() - 24 * 60 * 60 * 1000);
-const hasNewComments = [
-  ...pr.comments.nodes,
-  ...pr.reviews.nodes,
-].some(
-  (c) => new Date(c.createdAt) > cutoff && c.author.login !== username
+const hasNewComments = [...pr.comments.nodes, ...pr.reviews.nodes].some(
+  (c) => new Date(c.createdAt) > cutoff && c.author.login !== username,
 );
 ```
 
@@ -113,14 +110,14 @@ export class GitHubService {
     private readonly cache: CacheService,
   ) {}
 
-  async getPRs(): Promise<GitHubPR[]>
+  async getPRs(): Promise<GitHubPR[]>;
   // 1. cache.get(CACHE_KEY)
   // 2. POST a GraphQL con SEARCH_PRS_QUERY
   // 3. Mapear nodos a GitHubPR[]
   // 4. cache.set(CACHE_KEY, prs, CACHE_TTL)
   // 5. Si falla: log + retornar []
 
-  private mapPR(node: GitHubPRNode, username: string): GitHubPR
+  private mapPR(node: GitHubPRNode, username: string): GitHubPR;
 }
 ```
 
@@ -129,30 +126,30 @@ export class GitHubService {
 ```typescript
 // Desde daily-digest.types.ts
 interface GitHubPR {
-  id: number;              // node.number
+  id: number; // node.number
   title: string;
   url: string;
-  repo: string;            // node.repository.nameWithOwner
-  status: PRStatus;        // node.state.toLowerCase()
+  repo: string; // node.repository.nameWithOwner
+  status: PRStatus; // node.state.toLowerCase()
   isDraft: boolean;
   hasNewComments: boolean; // ver lógica arriba
-  checkStatus: CheckStatus;// node.commits.nodes[0]?.commit.statusCheckRollup?.state → lowercase
-  hasConflicts: boolean;   // node.mergeable === 'CONFLICTING'
+  checkStatus: CheckStatus; // node.commits.nodes[0]?.commit.statusCheckRollup?.state → lowercase
+  hasConflicts: boolean; // node.mergeable === 'CONFLICTING'
   updatedAt: string;
 }
 ```
 
 ## Mapeo de estados
 
-| GitHub API | Tipo local |
-|---|---|
-| `state: OPEN` | `'open'` |
-| `state: MERGED` | `'merged'` |
-| `state: CLOSED` | `'closed'` |
-| `isDraft: true` | `'draft'` (sobrescribe status) |
-| `statusCheckRollup.state: SUCCESS` | `'success'` |
-| `statusCheckRollup.state: null` | `'pending'` |
-| `mergeable: CONFLICTING` | `hasConflicts: true` |
+| GitHub API                         | Tipo local                     |
+| ---------------------------------- | ------------------------------ |
+| `state: OPEN`                      | `'open'`                       |
+| `state: MERGED`                    | `'merged'`                     |
+| `state: CLOSED`                    | `'closed'`                     |
+| `isDraft: true`                    | `'draft'` (sobrescribe status) |
+| `statusCheckRollup.state: SUCCESS` | `'success'`                    |
+| `statusCheckRollup.state: null`    | `'pending'`                    |
+| `mergeable: CONFLICTING`           | `hasConflicts: true`           |
 
 ## GitHubModule
 
@@ -179,6 +176,7 @@ Instalar: `npm install axios`
 ## Test unitario (github.service.spec.ts)
 
 Casos a cubrir:
+
 - Cache hit → sin llamada HTTP
 - Cache miss + respuesta GraphQL OK → PRs mapeados correctamente
 - PR con `mergeable: CONFLICTING` → `hasConflicts: true`

@@ -6,9 +6,9 @@ This repository could not use the external Graphify Python runtime in the local 
 
 ## Corpus
 
-- Files indexed: 211
-- Nodes: 271
-- Edges: 404
+- Files indexed: 213
+- Nodes: 273
+- Edges: 406
 - Communities: 22
 
 ## Communities
@@ -16,15 +16,15 @@ This repository could not use the external Graphify Python runtime in the local 
 | Community |Nodes |
 | --- |---: |
 | Package Dependencies |60 |
-| Repository Root |24 |
+| Repository Root |25 |
 | Documentation Portal |21 |
 | Frontend Application |21 |
 | Backend Application |15 |
 | Automation and Release |14 |
 | Backend Infrastructure |13 |
 | Reminders Persistence |11 |
+| Project Documentation |11 |
 | Frontend Sources |11 |
-| Project Documentation |10 |
 | Telegram Delivery |8 |
 | Scheduler |7 |
 | Frontend Core |7 |

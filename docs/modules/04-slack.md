@@ -16,8 +16,8 @@ backend/src/integrations/slack/
 ## Configuración requerida
 
 ```typescript
-slack.userToken  // xoxp-... (User OAuth Token)
-slack.userId     // ID del usuario (Uxxxxxxxxxxx)
+slack.userToken; // xoxp-... (User OAuth Token)
+slack.userId; // ID del usuario (Uxxxxxxxxxxx)
 ```
 
 ## Cómo obtener las credenciales
@@ -50,6 +50,7 @@ GET /search.messages
 ```
 
 **Parámetros:**
+
 ```
 query=<@${userId}>    ← menciones directas al usuario
 count=20
@@ -58,6 +59,7 @@ sort_dir=desc
 ```
 
 **Respuesta esperada:**
+
 ```json
 {
   "ok": true,
@@ -71,7 +73,7 @@ sort_dir=desc
         },
         "username": "ana.garcia",
         "text": "<@U123456> ¿cuándo estará listo el endpoint?",
-        "permalink": "https://tempus.slack.com/archives/C123/p1234567890123456"
+        "permalink": "https://your-workspace.slack.com/archives/C123/p1234567890123456"
       }
     ]
   }
@@ -81,9 +83,10 @@ sort_dir=desc
 ### Filtrado por tiempo
 
 Filtrar solo mensajes de las **últimas 24 horas**:
+
 ```typescript
 const cutoff = Date.now() / 1000 - 24 * 60 * 60; // Unix timestamp
-const recentMentions = matches.filter(m => parseFloat(m.ts) > cutoff);
+const recentMentions = matches.filter((m) => parseFloat(m.ts) > cutoff);
 ```
 
 ## Interfaz del servicio
@@ -100,7 +103,7 @@ export class SlackService {
     private readonly cache: CacheService,
   ) {}
 
-  async getMentions(): Promise<SlackMention[]>
+  async getMentions(): Promise<SlackMention[]>;
   // 1. cache.get(CACHE_KEY)
   // 2. GET /search.messages con query <@userId>
   // 3. Filtrar últimas 24h
@@ -108,7 +111,7 @@ export class SlackService {
   // 5. cache.set(CACHE_KEY, mentions, CACHE_TTL)
   // 6. Si falla o ok=false: log + retornar []
 
-  private mapMatch(match: SlackApiMatch): SlackMention
+  private mapMatch(match: SlackApiMatch): SlackMention;
 }
 ```
 
@@ -117,11 +120,11 @@ export class SlackService {
 ```typescript
 // Desde daily-digest.types.ts
 interface SlackMention {
-  ts: string;           // match.ts
-  channelName: string;  // match.channel.name
-  senderName: string;   // match.username
-  text: string;         // match.text (puede contener <@Uxxxx>, limpiar si se desea)
-  permalink: string;    // match.permalink
+  ts: string; // match.ts
+  channelName: string; // match.channel.name
+  senderName: string; // match.username
+  text: string; // match.text (puede contener <@Uxxxx>, limpiar si se desea)
+  permalink: string; // match.permalink
 }
 ```
 
@@ -161,6 +164,7 @@ if (!data.ok) {
 ```
 
 Errores comunes:
+
 - `missing_scope`: el token no tiene el scope necesario
 - `invalid_auth`: token inválido o revocado
 - `ratelimited`: esperar, usar cache
@@ -168,6 +172,7 @@ Errores comunes:
 ## Test unitario (slack.service.spec.ts)
 
 Casos a cubrir:
+
 - Cache hit → sin llamada HTTP
 - Cache miss + respuesta OK → menciones de últimas 24h
 - Mensajes más antiguos de 24h → filtrados

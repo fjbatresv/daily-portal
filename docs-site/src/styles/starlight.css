@@ -1,6 +1,6 @@
 :root {
   --sl-font: ui-sans-serif, system-ui, sans-serif;
-  --sl-font-mono: 'SFMono-Regular', Consolas, 'Liberation Mono', monospace;
+  --sl-font-mono: 'SFMono-Regular', consolas, 'Liberation Mono', monospace;
   --sl-color-accent-low: #241d3d;
   --sl-color-accent: #7dd3fc;
   --sl-color-accent-high: #e0f2fe;

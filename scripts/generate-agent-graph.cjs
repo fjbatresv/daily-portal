@@ -266,13 +266,19 @@ const graph = {
   multigraph: true,
   graph: {
     generated_by: 'scripts/generate-agent-graph.cjs',
-    generated_at: new Date().toISOString(),
     source: '.',
   },
   nodes: [...nodes.values()],
   links: edges,
   communities,
 };
+
+function escapeScriptJson(value) {
+  return JSON.stringify(value)
+    .replace(/</g, '\\u003c')
+    .replace(/\u2028/g, '\\u2028')
+    .replace(/\u2029/g, '\\u2029');
+}
 
 function markdownTable(rows) {
   return rows.map((row) => `| ${row.join(' |')} |`).join('\n');
@@ -374,7 +380,7 @@ const html = `<!doctype html>
     <svg id="graph" role="img" aria-label="Daily Portal knowledge graph"></svg>
   </main>
   <script>
-    const graph = ${JSON.stringify(graph)};
+    const graph = ${escapeScriptJson(graph)};
     const svg = document.getElementById('graph');
     const details = document.getElementById('details');
     const width = 1200;

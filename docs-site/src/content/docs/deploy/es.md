@@ -22,7 +22,7 @@ Este es el modo recomendado cuando Cloudflare Tunnel o Caddy apuntan directament
 Con `SERVE_STATIC=false`, NestJS expone solo `/api/*` y nginx sirve el frontend. Usa el perfil `nginx`:
 
 ```bash
-SERVE_STATIC=false docker compose --profile nginx up -d --build
+SERVE_STATIC=false docker compose -f docker-compose.yml -f docker-compose.nginx-override.yml --profile nginx up -d --build
 ```
 
 ## Variables importantes

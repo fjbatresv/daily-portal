@@ -121,6 +121,7 @@ For a new decision:
 ## Reporting bugs
 
 Use the [Bug Report template](https://github.com/fjbatresv/daily-portal/issues/new?template=bug_report.md). Include:
+
 - What you expected vs. what happened
 - Steps to reproduce
 - Your OS, Docker version, and relevant `.env` settings (never paste actual API tokens)

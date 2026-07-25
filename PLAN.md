@@ -9,18 +9,16 @@ Cada fase produce código funcional y testeable antes de avanzar a la siguiente.
 
 ## Índice de fases
 
-
-| Fase | Nombre                 | Tasks   |
-| ---- | ---------------------- | ------- |
-| 1    | Infraestructura base   | T01–T04 |
-| 2    | Módulos core (sin red) | T05–T07 |
-| 3    | Integraciones externas | T08–T11 |
-| 4    | Agregación y API       | T12     |
-| 5    | Frontend Angular       | T13–T18 |
-| 6    | Docker y despliegue    | T19–T20 |
-| 7    | Refactors técnicos     | T21     |
+| Fase | Nombre                  | Tasks   |
+| ---- | ----------------------- | ------- |
+| 1    | Infraestructura base    | T01–T04 |
+| 2    | Módulos core (sin red)  | T05–T07 |
+| 3    | Integraciones externas  | T08–T11 |
+| 4    | Agregación y API        | T12     |
+| 5    | Frontend Angular        | T13–T18 |
+| 6    | Docker y despliegue     | T19–T20 |
+| 7    | Refactors técnicos      | T21     |
 | 8    | Portal de documentación | T22–T26 |
-
 
 ---
 
@@ -54,8 +52,6 @@ Cada fase produce código funcional y testeable antes de avanzar a la siguiente.
 
 ---
 
-
-
 ### ~~T02 · DatabaseModule~~
 
 **Objetivo:** Módulo de base de datos con better-sqlite3, modo WAL y migración automática del schema.
@@ -76,8 +72,6 @@ Cada fase produce código funcional y testeable antes de avanzar a la siguiente.
 
 ---
 
-
-
 ### ~~T03 · CacheModule~~
 
 **Objetivo:** Wrapper de Redis con métodos `get`, `set`, `del` y TTL configurable por clave.
@@ -97,8 +91,6 @@ Cada fase produce código funcional y testeable antes de avanzar a la siguiente.
 - `cache.del('test')` elimina la clave
 
 ---
-
-
 
 ### ~~T04 · ConfigModule y tipos centrales~~
 
@@ -125,11 +117,7 @@ Cada fase produce código funcional y testeable antes de avanzar a la siguiente.
 
 ---
 
-
-
 ## Fase 2 — Módulos core (sin red)
-
-
 
 ### ~~T05 · RemindersModule~~
 
@@ -161,8 +149,6 @@ Cada fase produce código funcional y testeable antes de avanzar a la siguiente.
 
 ---
 
-
-
 ### ~~T06 · TelegramModule~~
 
 **Objetivo:** Enviar mensajes por Telegram con formato MarkdownV2 y registrar notificaciones en SQLite.
@@ -190,8 +176,6 @@ Cada fase produce código funcional y testeable antes de avanzar a la siguiente.
 
 ---
 
-
-
 ### ~~T07 · SchedulerModule~~
 
 **Objetivo:** Cron a las 8 AM (configurable) que dispara el digest diario.
@@ -213,16 +197,12 @@ Cada fase produce código funcional y testeable antes de avanzar a la siguiente.
 
 ---
 
-
-
 ## Fase 3 — Integraciones externas
 
 > Cada integración sigue el mismo patrón: **1) verificar cache → 2) llamar API → 3) guardar en cache → 4) retornar datos**.
 > Ante cualquier error (401, 429, timeout, etc.), retornar `[]` y loguear.
 
 ---
-
-
 
 ### ~~T08 · JiraModule~~
 
@@ -248,8 +228,6 @@ Cada fase produce código funcional y testeable antes de avanzar a la siguiente.
 
 ---
 
-
-
 ### ~~T09 · GitHubModule~~
 
 **Objetivo:** Obtener PRs abiertos del usuario con estado de checks, conflictos y comentarios recientes.
@@ -271,8 +249,6 @@ Cada fase produce código funcional y testeable antes de avanzar a la siguiente.
 - Test unitario: respuesta GraphQL mockeada → mapeo correcto a `GitHubPR[]`
 
 ---
-
-
 
 ### ~~T10 · GoogleCalendarModule~~
 
@@ -297,8 +273,6 @@ Cada fase produce código funcional y testeable antes de avanzar a la siguiente.
 
 ---
 
-
-
 ### ~~T11 · SlackModule~~
 
 **Objetivo:** Obtener menciones del usuario en los últimos 24h usando User OAuth Token.
@@ -321,11 +295,7 @@ Cada fase produce código funcional y testeable antes de avanzar a la siguiente.
 
 ---
 
-
-
 ## Fase 4 — Agregación y API
-
-
 
 ### ~~T12 · DailyAggregatorService + DashboardController~~
 
@@ -356,16 +326,12 @@ Cada fase produce código funcional y testeable antes de avanzar a la siguiente.
 
 ---
 
-
-
 ## Fase 5 — Frontend Angular
 
 > Cada componente es standalone. Sin NgModules. Usar signals para estado. No usar NgRx.
 > Todos los colores via tokens Aurora — nunca hardcodeados.
 
 ---
-
-
 
 ### ~~T13 · Scaffolding Angular + ThemeService + tokens~~
 
@@ -391,8 +357,6 @@ Cada fase produce código funcional y testeable antes de avanzar a la siguiente.
 
 ---
 
-
-
 ### T14 · DashboardService + RemindersService (HTTP)
 
 **Objetivo:** Servicios Angular para comunicarse con el backend.
@@ -414,8 +378,6 @@ Cada fase produce código funcional y testeable antes de avanzar a la siguiente.
 - `RemindersService.delete(id)` → `DELETE /api/reminders/:id`
 
 ---
-
-
 
 ### ~~T15 · DashboardComponent + DashboardStore + Header + Tabs~~
 
@@ -439,8 +401,6 @@ Cada fase produce código funcional y testeable antes de avanzar a la siguiente.
 - `DashboardStore.digest` se carga al montar el componente; `loading` muestra un spinner
 
 ---
-
-
 
 ### ~~T16 · TodoListComponent (tab Hoy)~~
 
@@ -468,8 +428,6 @@ Cada fase produce código funcional y testeable antes de avanzar a la siguiente.
 
 ---
 
-
-
 ### ~~T17 · SourcesComponent (tab Fuentes — secciones sin Recordatorios)~~
 
 **Objetivo:** Vista detallada de Jira, GitHub, Calendar y Slack.
@@ -495,8 +453,6 @@ Cada fase produce código funcional y testeable antes de avanzar a la siguiente.
 
 ---
 
-
-
 ### ~~T18 · RemindersSectionComponent + ReminderFormComponent~~
 
 **Objetivo:** Sección de recordatorios con escalación visual y formulario de creación inline.
@@ -521,11 +477,7 @@ Cada fase produce código funcional y testeable antes de avanzar a la siguiente.
 
 ---
 
-
-
 ## Fase 6 — Docker y despliegue
-
-
 
 ### ~~T19 · Dockerfile multi-stage~~
 
@@ -549,8 +501,6 @@ Cada fase produce código funcional y testeable antes de avanzar a la siguiente.
 - `docker run -e SERVE_STATIC=false daily-portal` expone solo `/api/*`
 
 ---
-
-
 
 ### ~~T20 · Docker Compose + nginx + .env.example~~
 
@@ -576,11 +526,7 @@ Cada fase produce código funcional y testeable antes de avanzar a la siguiente.
 
 ---
 
-
-
 ## Fase 7 — Refactors técnicos
-
-
 
 ### ~~T21 · Migrar HTTP client de integraciones a axios~~
 
@@ -605,15 +551,11 @@ Cada fase produce código funcional y testeable antes de avanzar a la siguiente.
 
 ---
 
-
-
 ## Fase 8 — Portal de documentación
 
 > Referencia de enfoque: `fjbatresv/sdg19-final` usa Starlight como sitio principal, Compodoc para frontend, TypeDoc para backend y una API reference/playground generado desde OpenAPI.
 
 ---
-
-
 
 ### T22 · Sitio principal de documentación con Astro Starlight
 
@@ -635,8 +577,6 @@ Cada fase produce código funcional y testeable antes de avanzar a la siguiente.
 
 ---
 
-
-
 ### T23 · Compodoc para documentación del frontend Angular
 
 **Objetivo:** Integrar Compodoc para generar documentación del frontend Angular standalone.
@@ -654,8 +594,6 @@ Cada fase produce código funcional y testeable antes de avanzar a la siguiente.
 - Standalone components, services, stores y modelos públicos relevantes tienen docstrings útiles.
 
 ---
-
-
 
 ### T24 · TypeDoc para documentación del backend NestJS
 
@@ -675,8 +613,6 @@ Cada fase produce código funcional y testeable antes de avanzar a la siguiente.
 
 ---
 
-
-
 ### T25 · API reference y playground desde OpenAPI
 
 **Objetivo:** Publicar una referencia navegable y playground de API usando `openapi.yaml` como contrato fuente.
@@ -694,8 +630,6 @@ Cada fase produce código funcional y testeable antes de avanzar a la siguiente.
 - El playground puede configurarse para apuntar a una URL base local o desplegada.
 
 ---
-
-
 
 ### T26 · Guías de setup y operación en español e inglés
 
@@ -715,8 +649,6 @@ Cada fase produce código funcional y testeable antes de avanzar a la siguiente.
 - La documentación no incluye secretos reales ni valores privados.
 
 ---
-
-
 
 ## Notas generales para Codex
 

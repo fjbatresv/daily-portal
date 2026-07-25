@@ -17,7 +17,7 @@ Daily Portal es un monorepo con backend NestJS, frontend Angular, SQLite para pe
 
 La imagen del backend se construye desde la raiz del repo. El Dockerfile compila Angular en un stage separado, compila NestJS y copia el frontend final a `/app/public`.
 
-`SERVE_STATIC=true` hace que NestJS sirva la SPA. `SERVE_STATIC=false` deja a NestJS solo con `/api/*` y habilita el perfil nginx para servir archivos estaticos.
+`SERVE_STATIC=true` hace que NestJS sirva la SPA. `SERVE_STATIC=false` deja a NestJS solo con `/api/*`; para servir archivos estaticos con nginx tambien se debe cargar `docker-compose.nginx-override.yml` junto con el perfil `nginx`.
 
 ## Documentacion fuente
 

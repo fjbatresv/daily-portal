@@ -99,6 +99,22 @@ describe('DashboardStore', () => {
     expect(store.loading()).toBe(false);
   });
 
+  it('uses the portal timezone date for fallback digest acknowledgement keys', () => {
+    dashboard.autoRefresh.and.returnValue(throwError(() => new Error('offline')));
+    localStorage.setItem('portal:acknowledged:2026-07-24', JSON.stringify(['jira:1:Tarea']));
+    jasmine.clock().install();
+
+    try {
+      jasmine.clock().mockDate(new Date('2026-07-25T03:30:00.000Z'));
+      store.load();
+    } finally {
+      jasmine.clock().uninstall();
+    }
+
+    expect(store.digest()?.date).toBe('2026-07-24');
+    expect(store.acknowledged()).toEqual(new Set(['jira:1:Tarea']));
+  });
+
   it('returns an empty todo list before a digest is available', () => {
     expect(store.todoItems()).toEqual([]);
     expect(store.pendingTodoCount()).toBe(0);

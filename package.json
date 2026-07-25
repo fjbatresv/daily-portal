@@ -7,8 +7,8 @@
     "npm": ">=10"
   },
   "scripts": {
-    "format": "prettier --write \"{backend,frontend,docs-site,scripts}/**/*.{ts,html,css,mjs,cjs,json,js,md}\" \"*.json\" \".github/**/*.yml\" \"docker-compose*.yml\"",
-    "format:check": "prettier --check \"{backend,frontend,docs-site,scripts}/**/*.{ts,html,css,mjs,cjs,json,js,md}\" \"*.json\" \".github/**/*.yml\" \"docker-compose*.yml\"",
+    "format": "prettier --write \"{backend,frontend,docs-site,scripts}/**/*.{ts,html,css,mjs,cjs,json,js,md}\" \"docs/**/*.md\" \"*.md\" \"*.json\" \".github/**/*.yml\" \"docker-compose*.yml\"",
+    "format:check": "prettier --check \"{backend,frontend,docs-site,scripts}/**/*.{ts,html,css,mjs,cjs,json,js,md}\" \"docs/**/*.md\" \"*.md\" \"*.json\" \".github/**/*.yml\" \"docker-compose*.yml\"",
     "docstrings:check": "node scripts/check-docstrings.cjs",
     "docs:frontend": "compodoc -c .compodocrc.json",
     "docs:frontend:coverage": "compodoc -c .compodocrc.json --coverageTest 80 --coverageTestThresholdFail true --coverageTestShowOnlyFailed --output /tmp/daily-portal-compodoc-frontend --silent",

@@ -7,26 +7,26 @@
 
 ## Stack
 
-| Capa | Tecnología | Nota |
-|---|---|---|
-| Frontend | Angular 22+ (standalone components) | |
-| Backend | NestJS (Node.js) | |
-| Base de datos | SQLite 3 | Archivo en volumen Docker, sin contenedor separado |
-| Cache | Redis 8 (alpine) | ~15 MB RAM idle, evita rate limiting en APIs externas |
-| Notificaciones | Telegram Bot API | Bot creado con @BotFather |
-| Infra | Docker Compose | Sin Compose Watch, Raspberry Pi OS |
-| Túnel | Cloudflare Tunnel | Configurado en la RPi; solo expone el puerto **8090** |
+| Capa           | Tecnología                          | Nota                                                  |
+| -------------- | ----------------------------------- | ----------------------------------------------------- |
+| Frontend       | Angular 22+ (standalone components) |                                                       |
+| Backend        | NestJS (Node.js)                    |                                                       |
+| Base de datos  | SQLite 3                            | Archivo en volumen Docker, sin contenedor separado    |
+| Cache          | Redis 8 (alpine)                    | ~15 MB RAM idle, evita rate limiting en APIs externas |
+| Notificaciones | Telegram Bot API                    | Bot creado con @BotFather                             |
+| Infra          | Docker Compose                      | Sin Compose Watch, Raspberry Pi OS                    |
+| Túnel          | Cloudflare Tunnel                   | Configurado en la RPi; solo expone el puerto **8090** |
 
 ### Integraciones activas / inactivas
 
-| Integración | Estado | Auth |
-|---|---|---|
-| Jira | ✅ Activa si se configuran credenciales | API Token |
-| ClickUp | ⛔ Desactivada | — |
-| GitHub | ✅ Activa | Personal Access Token |
-| Google Calendar | ✅ Activa si se configuran credenciales | OAuth2 Refresh Token |
-| Slack | ✅ Activa si se configuran credenciales | User OAuth Token (`xoxp-`) |
-| Telegram | ✅ Activa si se configuran credenciales | Bot Token |
+| Integración     | Estado                                  | Auth                       |
+| --------------- | --------------------------------------- | -------------------------- |
+| Jira            | ✅ Activa si se configuran credenciales | API Token                  |
+| ClickUp         | ⛔ Desactivada                          | —                          |
+| GitHub          | ✅ Activa                               | Personal Access Token      |
+| Google Calendar | ✅ Activa si se configuran credenciales | OAuth2 Refresh Token       |
+| Slack           | ✅ Activa si se configuran credenciales | User OAuth Token (`xoxp-`) |
+| Telegram        | ✅ Activa si se configuran credenciales | Bot Token                  |
 
 ---
 
@@ -406,12 +406,12 @@ daily-portal/
 
 El portal soporta dos modos controlados por la variable `SERVE_STATIC` y el perfil de Compose:
 
-| Modo | Cuándo usarlo | Cómo levantar |
-|---|---|---|
-| **Sin nginx** (default) | Ya tienes Caddy u otro proxy (uso con proxy externo) | `docker compose up` |
-| **Con nginx** | Instalación standalone sin proxy externo | `docker compose --profile nginx up` |
+| Modo                    | Cuándo usarlo                                            | Cómo levantar                       |
+| ----------------------- | -------------------------------------------------------- | ----------------------------------- |
+| **Sin nginx** (default) | Cloudflare Tunnel u otro proxy externo apunta al backend | `docker compose up`                 |
+| **Con nginx**           | Instalación standalone sin proxy externo                 | `docker compose --profile nginx up` |
 
-En el modo **sin nginx**, el backend NestJS sirve el frontend Angular directamente via `@nestjs/serve-static`. El contenedor expone el puerto `HOST_PORT` (default 8090) directamente al host. Caddy o Cloudflare Tunnel apuntan a ese puerto.
+En el modo **sin nginx**, el backend NestJS sirve el frontend Angular directamente via `@nestjs/serve-static`. El contenedor expone el puerto `HOST_PORT` (default 8090) directamente al host. Cloudflare Tunnel u otro proxy externo apuntan a ese puerto.
 
 En el modo **con nginx**, el perfil `nginx` activa un contenedor nginx que sirve los archivos estáticos y hace proxy de `/api/*` al backend. El backend no expone ningún puerto al host.
 
@@ -421,7 +421,7 @@ El build de Angular **siempre va embebido en la imagen del backend** (multi-stag
 
 ## Diagrama de Infraestructura — Raspberry Pi
 
-### Modo sin nginx (default — setup con proxy externo con Caddy)
+### Modo sin nginx (default — setup con proxy externo)
 
 ```mermaid
 graph TB
@@ -431,10 +431,6 @@ graph TB
 
   subgraph Cloudflare
     CF[Cloudflare Tunnel<br/>→ localhost:8090]
-  end
-
-  subgraph RPi - Host
-    CADDY[Caddy<br/>puerto 80/443<br/>ya existente]
   end
 
   subgraph RPi - Docker portal-net
@@ -449,7 +445,7 @@ graph TB
   NESTJS --> SQLITE
 ```
 
-> Puerto expuesto al host: `HOST_PORT` (default 8090). Cloudflare Tunnel o Caddy apuntan ahí.
+> Puerto expuesto al host: `HOST_PORT` (default 8090). Cloudflare Tunnel u otro proxy externo apuntan ahi.
 
 ### Modo con nginx (standalone)
 
@@ -489,7 +485,7 @@ services:
     networks:
       - portal-net
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: ['CMD', 'redis-cli', 'ping']
       interval: 10s
       timeout: 3s
       retries: 5
@@ -497,7 +493,7 @@ services:
   backend:
     build:
       context: .
-      dockerfile: backend/Dockerfile        # multi-stage: Angular + NestJS
+      dockerfile: backend/Dockerfile # multi-stage: Angular + NestJS
       args:
         BUILDPLATFORM: linux/arm64
     container_name: portal-backend
@@ -508,7 +504,7 @@ services:
       SERVE_STATIC: ${SERVE_STATIC:-true}
     ports:
       # Sin nginx: exponer al host. Con nginx: nginx se encarga, este puerto queda interno.
-      - "${HOST_PORT:-8090}:3000"
+      - '${HOST_PORT:-8090}:3000'
     volumes:
       - ./data:/app/data
     depends_on:
@@ -517,7 +513,7 @@ services:
     networks:
       - portal-net
     healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://localhost:3000/api/health || exit 1"]
+      test: ['CMD-SHELL', 'wget -qO- http://localhost:3000/api/health || exit 1']
       interval: 30s
       timeout: 10s
       retries: 3
@@ -527,15 +523,15 @@ services:
   # Cuando está activo: nginx sirve el frontend y hace proxy al backend.
   # El backend NO debe exponer su puerto al host en este modo.
   nginx:
-    profiles: ["nginx"]
+    profiles: ['nginx']
     image: nginx:alpine
     container_name: portal-nginx
     restart: unless-stopped
     ports:
-      - "${HOST_PORT:-8090}:80"
+      - '${HOST_PORT:-8090}:80'
     volumes:
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
-      - nginx-static:/usr/share/nginx/html:ro  # Angular build desde el backend
+      - nginx-static:/usr/share/nginx/html:ro # Angular build desde el backend
     depends_on:
       backend:
         condition: service_healthy
@@ -547,7 +543,7 @@ networks:
     driver: bridge
 
 volumes:
-  nginx-static:     # compartido entre backend (escribe) y nginx (lee) en modo nginx
+  nginx-static: # compartido entre backend (escribe) y nginx (lee) en modo nginx
 ```
 
 > **Sin contenedor de PostgreSQL.** SQLite vive en `./data/portal.db` montado como volumen en el backend.
@@ -561,9 +557,9 @@ Cuando usas el perfil `nginx`, el backend **no debe** exponer su puerto al host.
 # Uso: docker compose -f docker-compose.yml -f docker-compose.nginx-override.yml --profile nginx up
 services:
   backend:
-    ports: []                    # quitar el port binding al host
+    ports: [] # quitar el port binding al host
     environment:
-      SERVE_STATIC: "false"      # nginx sirve el frontend
+      SERVE_STATIC: 'false' # nginx sirve el frontend
 ```
 
 O más simple: poner `SERVE_STATIC=false` en `.env` cuando uses el perfil nginx.
@@ -765,23 +761,25 @@ El servicio usará `search.messages` con query `to:@me` para obtener menciones r
 
 ### Puertos ocupados — no usar
 
-| Puerto | Servicio detectado |
-|---|---|
-| 80 | Caddy (reverse proxy) |
-| 2019 | Caddy admin API |
-| 3000, 3001 | Servicios existentes |
-| 5984 | CouchDB |
-| 8080, 8081 | Servicios existentes |
-| 8123 | Home Assistant |
-| 8888 | Servicio existente |
-| 53 | DNS (Pi-hole / AdGuard) |
-| 139, 445 | Samba |
-| 22 | SSH |
+| Puerto     | Servicio detectado      |
+| ---------- | ----------------------- |
+| 80         | Caddy (reverse proxy)   |
+| 2019       | Caddy admin API         |
+| 3000, 3001 | Servicios existentes    |
+| 5984       | CouchDB                 |
+| 8080, 8081 | Servicios existentes    |
+| 8123       | Home Assistant          |
+| 8888       | Servicio existente      |
+| 53         | DNS (Pi-hole / AdGuard) |
+| 139, 445   | Samba                   |
+| 22         | SSH                     |
 
 **Puerto asignado al portal: `8090`** (libre). Configurar en Cloudflare Tunnel → `http://localhost:8090`.
 
 ### Docker sin sudo
+
 El usuario actual no está en el grupo `docker`. Para evitar usar `sudo` en cada comando:
+
 ```bash
 sudo usermod -aG docker $USER
 # Cerrar sesión y volver a entrar para que tome efecto
@@ -790,7 +788,9 @@ docker ps
 ```
 
 ### Construcción ARM64
+
 Las imágenes se construyen para `linux/arm64` (aarch64). Si construyes desde otra máquina (x86), usa:
+
 ```bash
 docker buildx build --platform linux/arm64 ...
 # O directamente en la RPi donde la arquitectura ya es la correcta
@@ -801,6 +801,7 @@ docker buildx build --platform linux/arm64 ...
 ## Guía de inicio rápido
 
 ### 1. Telegram Bot
+
 ```bash
 # En Telegram:
 # 1. Hablar con @BotFather → /newbot
@@ -809,6 +810,7 @@ docker buildx build --platform linux/arm64 ...
 ```
 
 ### 2. Google Calendar OAuth2
+
 ```
 1. console.cloud.google.com → Nuevo proyecto
 2. APIs & Services → Enable → Google Calendar API
@@ -821,6 +823,7 @@ docker buildx build --platform linux/arm64 ...
 ```
 
 ### 3. Levantar en la RPi
+
 ```bash
 # Clonar el repo en la RPi
 git clone <repo> daily-portal && cd daily-portal

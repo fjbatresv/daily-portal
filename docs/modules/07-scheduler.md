@@ -20,6 +20,7 @@ npm install -D @types/cron
 ```
 
 Registrar en `AppModule`:
+
 ```typescript
 import { ScheduleModule } from '@nestjs/schedule';
 
@@ -35,8 +36,8 @@ export class AppModule {}
 ## Configuración
 
 ```typescript
-scheduler.cron     // default: '0 8 * * *'  (8:00 AM todos los días)
-scheduler.timezone // default: 'America/Guatemala'
+scheduler.cron; // default: '0 8 * * *'  (8:00 AM todos los días)
+scheduler.timezone; // default: 'America/Guatemala'
 ```
 
 ## SchedulerService
@@ -55,10 +56,9 @@ export class SchedulerService {
     private readonly config: ConfigService,
   ) {}
 
-  @Cron(
-    process.env.MORNING_DIGEST_CRON ?? '0 8 * * *',
-    { timeZone: process.env.TZ ?? 'America/Guatemala' }
-  )
+  @Cron(process.env.MORNING_DIGEST_CRON ?? '0 8 * * *', {
+    timeZone: process.env.TZ ?? 'America/Guatemala',
+  })
   async runMorningDigest(): Promise<void> {
     this.logger.log('Starting morning digest...');
 
@@ -81,8 +81,8 @@ export class SchedulerService {
 ```typescript
 @Module({
   imports: [
-    DashboardModule,   // exporta DailyAggregatorService
-    TelegramModule,    // exporta TelegramService
+    DashboardModule, // exporta DailyAggregatorService
+    TelegramModule, // exporta TelegramService
   ],
   providers: [SchedulerService],
 })
@@ -91,12 +91,12 @@ export class SchedulerModule {}
 
 ## Cron expressions de referencia
 
-| Expression | Cuándo |
-|---|---|
-| `0 8 * * *` | 8:00 AM todos los días (default) |
-| `0 8 * * 1-5` | 8:00 AM solo lunes a viernes |
-| `0 7 * * 1-5` | 7:00 AM lunes a viernes |
-| `*/5 * * * *` | Cada 5 minutos (para pruebas) |
+| Expression    | Cuándo                           |
+| ------------- | -------------------------------- |
+| `0 8 * * *`   | 8:00 AM todos los días (default) |
+| `0 8 * * 1-5` | 8:00 AM solo lunes a viernes     |
+| `0 7 * * 1-5` | 7:00 AM lunes a viernes          |
+| `*/5 * * * *` | Cada 5 minutos (para pruebas)    |
 
 ## Test del cron en desarrollo
 
@@ -121,6 +121,7 @@ async triggerManual(): Promise<DailyDigest> {
 ## Test unitario (scheduler.service.spec.ts)
 
 Casos a cubrir:
+
 - `runMorningDigest` llama a `aggregator.buildDailyDigest()` y luego `telegram.sendMorningDigest()`
 - Si `aggregator` lanza error → el método no relanza (catch interno)
 - Si `telegram` lanza error → el método no relanza

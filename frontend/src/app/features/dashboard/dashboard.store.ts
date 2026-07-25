@@ -20,9 +20,24 @@ const acknowledgedPrefix = 'portal:acknowledged:';
 const priorityOrder: Record<Priority, number> = { high: 0, medium: 1, low: 2 };
 
 /**
+ * Formats the current portal-local day for fallback digests and acknowledgement keys.
+ */
+function formatPortalDate(date = new Date()): string {
+  const parts = new Intl.DateTimeFormat('en', {
+    day: '2-digit',
+    month: '2-digit',
+    timeZone: 'America/Guatemala',
+    year: 'numeric',
+  }).formatToParts(date);
+  const value = (type: string) => parts.find((part) => part.type === type)?.value ?? '';
+
+  return `${value('year')}-${value('month')}-${value('day')}`;
+}
+
+/**
  * Builds an empty digest fallback when the API cannot be reached.
  */
-function createEmptyDigest(date = new Date().toISOString().slice(0, 10)): DailyDigest {
+function createEmptyDigest(date = formatPortalDate()): DailyDigest {
   const generatedAt = new Date().toISOString();
 
   return {
