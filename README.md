@@ -144,7 +144,7 @@ The portal will be available at `http://localhost:8090` (or whatever `HOST_PORT`
 ### 3. Start (with nginx)
 
 ```bash
-docker compose --profile nginx up -d
+SERVE_STATIC=false docker compose -f docker-compose.yml -f docker-compose.nginx-override.yml --profile nginx up -d
 ```
 
 In this mode, nginx serves the Angular frontend and proxies `/api/*` to NestJS.

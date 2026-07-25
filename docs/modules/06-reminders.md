@@ -88,7 +88,16 @@ export class RemindersRepository {
 ```typescript
 // findByDate
 const stmt = this.db.instance.prepare(
-  `SELECT * FROM reminders WHERE date = ? AND completed = 0 ORDER BY priority DESC, created_at ASC`,
+  `SELECT * FROM reminders
+   WHERE date = ? AND completed = 0
+   ORDER BY
+     CASE priority
+       WHEN 'high' THEN 3
+       WHEN 'medium' THEN 2
+       WHEN 'low' THEN 1
+       ELSE 0
+     END DESC,
+     created_at ASC`,
 );
 return stmt.all(date) as ReminderRow[];
 
@@ -119,7 +128,8 @@ export class CreateReminderDto {
   @MaxLength(500)
   text: string;
 
-  @IsDateString()
+  @Matches(/^\d{4}-\d{2}-\d{2}$/)
+  @IsDateString({ strict: true })
   date: string; // YYYY-MM-DD
 
   @IsOptional()
@@ -136,7 +146,8 @@ export class UpdateReminderDto {
   text?: string;
 
   @IsOptional()
-  @IsDateString()
+  @Matches(/^\d{4}-\d{2}-\d{2}$/)
+  @IsDateString({ strict: true })
   date?: string;
 
   @IsOptional()

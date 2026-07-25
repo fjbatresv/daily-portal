@@ -6,13 +6,12 @@ on:
   push:
     branches: [main, develop]
 
-permissions:
-  contents: read
-
 jobs:
   validate-config:
     name: Validate CodeRabbit config
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - name: Checkout
         # actions/checkout@v7

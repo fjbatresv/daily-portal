@@ -19,7 +19,7 @@ Angular lee la preferencia del sistema al iniciar y escucha cambios:
 
 ```typescript
 // app.component.ts
-const stored = localStorage.getItem('theme');
+const stored = localStorage.getItem('aurora-theme');
 const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
 document.documentElement.setAttribute('data-theme', stored ?? (systemDark ? 'dark' : 'light'));
 ```
@@ -318,13 +318,33 @@ Siempre usar los CSS custom properties o las clases Tailwind mapeadas.
 
 ### Badges de prioridad
 
+```typescript
+// En un pipe o componente PriorityBadgeComponent
+const priorityTokens = {
+  error: {
+    background: 'var(--color-error-subtle)',
+    color: 'var(--color-error-text)',
+    border: 'var(--color-error-muted)',
+  },
+  warning: {
+    background: 'var(--color-warning-subtle)',
+    color: 'var(--color-warning-text)',
+    border: 'var(--color-warning-muted)',
+  },
+  'text-tertiary': {
+    background: 'transparent',
+    color: 'var(--color-text-tertiary)',
+    border: 'var(--color-border-subtle)',
+  },
+};
+```
+
 ```html
-<!-- En un pipe o componente PriorityBadgeComponent -->
 <span
   class="badge"
-  [style.background]="'var(--color-' + priority + '-subtle)'"
-  [style.color]="'var(--color-' + priority + '-text)'"
-  [style.border-color]="'var(--color-' + priority + '-muted)'"
+  [style.background]="priorityTokens[priority].background"
+  [style.color]="priorityTokens[priority].color"
+  [style.border-color]="priorityTokens[priority].border"
 >
   {{ label }}
 </span>
@@ -368,9 +388,11 @@ Cada sección del dashboard usa su color de integración para el borde izquierdo
 } // Hero, contador grande
 
 // Pesos
-font-weight: 400; // Cuerpo
-font-weight: 500; // Labels, botones, badges
-font-weight: 600; // Títulos de sección (solo h2/h3)
+:root {
+  --font-weight-body: 400; // Cuerpo
+  --font-weight-medium: 500; // Labels, botones, badges
+  --font-weight-semibold: 600; // Títulos de sección (solo h2/h3)
+}
 ```
 
 ---

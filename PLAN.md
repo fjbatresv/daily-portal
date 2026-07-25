@@ -518,7 +518,7 @@ Cada fase produce código funcional y testeable antes de avanzar a la siguiente.
 **Criterios de aceptación:**
 
 - `docker compose up -d` levanta backend + redis; Angular servido por NestJS (SERVE_STATIC=true)
-- `docker compose --profile nginx up -d` levanta backend + redis + nginx; Angular servido por nginx (SERVE_STATIC=false)
+- `SERVE_STATIC=false docker compose -f docker-compose.yml -f docker-compose.nginx-override.yml --profile nginx up -d` levanta backend + redis + nginx; Angular servido por nginx
 - El volumen `./data:/app/data` persiste la base de datos SQLite entre reinicios
 - El volumen `redis-data` persiste el cache de Redis
 - El puerto expuesto es `${HOST_PORT:-8090}:3000`
@@ -557,7 +557,7 @@ Cada fase produce código funcional y testeable antes de avanzar a la siguiente.
 
 ---
 
-### T22 · Sitio principal de documentación con Astro Starlight
+### ~~T22 · Sitio principal de documentación con Astro Starlight~~
 
 **Objetivo:** Crear un sitio estático de documentación en `docs-site/` que sirva como entrada principal para arquitectura, módulos, operación local y despliegue.
 
@@ -577,7 +577,7 @@ Cada fase produce código funcional y testeable antes de avanzar a la siguiente.
 
 ---
 
-### T23 · Compodoc para documentación del frontend Angular
+### ~~T23 · Compodoc para documentación del frontend Angular~~
 
 **Objetivo:** Integrar Compodoc para generar documentación del frontend Angular standalone.
 
@@ -595,7 +595,7 @@ Cada fase produce código funcional y testeable antes de avanzar a la siguiente.
 
 ---
 
-### T24 · TypeDoc para documentación del backend NestJS
+### ~~T24 · TypeDoc para documentación del backend NestJS~~
 
 **Objetivo:** Integrar TypeDoc para generar referencia técnica del backend.
 
@@ -613,7 +613,7 @@ Cada fase produce código funcional y testeable antes de avanzar a la siguiente.
 
 ---
 
-### T25 · API reference y playground desde OpenAPI
+### ~~T25 · API reference y playground desde OpenAPI~~
 
 **Objetivo:** Publicar una referencia navegable y playground de API usando `openapi.yaml` como contrato fuente.
 
@@ -631,7 +631,7 @@ Cada fase produce código funcional y testeable antes de avanzar a la siguiente.
 
 ---
 
-### T26 · Guías de setup y operación en español e inglés
+### ~~T26 · Guías de setup y operación en español e inglés~~
 
 **Objetivo:** Agregar guías bilingües para desarrollo local, variables de entorno, Docker, Raspberry Pi y Cloudflare Tunnel.
 

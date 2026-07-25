@@ -8,7 +8,7 @@ This repository could not use the external Graphify Python runtime in the local 
 
 - Files indexed: 213
 - Nodes: 273
-- Edges: 406
+- Edges: 405
 - Communities: 22
 
 ## Communities

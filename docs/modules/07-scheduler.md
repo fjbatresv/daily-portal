@@ -35,9 +35,9 @@ export class AppModule {}
 
 ## Configuración
 
-```typescript
-scheduler.cron; // default: '0 8 * * *'  (8:00 AM todos los días)
-scheduler.timezone; // default: 'America/Guatemala'
+```text
+MORNING_DIGEST_CRON=0 8 * * *      # 8:00 AM todos los días
+TZ=America/Guatemala               # timezone del cron
 ```
 
 ## SchedulerService
@@ -103,7 +103,7 @@ export class SchedulerModule {}
 Para verificar que el mensaje llega sin esperar las 8 AM, cambiar temporalmente el cron a cada minuto:
 
 ```bash
-MORNING_DIGEST_CRON="* * * * *"  # en .env local
+MORNING_DIGEST_CRON="* * * * *" TZ="America/Guatemala" # en .env local
 ```
 
 O exponer un endpoint de disparo manual (solo en desarrollo):

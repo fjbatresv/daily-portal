@@ -4638,15 +4638,6 @@
       "weight": 1
     },
     {
-      "source": "file:AGENTS.md",
-      "target": "file:scripts/check-docstrings.cjs",
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1,
-      "source_file": "AGENTS.md",
-      "weight": 1
-    },
-    {
       "source": "file:CONTRIBUTING.md",
       "target": "file:AGENTS.md",
       "relation": "references",

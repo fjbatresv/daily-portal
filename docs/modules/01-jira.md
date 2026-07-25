@@ -43,7 +43,7 @@ GET /rest/api/3/search
 
 **Query params:**
 
-```
+```text
 jql=project={projectKey} AND assignee=currentUser() AND statusCategory in ("In Progress","To Do") ORDER BY updated DESC
 fields=summary,status,priority,assignee
 maxResults=20

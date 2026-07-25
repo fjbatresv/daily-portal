@@ -406,10 +406,10 @@ daily-portal/
 
 El portal soporta dos modos controlados por la variable `SERVE_STATIC` y el perfil de Compose:
 
-| Modo                    | Cuándo usarlo                                            | Cómo levantar                       |
-| ----------------------- | -------------------------------------------------------- | ----------------------------------- |
-| **Sin nginx** (default) | Cloudflare Tunnel u otro proxy externo apunta al backend | `docker compose up`                 |
-| **Con nginx**           | Instalación standalone sin proxy externo                 | `docker compose --profile nginx up` |
+| Modo                    | Cuándo usarlo                                            | Cómo levantar                                                                                                     |
+| ----------------------- | -------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| **Sin nginx** (default) | Cloudflare Tunnel u otro proxy externo apunta al backend | `docker compose up`                                                                                               |
+| **Con nginx**           | Instalación standalone sin proxy externo                 | `SERVE_STATIC=false docker compose -f docker-compose.yml -f docker-compose.nginx-override.yml --profile nginx up` |
 
 En el modo **sin nginx**, el backend NestJS sirve el frontend Angular directamente via `@nestjs/serve-static`. El contenedor expone el puerto `HOST_PORT` (default 8090) directamente al host. Cloudflare Tunnel u otro proxy externo apuntan a ese puerto.
 
@@ -518,32 +518,12 @@ services:
       timeout: 10s
       retries: 3
 
-  # ── Perfil nginx (opcional) ───────────────────────────────────────────────
-  # Activar con: docker compose --profile nginx up
-  # Cuando está activo: nginx sirve el frontend y hace proxy al backend.
-  # El backend NO debe exponer su puerto al host en este modo.
-  nginx:
-    profiles: ['nginx']
-    image: nginx:alpine
-    container_name: portal-nginx
-    restart: unless-stopped
-    ports:
-      - '${HOST_PORT:-8090}:80'
-    volumes:
-      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
-      - nginx-static:/usr/share/nginx/html:ro # Angular build desde el backend
-    depends_on:
-      backend:
-        condition: service_healthy
-    networks:
-      - portal-net
-
 networks:
   portal-net:
     driver: bridge
 
 volumes:
-  nginx-static: # compartido entre backend (escribe) y nginx (lee) en modo nginx
+  redis-data:
 ```
 
 > **Sin contenedor de PostgreSQL.** SQLite vive en `./data/portal.db` montado como volumen en el backend.
@@ -557,12 +537,24 @@ Cuando usas el perfil `nginx`, el backend **no debe** exponer su puerto al host.
 # Uso: docker compose -f docker-compose.yml -f docker-compose.nginx-override.yml --profile nginx up
 services:
   backend:
-    ports: [] # quitar el port binding al host
+    ports: !reset [] # quitar el port binding al host
     environment:
       SERVE_STATIC: 'false' # nginx sirve el frontend
+
+  nginx:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+      target: nginx-static
+    profiles:
+      - nginx
+    ports:
+      - '${HOST_PORT:-8090}:80'
+    depends_on:
+      - backend
 ```
 
-O más simple: poner `SERVE_STATIC=false` en `.env` cuando uses el perfil nginx.
+El override evita que backend y nginx intenten publicar el mismo `HOST_PORT`. El target `nginx-static` copia el build Angular en la imagen nginx durante el build, por lo que no se necesita un named volume para poblar `/usr/share/nginx/html`.
 
 ---
 

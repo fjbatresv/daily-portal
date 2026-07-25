@@ -6,13 +6,12 @@ on:
       - develop
       - main
 
-permissions:
-  contents: read
-
 jobs:
   checks:
     name: Lint, format, test and build
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - name: Checkout
         # actions/checkout@v7

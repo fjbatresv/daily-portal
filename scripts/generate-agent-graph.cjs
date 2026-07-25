@@ -415,6 +415,9 @@ const html = `<!doctype html>
       const group = document.createElementNS('http://www.w3.org/2000/svg', 'g');
       group.setAttribute('class', 'node');
       group.setAttribute('transform', \`translate(\${node.x},\${node.y})\`);
+      group.setAttribute('tabindex', '0');
+      group.setAttribute('role', 'button');
+      group.setAttribute('aria-label', \`Inspect \${node.label}\`);
       const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
       circle.setAttribute('r', node.id.startsWith('package:') ? 4 : 6);
       circle.setAttribute('fill', node.color);
@@ -422,10 +425,17 @@ const html = `<!doctype html>
       title.textContent = node.label;
       group.appendChild(title);
       group.appendChild(circle);
-      group.addEventListener('click', () => {
+      const inspectNode = () => {
         const out = graph.links.filter((edge) => edge.source === node.id || edge.target === node.id).slice(0, 12);
         details.innerHTML = '<strong>' + escape(node.label) + '</strong><br><code>' + escape(node.community) + '</code><br><br>' +
           out.map((edge) => '<code>' + escape(edge.relation) + '</code> ' + escape(edge.source === node.id ? nodeMap.get(edge.target)?.label ?? edge.target : nodeMap.get(edge.source)?.label ?? edge.source)).join('<br>');
+      };
+      group.addEventListener('click', inspectNode);
+      group.addEventListener('keydown', (event) => {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault();
+          inspectNode();
+        }
       });
       svg.appendChild(group);
     }

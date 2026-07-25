@@ -118,7 +118,7 @@ describe('GitHubService', () => {
     expect(axiosPostMock).toHaveBeenCalledWith(
       'https://api.github.com/graphql',
       expect.objectContaining({
-        variables: { query: 'is:pr is:open author:octocat' },
+        variables: { query: 'is:pr is:open (author:octocat OR review-requested:octocat)' },
       }),
       expect.objectContaining({
         headers: {
@@ -133,7 +133,9 @@ describe('GitHubService', () => {
       throw new Error('Expected GitHub request body to match the GraphQL payload');
     }
     expect(requestBody.query).toContain('query SearchAssignedPRs');
-    expect(requestBody.variables.query).toBe('is:pr is:open author:octocat');
+    expect(requestBody.variables.query).toBe(
+      'is:pr is:open (author:octocat OR review-requested:octocat)',
+    );
     expect(cache.set.mock.calls).toEqual([
       ['github:prs', [mappedPR], 300],
       ['github:prs:last-success', [mappedPR], 86400],

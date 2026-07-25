@@ -37,8 +37,8 @@ Content-Type: application/json
 
 ```graphql
 # Guardar en github.queries.ts como constante SEARCH_PRS_QUERY
-query SearchAssignedPRs($username: String!) {
-  search(query: "is:pr is:open author:$username", type: ISSUE, first: 20) {
+query SearchAssignedPRs($query: String!) {
+  search(query: $query, type: ISSUE, first: 20) {
     nodes {
       ... on PullRequest {
         id
@@ -91,10 +91,14 @@ Un PR tiene comentarios nuevos si existe algún comentario o review con `created
 
 ```typescript
 const cutoff = new Date(Date.now() - 24 * 60 * 60 * 1000);
-const hasNewComments = [...pr.comments.nodes, ...pr.reviews.nodes].some(
-  (c) => new Date(c.createdAt) > cutoff && c.author.login !== username,
-);
+const hasNewComments = [...pr.comments.nodes, ...pr.reviews.nodes].some((c) => {
+  const authorLogin = c.author?.login;
+
+  return authorLogin !== undefined && authorLogin !== username && new Date(c.createdAt) > cutoff;
+});
 ```
+
+La variable `query` se construye con el usuario configurado, por ejemplo: `is:pr is:open (author:{username} OR review-requested:{username})`. Los autores eliminados o fantasma (`author === null`) no cuentan como actividad de terceros.
 
 ## Interfaz del servicio
 

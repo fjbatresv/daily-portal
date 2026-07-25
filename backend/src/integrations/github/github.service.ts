@@ -57,7 +57,9 @@ export class GitHubService {
         'https://api.github.com/graphql',
         {
           query: SEARCH_PRS_QUERY,
-          variables: { query: `is:pr is:open author:${githubConfig.username}` },
+          variables: {
+            query: `is:pr is:open (author:${githubConfig.username} OR review-requested:${githubConfig.username})`,
+          },
         },
         {
           headers: {

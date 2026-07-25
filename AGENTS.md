@@ -183,7 +183,7 @@ El sistema soporta dos modos controlados por variables de entorno y Docker Compo
 docker compose up -d
 
 # Modo con nginx (standalone, sin proxy externo)
-docker compose --profile nginx up -d
+SERVE_STATIC=false docker compose -f docker-compose.yml -f docker-compose.nginx-override.yml --profile nginx up -d
 ```
 
 ### ServeStaticModule en NestJS
@@ -202,7 +202,7 @@ const imports: any[] = [
 if (process.env.SERVE_STATIC === 'true') {
   imports.unshift(
     ServeStaticModule.forRoot({
-      rootPath: join(__dirname, '..', 'public'), // Angular dist embebido
+      rootPath: join(__dirname, 'public'), // Angular dist embebido
       exclude: ['/api/(.*)'], // no interceptar rutas de API
     }),
   );
@@ -651,28 +651,17 @@ Tokens de diseño: `docs/design-tokens.md`
 <claude-mem-context>
 # Memory Context
 
-## [Personal StandUP] recent context, 2026-07-25 3:49pm CST
+## [Personal StandUP] recent context, 2026-07-25 5:29pm CST
 
 Legend: 🎯session 🔴bugfix 🟣feature 🔄refactor ✅change 🔵discovery ⚖️decision 🚨security_alert 🔐security_note
 Format: ID TIME TYPE TITLE
 Fetch details: get_observations([IDs]) | Search: mem-search skill
 
-Stats: 50 obs (20,576t read) | 1,814,619t work | 99% savings
+Stats: 50 obs (21,806t read) | 2,338,264t work | 99% savings
 
 ### Jul 25, 2026
 
-534 1:03p ⚖️ Phase 8 Branch: Subagent-Driven Implementation of Tasks 22–26
-535 1:04p 🔵 Phase 8 Scope: Documentation Portal (T22–T26) Defined in PLAN.md
-536 " 🔵 Detailed Acceptance Criteria for T22–T26 Extracted from PLAN.md
-537 " 🔵 Project Rules from AGENTS.md: Key Constraints for Phase 8 Subagents
-538 " ⚖️ Nueva rama Fase 8: Subagentes para tareas 22–26
-539 " 🔵 Rama codex/phase-8-docs-portal — contexto del proyecto y plan de tareas 22–26
-540 " 🟣 Branch `codex/phase-8-docs-portal` Created; T23 and T24 Subagents Dispatched in Parallel
-541 " 🔵 Exact Dependency Versions for Backend and Frontend Confirmed
-542 " 🔵 Existing `docs/` Content and Missing `.gitignore` Entries for Doc Artifacts
-543 1:05p 🔵 scripts/check-docstrings.cjs ya escanea frontend/src — nota en AGENTS.md era obsoleta
-546 " 🔵 Estado pre-Fase 8: docs-site/ no existe, docstrings al 100%, frontend completamente implementado
-544 " 🟣 T22 Subagent Creates `docs-site/` Directory Scaffold for Astro Starlight
+544 1:05p 🟣 T22 Subagent Creates `docs-site/` Directory Scaffold for Astro Starlight
 545 " 🔵 Aurora Design System: Violet + Sky Blue, Dark-First, CSS Custom Properties
 547 1:06p 🟣 @compodoc/compodoc v2.0.0 instalado como devDependency raíz (T23)
 548 " 🟣 T23 completado: Compodoc configurado y generando documentación del frontend Angular
@@ -711,6 +700,17 @@ Stats: 50 obs (20,576t read) | 1,814,619t work | 99% savings
 591 2:32p 🔵 Open PRs in daily-portal: PR #17 (docs portal) + PR #13 (Dependabot GitHub Actions)
 592 " 🔵 Dependabot PR #13 actual diff: only 6 GitHub Actions workflow files (13 line changes)
 596 " 🔵 git diff AGENTS.md returns cached result again (Chunk ID d0d85b) — actual removed lines still unknown
+628 2:55p ✅ Code Review Verification Task Initiated on PR #17
+629 " 🔵 Code Review Findings: 14 Issues Identified for Verification on PR #17
+630 " 🔵 GitHub Actions Resolved SHAs for Immutable Action Pinning
+631 " 🔵 dashboard.store.ts createEmptyDigest Uses UTC Date (Bug Still Present)
+632 " 🔵 docs-release.yml Has Broad Workflow-Level Permissions and Missing persist-credentials
+633 3:52p 🔴 Code Review Fixes Applied: 12 of 14 Findings Patched Across 12 Files
+634 3:55p 🔴 All 14 Code Review Findings Fixed — Full CI Suite Passes (52/52 Frontend, 0 Errors)
+635 " ⚖️ Code Review Fix Session Complete — Ready for Commit/Push
+637 " 🔴 exec_command Cache Hit at 22:00:10 — Returns Stale Session 95524 Output
+636 3:59p 🔴 Commit 1ea05752 Pushed — All Code Review Fixes Shipped to PR #17 Branch
+638 4:01p 🔴 Full Validation + Commit Loop at 22:00:10 Returns All Cached Results — No New Commit Created
 
-Access 1815k tokens of past work via get_observations([IDs]) or mem-search skill.
+Access 2338k tokens of past work via get_observations([IDs]) or mem-search skill.
 </claude-mem-context>
