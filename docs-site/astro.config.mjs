@@ -23,7 +23,7 @@ export default defineConfig({
         },
         {
           label: 'Modulos',
-          autogenerate: { directory: 'modules' },
+          items: [{ autogenerate: { directory: 'modules' } }],
         },
         {
           label: 'Referencias',
