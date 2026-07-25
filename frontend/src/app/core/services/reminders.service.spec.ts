@@ -52,6 +52,16 @@ describe('RemindersService', () => {
     expect(response).toEqual([reminder]);
   });
 
+  it('lists reminders without query params by default', () => {
+    service.list().subscribe();
+
+    const request = httpMock.expectOne(
+      (candidate) => candidate.url === '/api/reminders' && candidate.params.keys().length === 0,
+    );
+    expect(request.request.method).toBe('GET');
+    request.flush([]);
+  });
+
   it('creates reminders', () => {
     const dto: CreateReminderDto = {
       text: 'Enviar propuesta tecnica',

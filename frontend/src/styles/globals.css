@@ -1,5 +1,4 @@
 @import 'tailwindcss';
-@import '@tabler/icons-webfont/dist/tabler-icons.min.css';
 
 :root,
 [data-theme='dark'] {
