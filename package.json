@@ -19,6 +19,7 @@
     "docs:build": "npm run docs:frontend && npm run docs:backend && npm run build --workspace docs-site",
     "docs:preview": "npm run preview --workspace docs-site",
     "docs:check": "npm run docs:frontend:check && npm run docs:backend:check && npm run check --workspace docs-site",
+    "graphify:repo": "node scripts/generate-agent-graph.cjs",
     "lint": "npm run lint --workspace backend && npm run lint --workspace frontend",
     "test": "npm run test --workspace backend && npm run test --workspace frontend",
     "build": "npm run build --workspace backend && npm run build --workspace frontend",

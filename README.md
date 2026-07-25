@@ -90,6 +90,18 @@ Documentation releases are deployed to GitHub Pages through [`.github/workflows/
 
 For forks, enable GitHub Pages with **Source: GitHub Actions** in the repository settings. The workflow builds the docs with the correct base path for `https://OWNER.github.io/REPO/`.
 
+## Agent Context
+
+AI coding agents should start with [`AGENTS.md`](./AGENTS.md) and [`docs/agent-context.md`](./docs/agent-context.md). The repository includes a generated knowledge graph in [`graphify-out/`](./graphify-out/) with an audit report, raw graph JSON, and an interactive HTML view.
+
+Regenerate it with:
+
+```bash
+source ~/.nvm/nvm.sh
+nvm use
+npm run graphify:repo
+```
+
 ---
 
 ## Prerequisites
