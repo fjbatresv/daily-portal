@@ -1,15 +1,13 @@
 import { Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import axios, { AxiosResponse } from 'axios';
 import { CacheService } from '../../common/cache';
 import { GitHubPR } from '../../common/types/daily-digest.types';
 import { AppConfiguration } from '../../config/configuration';
+import { AxiosPostMock, axiosResponse, getAxiosMock } from '../../../test/axios-test-utils';
 import { GitHubGraphQlResponse, GitHubPRNode } from './github.types';
 import { GitHubService } from './github.service';
 
 jest.mock('axios');
-
-type AxiosPostMock = jest.Mock<Promise<AxiosResponse<unknown>>, [string, unknown?, unknown?]>;
 
 const mappedPR: GitHubPR = {
   id: 42,
@@ -91,7 +89,7 @@ describe('GitHubService', () => {
         return undefined;
       }),
     } as unknown as ConfigService<AppConfiguration, true>;
-    axiosPostMock = getAxiosMock().post;
+    axiosPostMock = getAxiosMock('post').post;
     axiosPostMock.mockReset();
     loggerErrorSpy = jest.spyOn(Logger.prototype, 'error').mockImplementation(() => undefined);
     service = new GitHubService(config, cache);
@@ -344,14 +342,6 @@ describe('GitHubService', () => {
     expect(cache.set.mock.calls).toEqual([['github:prs', [], 30]]);
   });
 });
-
-function axiosResponse<T>(status: number, data: T): AxiosResponse<T> {
-  return { status, data } as unknown as AxiosResponse<T>;
-}
-
-function getAxiosMock(): { post: AxiosPostMock } {
-  return axios as unknown as { post: AxiosPostMock };
-}
 
 function isGitHubRequestBody(value: unknown): value is {
   query: string;

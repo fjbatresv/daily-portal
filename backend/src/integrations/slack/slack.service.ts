@@ -3,6 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import axios from 'axios';
 import { CacheService } from '../../common/cache';
 import { SlackMention } from '../../common/types/daily-digest.types';
+import { stringifyIntegrationResponseData } from '../../common/utils/http-response.util';
 import { AppConfiguration } from '../../config/configuration';
 import { SlackApiMatch, SlackSearchResponse } from './slack.types';
 
@@ -58,7 +59,10 @@ export class SlackService {
 
       if (response.status < 200 || response.status >= 300) {
         this.logger.error(
-          `Slack API returned ${response.status}: ${this.stringifyResponseData(response.data)}`,
+          `Slack API returned ${response.status}: ${stringifyIntegrationResponseData(
+            response.data,
+            'Slack',
+          )}`,
         );
         await this.cacheEmptyMentions();
         return [];
@@ -135,21 +139,5 @@ export class SlackService {
     }
 
     return 'Unknown Slack error';
-  }
-
-  private stringifyResponseData(data: unknown): string {
-    if (typeof data === 'string') {
-      return data;
-    }
-
-    if (data === undefined) {
-      return 'No Slack error response body';
-    }
-
-    try {
-      return JSON.stringify(data);
-    } catch {
-      return 'Unable to serialize Slack error response';
-    }
   }
 }

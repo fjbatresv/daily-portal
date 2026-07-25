@@ -1,15 +1,13 @@
 import { Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import axios, { AxiosResponse } from 'axios';
 import { DailyDigest } from '../common/types/daily-digest.types';
 import { AppConfiguration } from '../config/configuration';
+import { AxiosPostMock, axiosResponse, getAxiosMock } from '../../test/axios-test-utils';
 import { NotificationLogsRepository } from './notification-logs.repository';
 import { TelegramFormatter } from './telegram-formatter.service';
 import { TelegramService } from './telegram.service';
 
 jest.mock('axios');
-
-type AxiosPostMock = jest.Mock<Promise<AxiosResponse<unknown>>, [string, unknown?, unknown?]>;
 
 const digest: DailyDigest = {
   date: '2026-06-29',
@@ -29,7 +27,7 @@ describe('TelegramService', () => {
   let loggerErrorSpy: jest.SpiedFunction<Logger['error']>;
 
   beforeEach(() => {
-    axiosPostMock = getAxiosMock().post;
+    axiosPostMock = getAxiosMock('post').post;
     axiosPostMock.mockReset();
     notificationLogs = {
       create: jest.fn(),
@@ -124,14 +122,6 @@ describe('TelegramService', () => {
     expect(notificationLogs.create.mock.calls).toEqual([['error', 'timeout of 10000ms exceeded']]);
   });
 });
-
-function axiosResponse<T>(status: number, data: T): AxiosResponse<T> {
-  return { status, data } as unknown as AxiosResponse<T>;
-}
-
-function getAxiosMock(): { post: AxiosPostMock } {
-  return axios as unknown as { post: AxiosPostMock };
-}
 
 function isTelegramBody(value: unknown): value is { text: string } {
   return (

@@ -13,6 +13,11 @@ interface TelegramSendMessageBody {
   disable_web_page_preview: boolean;
 }
 
+interface TelegramSendMessageResponse {
+  ok: boolean;
+  description?: string;
+}
+
 /**
  * Sends Telegram Bot API messages and records delivery outcomes.
  */
@@ -58,7 +63,7 @@ export class TelegramService {
         disable_web_page_preview: true,
       };
 
-      const response = await axios.post(
+      const response = await axios.post<TelegramSendMessageResponse>(
         `https://api.telegram.org/bot${botToken}/sendMessage`,
         body,
         {

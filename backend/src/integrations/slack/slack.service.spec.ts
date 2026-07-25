@@ -1,15 +1,13 @@
 import { Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import axios, { AxiosResponse } from 'axios';
 import { CacheService } from '../../common/cache';
 import { SlackMention } from '../../common/types/daily-digest.types';
 import { AppConfiguration } from '../../config/configuration';
+import { AxiosGetMock, axiosResponse, getAxiosMock } from '../../../test/axios-test-utils';
 import { SlackApiMatch, SlackSearchResponse } from './slack.types';
 import { SlackService } from './slack.service';
 
 jest.mock('axios');
-
-type AxiosGetMock = jest.Mock<Promise<AxiosResponse<unknown>>, [string, unknown?]>;
 
 const mappedMention: SlackMention = {
   ts: '1784561400.000000',
@@ -58,7 +56,7 @@ describe('SlackService', () => {
         return undefined;
       }),
     } as unknown as ConfigService<AppConfiguration, true>;
-    axiosGetMock = getAxiosMock().get;
+    axiosGetMock = getAxiosMock('get').get;
     axiosGetMock.mockReset();
     loggerErrorSpy = jest.spyOn(Logger.prototype, 'error').mockImplementation(() => undefined);
     service = new SlackService(config, cache);
@@ -240,11 +238,3 @@ describe('SlackService', () => {
     expect(cache.set.mock.calls).toEqual([['slack:mentions', [], 30]]);
   });
 });
-
-function axiosResponse<T>(status: number, data: T): AxiosResponse<T> {
-  return { status, data } as unknown as AxiosResponse<T>;
-}
-
-function getAxiosMock(): { get: AxiosGetMock } {
-  return axios as unknown as { get: AxiosGetMock };
-}

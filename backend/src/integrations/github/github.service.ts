@@ -3,6 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import axios, { AxiosResponse } from 'axios';
 import { CacheService } from '../../common/cache';
 import { CheckStatus, GitHubPR, PRStatus } from '../../common/types/daily-digest.types';
+import { stringifyIntegrationResponseData } from '../../common/utils/http-response.util';
 import { AppConfiguration } from '../../config/configuration';
 import { SEARCH_PRS_QUERY } from './github.queries';
 import {
@@ -130,7 +131,10 @@ export class GitHubService {
     }
 
     this.logger.error(
-      `GitHub API returned ${response.status}: ${this.stringifyResponseData(response.data)}`,
+      `GitHub API returned ${response.status}: ${stringifyIntegrationResponseData(
+        response.data,
+        'GitHub',
+      )}`,
     );
     await this.cacheEmptyPRs();
     return [];
@@ -203,21 +207,5 @@ export class GitHubService {
     }
 
     return 'Unknown GitHub error';
-  }
-
-  private stringifyResponseData(data: unknown): string {
-    if (typeof data === 'string') {
-      return data;
-    }
-
-    if (data === undefined) {
-      return 'No GitHub error response body';
-    }
-
-    try {
-      return JSON.stringify(data);
-    } catch {
-      return 'Unable to serialize GitHub error response';
-    }
   }
 }

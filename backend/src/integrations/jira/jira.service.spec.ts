@@ -1,15 +1,13 @@
 import { Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import axios, { AxiosResponse } from 'axios';
 import { CacheService } from '../../common/cache';
 import { JiraTask } from '../../common/types/daily-digest.types';
 import { AppConfiguration } from '../../config/configuration';
+import { AxiosGetMock, axiosResponse, getAxiosMock } from '../../../test/axios-test-utils';
 import { JiraSearchResponse } from './jira.types';
 import { JiraService } from './jira.service';
 
 jest.mock('axios');
-
-type AxiosGetMock = jest.Mock<Promise<AxiosResponse<unknown>>, [string, unknown?]>;
 
 const mappedTask: JiraTask = {
   id: '10001',
@@ -56,7 +54,7 @@ describe('JiraService', () => {
         return undefined;
       }),
     } as unknown as ConfigService<AppConfiguration, true>;
-    axiosGetMock = getAxiosMock().get;
+    axiosGetMock = getAxiosMock('get').get;
     axiosGetMock.mockReset();
     loggerErrorSpy = jest.spyOn(Logger.prototype, 'error').mockImplementation(() => undefined);
     service = new JiraService(config, cache);
@@ -197,6 +195,7 @@ describe('JiraService', () => {
 
     expect(loggerErrorSpy).toHaveBeenCalledWith('Jira: rate limit');
     expect(cache.get.mock.calls).toEqual([['jira:tasks'], ['jira:tasks:last-success']]);
+    expect(cache.set.mock.calls).toEqual([['jira:tasks', [mappedTask], 30]]);
   });
 
   it('negative-caches an empty result when rate limit has no fallback data', async () => {
@@ -226,11 +225,3 @@ describe('JiraService', () => {
     expect(cache.set.mock.calls).toEqual([['jira:tasks', [], 30]]);
   });
 });
-
-function axiosResponse<T>(status: number, data: T): AxiosResponse<T> {
-  return { status, data } as unknown as AxiosResponse<T>;
-}
-
-function getAxiosMock(): { get: AxiosGetMock } {
-  return axios as unknown as { get: AxiosGetMock };
-}

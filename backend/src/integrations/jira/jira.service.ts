@@ -3,6 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import axios, { AxiosResponse } from 'axios';
 import { CacheService } from '../../common/cache';
 import { JiraTask } from '../../common/types/daily-digest.types';
+import { stringifyIntegrationResponseData } from '../../common/utils/http-response.util';
 import { AppConfiguration } from '../../config/configuration';
 import { JiraApiIssue, JiraSearchResponse } from './jira.types';
 
@@ -121,6 +122,7 @@ export class JiraService {
       const fallbackTasks = await this.cache.get<JiraTask[]>(this.fallbackCacheKey);
 
       if (fallbackTasks) {
+        await this.cache.set(this.cacheKey, fallbackTasks, this.negativeCacheTtlSeconds);
         return fallbackTasks;
       }
 
@@ -129,7 +131,10 @@ export class JiraService {
     }
 
     this.logger.error(
-      `Jira API returned ${response.status}: ${this.stringifyResponseData(response.data)}`,
+      `Jira API returned ${response.status}: ${stringifyIntegrationResponseData(
+        response.data,
+        'Jira',
+      )}`,
     );
     await this.cacheEmptyTasks();
     return [];
@@ -160,21 +165,5 @@ export class JiraService {
     }
 
     return 'Unknown Jira error';
-  }
-
-  private stringifyResponseData(data: unknown): string {
-    if (typeof data === 'string') {
-      return data;
-    }
-
-    if (data === undefined) {
-      return 'No Jira error response body';
-    }
-
-    try {
-      return JSON.stringify(data);
-    } catch {
-      return 'Unable to serialize Jira error response';
-    }
   }
 }
