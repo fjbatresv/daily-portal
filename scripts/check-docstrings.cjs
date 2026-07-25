@@ -28,7 +28,8 @@ function collectSourceFiles(dir) {
       entry.isFile() &&
       entry.name.endsWith('.ts') &&
       !entry.name.endsWith('.spec.ts') &&
-      !entry.name.endsWith('.types.ts')
+      !entry.name.endsWith('.types.ts') &&
+      !entry.name.endsWith('.d.ts')
     ) {
       return [path];
     }
