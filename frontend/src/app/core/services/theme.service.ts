@@ -1,5 +1,8 @@
 import { Injectable, signal } from '@angular/core';
 
+/**
+ * Theme modes supported by Aurora design tokens.
+ */
 export type Theme = 'dark' | 'light';
 
 /**
@@ -8,6 +11,10 @@ export type Theme = 'dark' | 'light';
 @Injectable({ providedIn: 'root' })
 export class ThemeService {
   private readonly storageKey = 'aurora-theme';
+
+  /**
+   * Current theme reflected on the document element.
+   */
   readonly current = signal<Theme>('dark');
 
   /**

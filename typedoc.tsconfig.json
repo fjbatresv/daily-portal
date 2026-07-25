@@ -1,0 +1,16 @@
+{
+  "extends": "./backend/tsconfig.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "removeComments": false
+  },
+  "include": ["backend/src/**/*.ts"],
+  "exclude": [
+    "backend/dist",
+    "backend/coverage",
+    "backend/test",
+    "backend/src/**/*.spec.ts",
+    "backend/src/**/*.e2e-spec.ts",
+    "node_modules"
+  ]
+}

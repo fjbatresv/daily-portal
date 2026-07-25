@@ -104,7 +104,7 @@ export class TelegramFormatter {
 📋 *Daily Digest — Lunes 29 Jun 2026*
 
 📅 *Calendario* \(3 eventos\)
-• 09:00 Stand\-up Tempus
+• 09:00 Stand\-up del equipo
 • 11:00 Design Review
 • 15:00 1:1 con manager
 
@@ -116,7 +116,7 @@ export class TelegramFormatter {
 • ⚠️ \[api\-gateway\] Comentarios nuevos
 • 🔴 \[frontend\-app\] Checks fallando
 
-💬 *Slack Tempus* \(3 menciones\)
+💬 *Slack* \(3 menciones\)
 • \#backend: "¿cuándo estará el endpoint?"
 
 📌 *Recordatorios de hoy* \(1\)

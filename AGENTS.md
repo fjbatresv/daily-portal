@@ -25,7 +25,7 @@ El usuario accede al portal desde internet mediante Cloudflare Tunnel → puerto
 | Base de datos | SQLite | via `better-sqlite3` (sin ORM) |
 | Cache | Redis | 8 alpine |
 | Contenedores | Docker Compose | v5.x |
-| Lenguaje | TypeScript | 5.x estricto |
+| Lenguaje | TypeScript | estricto |
 
 **Runtime local obligatorio:** usar siempre el Node.js gestionado por `nvm` para comandos locales (`npm install`, `npm test`, `npm run build`, `ng`, etc.). Antes de ejecutar comandos Node/NPM, cargar `nvm` si hace falta:
 
@@ -33,6 +33,18 @@ El usuario accede al portal desde internet mediante Cloudflare Tunnel → puerto
 source ~/.nvm/nvm.sh
 nvm use
 ```
+
+---
+
+## Reglas para agentes — OBLIGATORIAS
+
+1. Lee este archivo completo antes de escribir código.
+2. Lee `README.md`, `CONTRIBUTING.md` y los ADRs en `docs/adr/` antes de cambios amplios de arquitectura, despliegue, persistencia, API pública o documentación.
+3. No publiques ni inventes secretos. Usa placeholders como `you@example.com`, `primary` o `work@example.com`.
+4. No hagas commits, pushes ni abras PRs salvo que el usuario lo pida explícitamente.
+5. No reviertas cambios ajenos en el working tree. Si encuentras cambios no relacionados, déjalos intactos.
+6. Para cambios que afecten el contrato HTTP, actualiza `openapi.yaml`, tipos compartidos, frontend y documentación correspondiente.
+7. Para decisiones de arquitectura nuevas o cambios de despliegue, crea o actualiza un ADR en `docs/adr/` y enlázalo desde `docs/adr/README.md`.
 
 ---
 
@@ -49,7 +61,8 @@ nvm use
 9. **Barrel exports** en cada módulo (`index.ts`).
 10. **Tests unitarios** para cada Service con Jest. Mockear dependencias externas.
 11. **Coverage unitario mínimo 80%.** Cada cambio debe mantener al menos 80% de cobertura global en unit tests (`statements`, `branches`, `functions` y `lines`) para el área afectada.
-12. **Coverage de docstrings mínimo 80%.** Al menos 80% de clases, servicios, controladores, funciones y métodos exportados o públicos deben tener docstrings útiles que expliquen intención, entradas/salidas o comportamiento relevante.
+12. **Coverage de docstrings mínimo 80%.** Al menos 80% de clases, servicios, controladores, funciones, métodos exportados o públicos y símbolos relevantes de frontend deben tener docstrings útiles que expliquen intención, entradas/salidas o comportamiento relevante.
+13. **Documentación como producto.** Cambios en setup, despliegue, arquitectura, API o contribución deben actualizar `README.md`, `CONTRIBUTING.md`, `docs/`, `docs-site/` u `openapi.yaml` según corresponda.
 
 ## Reglas de Pull Request — OBLIGATORIAS
 
@@ -75,6 +88,8 @@ daily-portal/
 ├── nginx/
 │   └── nginx.conf               ← solo para el perfil nginx
 ├── docs/
+│   ├── adr/
+│   │   └── *.md                 ← Architecture Decision Records
 │   └── modules/
 │       ├── 01-jira.md
 │       ├── 02-github.md
@@ -84,6 +99,10 @@ daily-portal/
 │       ├── 06-reminders.md
 │       ├── 07-scheduler.md
 │       └── 08-daily-aggregator.md
+├── docs-site/                   ← Astro Starlight, Compodoc, TypeDoc y OpenAPI docs
+│   ├── astro.config.mjs
+│   ├── package.json
+│   └── src/content/docs/
 │
 ├── backend/                     ← NestJS API
 │   ├── Dockerfile               ← multi-stage: Angular + NestJS, build context=raíz
@@ -537,21 +556,50 @@ Colores semánticos por caso de uso:
 
 ---
 
+## Documentación pública
+
+El proyecto tiene un portal de documentación en `docs-site/`:
+
+- Starlight: sitio principal.
+- Compodoc: referencia del frontend en `docs-site/public/reference/frontend`.
+- TypeDoc: referencia del backend en `docs-site/public/reference/backend`.
+- RapiDoc/OpenAPI: referencia y playground derivados de `openapi.yaml`.
+
+Las salidas generadas en `docs-site/public/` y `docs-site/dist/` no se versionan. Se regeneran con scripts.
+
+GitHub Pages se despliega mediante `.github/workflows/docs-release.yml`. Para forks, Pages debe configurarse con **Source: GitHub Actions**.
+
+---
+
 ## Comandos de desarrollo
 
 ```bash
-# Backend
-cd backend
+# Instalar dependencias desde la raíz
+source ~/.nvm/nvm.sh
+nvm use
 npm install
-npm run start:dev       # watch mode
+
+# Backend
+npm run start:dev --workspace backend
 
 # Frontend
-cd frontend
-npm install
-ng serve               # http://localhost:4200
+npm run start --workspace frontend
 
 # Docker (producción en RPi)
 docker compose up -d --build
+
+# Docs
+npm run docs:dev
+npm run docs:check
+npm run docs:build
+
+# Checks principales
+npm run format:check
+npm run docstrings:check
+npm run lint
+npm run test
+npm run build
+npm run ci
 
 # Migraciones SQLite (solo primer boot)
 # Se ejecutan automáticamente via DatabaseModule al iniciar
@@ -592,56 +640,73 @@ Implementar en este orden para poder validar end-to-end cuanto antes:
 
 Spec del API REST: `openapi.yaml`
 Arquitectura completa: `daily-portal-architecture.md`
+ADRs: `docs/adr/`
 Layout y comportamiento UI: `docs/layout.md`
 Tokens de diseño: `docs/design-tokens.md`
-
-## Imported Claude Cowork project instructions
 
 
 <claude-mem-context>
 # Memory Context
 
-# [Personal StandUP] recent context, 2026-07-22 11:11pm CST
+# [Personal StandUP] recent context, 2026-07-25 2:04pm CST
 
 Legend: 🎯session 🔴bugfix 🟣feature 🔄refactor ✅change 🔵discovery ⚖️decision 🚨security_alert 🔐security_note
 Format: ID TIME TYPE TITLE
 Fetch details: get_observations([IDs]) | Search: mem-search skill
 
-Stats: 32 obs (10,120t read) | 589,508t work | 98% savings
+Stats: 50 obs (20,478t read) | 1,810,259t work | 99% savings
 
-### Jul 20, 2026
-405 5:38p ⚖️ Task Completion Convention: Strike-Through Completed Tasks in PLAN.md
-406 7:02p 🟣 Slack Integration Module Implemented
-407 " 🔴 Slack Spec Timestamp Corrected
-408 " ⚖️ Branch-First Git Workflow Enforced for Task 11
-409 7:12p 🔵 Task 11 Staged on `develop` Branch — Feature Branch Missing
-410 " ✅ Feature Branch `codex/t11-slack-module` Created and Staged
-411 " ✅ Task 11 Committed and Marked Complete in PLAN.md
-412 7:13p 🔵 Repo Default Branch is `main`; Feature Branches Target `develop`
-413 " 🟣 PR #9 Opened for Task 11 Slack Integration
-414 " 🔵 daily-portal CI Pipeline Has 5 Required Checks on PRs
-415 7:24p ✅ Task 12 Backend Work Initiated — Branch Creation
-416 " 🔵 Project State Confirmed — T01–T11 Complete, T12 Is Next
-417 " ⚖️ T12 Implementation Spec: DailyAggregatorService + DashboardController
-418 7:25p 🔵 Critical Interface Details Found Before T12 Implementation
-419 7:26p 🟣 T12: DashboardModule + DailyAggregatorService Created
-420 " 🟣 T12 Unit Tests Added for DailyAggregatorService and DashboardController
-421 " 🔴 Prettier Format Check Fails on Two New Dashboard Files
-423 7:27p ✅ User Confirmed T12 Commit and Push ("Hazlo")
-424 7:35p 🟣 supertest and @types/supertest Installed for Dashboard E2E Tests
-426 " 🔵 Primary Session Restarted — Re-reading Module Files Before Writing Integration Tests
-425 " 🔵 DashboardModule Dependency Graph for Integration Testing
-428 7:36p 🔵 Completed file changes in this batch — summary of all successful patches
-430 7:39p 🔵 tsconfig.json exclude updated — e2e-spec excluded from main build
-432 " 🔵 Two test fixes applied — root cause of reminders failure was timezone mismatch
-437 7:43p 🔵 Ready to commit and push — gh authenticated, 16 files staged, AGENTS.md has unstaged changes
-442 7:47p 🔵 SonarCloud quality gate failed on coverage for PR #10
-443 " 🔵 PR #10 final CI check results — only SonarCloud failed
-444 7:48p 🔵 SonarCloud quality gate root cause: new-code coverage below threshold
-445 " 🔴 SonarCloud new-code coverage 63% fixed by adding e2e-spec to exclusions and test inclusions
-446 " ✅ Local CI pipeline re-run after sonar-project.properties fix — passing so far
-447 " ✅ Local CI fully passes after sonar-project.properties fix — ready to commit
-448 7:49p 🔴 SonarCloud fix committed and pushed — commit 840c57c4
+### Jul 25, 2026
+510 12:25p 🔴 no-unsafe-assignment Fix Strategy: Removing Test Assertions (Not Destructuring)
+511 " 🔴 apply_patch Phantom Success on github.service.spec.ts — Lines Still Present After Reported Success
+515 12:36p 🔵 GitHub CLI (gh) Not Installed — PR Creation Needs Alternative
+516 " ✅ T21 Marked Complete in PLAN.md — Commit Staged for 11 Files
+517 12:37p ✅ T21 Committed and Branch Pushed to GitHub Remote
+518 " 🟣 PR #16 Opened — T21 Axios Migration Published to GitHub
+519 12:51p 🔵 CodeRabbit PR #16 Review: 5 Actionable Comments + 0% Docstring Coverage on Changed Files
+520 " 🔵 JiraService 429 Cache-Write Bug Confirmed — GitHub 403 Handler Has Correct Pattern
+521 " 🔵 stringifyResponseData Duplicated in GitHub/Jira/Slack — Shared Utility Path Identified
+522 " 🔵 TelegramService axios.post Lacks Response Type Generic
+523 12:52p 🔴 Two New Shared Utility Files Created: http-response.util.ts and axios-test-utils.ts
+524 " 🔴 All Three Integration Services Refactored to Use Shared Utilities — Jira 429 Bug Fixed
+525 12:54p 🔵 Build Failure: jest Namespace Unavailable When axios-test-utils.ts Lives in src/
+528 12:55p 🔴 Full CI Gate Results: Build ✅, Tests 141/141 ✅, Lint ✅, Docstrings 135/135 (100%) ✅
+534 1:03p ⚖️ Phase 8 Branch: Subagent-Driven Implementation of Tasks 22–26
+535 1:04p 🔵 Phase 8 Scope: Documentation Portal (T22–T26) Defined in PLAN.md
+536 " 🔵 Detailed Acceptance Criteria for T22–T26 Extracted from PLAN.md
+537 " 🔵 Project Rules from AGENTS.md: Key Constraints for Phase 8 Subagents
+538 " ⚖️ Nueva rama Fase 8: Subagentes para tareas 22–26
+539 " 🔵 Rama codex/phase-8-docs-portal — contexto del proyecto y plan de tareas 22–26
+540 " 🟣 Branch `codex/phase-8-docs-portal` Created; T23 and T24 Subagents Dispatched in Parallel
+541 " 🔵 Exact Dependency Versions for Backend and Frontend Confirmed
+542 " 🔵 Existing `docs/` Content and Missing `.gitignore` Entries for Doc Artifacts
+543 1:05p 🔵 scripts/check-docstrings.cjs ya escanea frontend/src — nota en AGENTS.md era obsoleta
+546 " 🔵 Estado pre-Fase 8: docs-site/ no existe, docstrings al 100%, frontend completamente implementado
+544 " 🟣 T22 Subagent Creates `docs-site/` Directory Scaffold for Astro Starlight
+545 " 🔵 Aurora Design System: Violet + Sky Blue, Dark-First, CSS Custom Properties
+547 1:06p 🟣 @compodoc/compodoc v2.0.0 instalado como devDependency raíz (T23)
+548 " 🟣 T23 completado: Compodoc configurado y generando documentación del frontend Angular
+549 " 🔵 Compodoc coverage ≠ check-docstrings.cjs: 35% vs 100% — métricas distintas
+550 " 🔵 Compodoc mide cobertura a nivel de propiedad/campo — 35% requiere JSDoc en ~65 símbolos adicionales
+552 " 🟣 JSDoc inline en propiedades de interfaces y tipos privados de daily-digest.model.ts
+551 1:07p 🟣 T22 + T26 Implemented: Astro Starlight Site Fully Scaffolded with All Content Pages
+558 1:16p 🟣 GitHub Pages Documentation Deployment Workflow Requested
+559 1:18p 🟣 Source Docs Copied to Public as .txt for GitHub Pages Compatibility
+560 " 🟣 Astro Config Made GitHub Pages-Compatible via DOCS_SITE_URL and DOCS_BASE_PATH Env Vars
+561 " 🔵 Docs Build Passes Clean: 17 Pages, 0 Errors, Pagefind Indexes 16 Pages
+562 1:22p 🟣 GitHub Pages Documentation Deployment Workflow Created
+563 " 🔴 RapiDoc Script and OpenAPI URLs Fixed to Use Relative Paths
+564 1:23p 🔴 Sidebar Links Double-Prefixing Base Path Fixed in astro.config.mjs
+565 " 🔴 Docs Build Passes End-to-End with GitHub Pages Env Vars (Exit 0)
+566 " 🔴 Git Status: All Phase-8 Docs Portal Changes Uncommitted on Current Branch
+567 " 🔴 Sidebar Double-Prefix Bug Confirmed Fixed After astro.config.mjs Patch
+568 " 🔴 README.md Project Structure Section Does Not Yet Include docs-site or New Scripts
+569 " ⚖️ Open Source Project Documentation and Architecture Strategy
+570 1:40p 🟣 Documentation Portal Verified: Full Build Pipeline Passes
+571 " 🟣 ADR Directory Created with 4 Initial Architecture Decision Records
+572 " ✅ README and CONTRIBUTING Updated for Open-Source Public Release
+573 " 🔵 Architecture Doc Contains Stale Port Reference and Redundant .env.example Section
+574 " ✅ Final Documentation De-personalization Pass Completed
 
-Access 590k tokens of past work via get_observations([IDs]) or mem-search skill.
+Access 1810k tokens of past work via get_observations([IDs]) or mem-search skill.
 </claude-mem-context>

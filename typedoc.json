@@ -1,0 +1,30 @@
+{
+  "$schema": "https://typedoc.org/schema.json",
+  "entryPoints": ["backend/src/**/*.ts"],
+  "entryPointStrategy": "expand",
+  "tsconfig": "typedoc.tsconfig.json",
+  "out": "docs-site/public/reference/backend",
+  "name": "Daily Portal Backend",
+  "includeVersion": false,
+  "readme": "none",
+  "cleanOutputDir": true,
+  "exclude": [
+    "backend/dist/**",
+    "backend/coverage/**",
+    "backend/test/**",
+    "backend/src/**/*.spec.ts",
+    "backend/src/**/*.e2e-spec.ts",
+    "node_modules/**"
+  ],
+  "excludeExternals": true,
+  "excludeInternal": true,
+  "excludePrivate": true,
+  "excludeProtected": true,
+  "githubPages": false,
+  "hideGenerator": true,
+  "validation": {
+    "invalidLink": true,
+    "notExported": true,
+    "rewrittenLink": true
+  }
+}

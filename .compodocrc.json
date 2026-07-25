@@ -1,0 +1,15 @@
+{
+  "tsconfig": "frontend/tsconfig.compodoc.json",
+  "output": "docs-site/public/reference/frontend",
+  "name": "Daily Portal Frontend",
+  "language": "es-ES",
+  "theme": "material",
+  "disableSourceCode": false,
+  "disableRoutesGraph": false,
+  "disablePrivate": true,
+  "disableProtected": true,
+  "disableInternal": true,
+  "disableLifeCycleHooks": false,
+  "disableConstructors": true,
+  "hideGenerator": true
+}

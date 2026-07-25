@@ -2,7 +2,7 @@
 
 ## Responsabilidad
 
-Obtener las tareas de Jira (proyecto Tempus) asignadas al usuario autenticado con estado `In Progress` o `To Do`.
+Obtener las tareas de Jira del proyecto configurado asignadas al usuario autenticado con estado `In Progress` o `To Do`.
 
 ## Archivos a crear
 
@@ -17,7 +17,7 @@ backend/src/integrations/jira/
 
 ```typescript
 jira.baseUrl      // https://tu-org.atlassian.net
-jira.email        // fjbatresv@gmail.com
+jira.email        // you@example.com
 jira.apiToken     // token de API de Atlassian
 jira.projectKey   // ej: TEMP
 ```

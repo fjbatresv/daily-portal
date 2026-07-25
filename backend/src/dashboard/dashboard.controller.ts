@@ -2,9 +2,23 @@ import { Controller, Get, HttpCode, Post } from '@nestjs/common';
 import { DailyDigest } from '../common/types/daily-digest.types';
 import { DailyAggregatorService } from './daily-aggregator.service';
 
-interface HealthResponse {
+/**
+ * Public liveness payload returned by the health endpoint.
+ */
+export interface HealthResponse {
+  /**
+   * Fixed marker that indicates the API process is accepting requests.
+   */
   status: 'ok';
+
+  /**
+   * ISO timestamp generated when the health probe is handled.
+   */
   timestamp: string;
+
+  /**
+   * Process uptime in seconds, as reported by Node.js.
+   */
   uptime: number;
 }
 

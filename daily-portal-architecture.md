@@ -1,7 +1,7 @@
 # Daily Portal — Arquitectura del Sistema
 
 > Portal personal de tareas diarias con notificaciones Telegram, integrado con Jira, GitHub, Google Calendar y Slack.
-> Desplegado en Raspberry Pi vía Docker. Cloudflare Tunnel expone el puerto **8080**.
+> Desplegado en Raspberry Pi vía Docker. Cloudflare Tunnel expone el puerto **8090**.
 
 ---
 
@@ -15,18 +15,18 @@
 | Cache | Redis 8 (alpine) | ~15 MB RAM idle, evita rate limiting en APIs externas |
 | Notificaciones | Telegram Bot API | Bot creado con @BotFather |
 | Infra | Docker Compose | Sin Compose Watch, Raspberry Pi OS |
-| Túnel | Cloudflare Tunnel | Configurado en la RPi; solo expone el puerto **8080** |
+| Túnel | Cloudflare Tunnel | Configurado en la RPi; solo expone el puerto **8090** |
 
 ### Integraciones activas / inactivas
 
 | Integración | Estado | Auth |
 |---|---|---|
-| Jira (Tempus) | ✅ Activa | API Token |
-| ClickUp (GTC) | ⛔ Desactivada | — |
+| Jira | ✅ Activa si se configuran credenciales | API Token |
+| ClickUp | ⛔ Desactivada | — |
 | GitHub | ✅ Activa | Personal Access Token |
-| Google Calendar | ✅ Activa (2 calendarios) | OAuth2 Refresh Token |
-| Slack (Tempus) | ✅ Activa | User OAuth Token (`xoxp-`) |
-| Telegram | ✅ Activa | Bot Token |
+| Google Calendar | ✅ Activa si se configuran credenciales | OAuth2 Refresh Token |
+| Slack | ✅ Activa si se configuran credenciales | User OAuth Token (`xoxp-`) |
+| Telegram | ✅ Activa si se configuran credenciales | Bot Token |
 
 ---
 
@@ -36,19 +36,19 @@
 C4Context
   title Daily Portal — Contexto
 
-  Person(user, "Javier", "Accede al portal y recibe notificaciones matutinas.")
+  Person(user, "Usuario", "Accede al portal y recibe notificaciones matutinas.")
 
   System(portal, "Daily Portal", "Portal web en RPi. Agrega tareas, PRs, calendario y Slack para generar un plan diario.")
 
-  System_Ext(jira, "Jira (Tempus)", "Tareas del proyecto Tempus")
+  System_Ext(jira, "Jira", "Tareas del proyecto configurado")
   System_Ext(github, "GitHub", "PRs asignados, comentarios y status checks")
-  System_Ext(gcal, "Google Calendar", "2 calendarios: personal y Tempus")
-  System_Ext(slack, "Slack (Tempus)", "Mensajes y menciones sin bot")
+  System_Ext(gcal, "Google Calendar", "Calendarios configurados")
+  System_Ext(slack, "Slack", "Mensajes y menciones sin bot")
   System_Ext(telegram, "Telegram", "Notificación matutina a las 8 AM")
   System_Ext(cf, "Cloudflare Tunnel", "Exposición segura del portal al exterior")
 
   Rel(user, cf, "Accede al portal", "HTTPS")
-  Rel(cf, portal, "Proxy → puerto 8080", "HTTP")
+  Rel(cf, portal, "Proxy → puerto 8090", "HTTP")
   Rel(portal, jira, "Lee tareas asignadas", "REST API")
   Rel(portal, github, "Lee PRs, comentarios y checks", "GraphQL")
   Rel(portal, gcal, "Lee eventos del día (2 calendarios)", "Calendar API v3")
@@ -64,10 +64,10 @@ C4Context
 C4Container
   title Daily Portal — Contenedores (Raspberry Pi)
 
-  Person(user, "Javier")
+  Person(user, "Usuario")
 
   System_Boundary(rpi, "Raspberry Pi — Docker") {
-    Container(nginx, "nginx", "nginx:alpine", "Reverse proxy. Sirve Angular en / y redirige /api/* al backend. Expone :8080.")
+    Container(nginx, "nginx", "nginx:alpine", "Reverse proxy. Sirve Angular en / y redirige /api/* al backend. Expone :8090.")
     Container(angular_app, "Angular SPA", "Node build → nginx", "Dashboard web.")
     Container(nestjs_api, "NestJS API", "Node 24 LTS slim", "Backend. Módulos de integración, scheduler, CRUD de recordatorios.")
     ContainerDb(sqlite, "SQLite", "Archivo en volumen", "Recordatorios y log de notificaciones. Sin contenedor propio.")
@@ -82,7 +82,7 @@ C4Container
   System_Ext(telegram, "Telegram")
 
   Rel(user, cf, "HTTPS")
-  Rel(cf, nginx, "HTTP → :8080")
+  Rel(cf, nginx, "HTTP → :8090")
   Rel(nginx, angular_app, "/* → archivos estáticos")
   Rel(nginx, nestjs_api, "/api/* → :3000")
   Rel(nestjs_api, sqlite, "better-sqlite3 (sync, in-process)")
@@ -271,7 +271,7 @@ sequenceDiagram
 ```mermaid
 graph TB
   subgraph Internet
-    USER[👤 Javier]
+    USER[👤 Usuario]
     JIRA_E[Jira API]
     GH_E[GitHub GraphQL]
     GCAL_E[Google Calendar API]
@@ -280,7 +280,7 @@ graph TB
   end
 
   subgraph Cloudflare
-    CF[Cloudflare Tunnel<br/>cloudflared en RPi<br/>apunta a localhost:8080]
+    CF[Cloudflare Tunnel<br/>cloudflared en RPi<br/>apunta a localhost:8090]
   end
 
   USER -->|HTTPS tudominio.com| CF
@@ -294,7 +294,7 @@ graph TB
     SQLITE[(SQLite<br/>volumen: ./data/portal.db<br/>sin contenedor propio)]
   end
 
-  CF -->|HTTP localhost:8080| NGINX
+  CF -->|HTTP localhost:8090| NGINX
   NGINX -->|/* | ANGULAR
   NGINX -->|/api/*| NESTJS
   NESTJS --> REDIS
@@ -306,7 +306,7 @@ graph TB
   NESTJS -->|HTTPS| TG_E
 ```
 
-> **Cloudflare Tunnel:** en tu configuración nativa de la RPi, apunta el ingress a `http://localhost:8090`. El contenedor `nginx` expone ese puerto hacia el host con `ports: "8090:80"`.
+> **Cloudflare Tunnel:** en tu configuracion local de la RPi, apunta el ingress a `http://localhost:8090`. El contenedor `nginx` expone ese puerto hacia el host con `ports: "8090:80"`.
 
 ---
 
@@ -408,7 +408,7 @@ El portal soporta dos modos controlados por la variable `SERVE_STATIC` y el perf
 
 | Modo | Cuándo usarlo | Cómo levantar |
 |---|---|---|
-| **Sin nginx** (default) | Ya tienes Caddy u otro proxy (tu caso) | `docker compose up` |
+| **Sin nginx** (default) | Ya tienes Caddy u otro proxy (uso con proxy externo) | `docker compose up` |
 | **Con nginx** | Instalación standalone sin proxy externo | `docker compose --profile nginx up` |
 
 En el modo **sin nginx**, el backend NestJS sirve el frontend Angular directamente via `@nestjs/serve-static`. El contenedor expone el puerto `HOST_PORT` (default 8090) directamente al host. Caddy o Cloudflare Tunnel apuntan a ese puerto.
@@ -421,12 +421,12 @@ El build de Angular **siempre va embebido en la imagen del backend** (multi-stag
 
 ## Diagrama de Infraestructura — Raspberry Pi
 
-### Modo sin nginx (default — tu setup con Caddy)
+### Modo sin nginx (default — setup con proxy externo con Caddy)
 
 ```mermaid
 graph TB
   subgraph Internet
-    USER[👤 Javier]
+    USER[👤 Usuario]
   end
 
   subgraph Cloudflare
@@ -438,7 +438,7 @@ graph TB
   end
 
   subgraph RPi - Docker portal-net
-    NESTJS[NestJS + Angular<br/>node:24-slim<br/>SERVE_STATIC=true<br/>HOST_PORT:3000]
+    NESTJS[NestJS + Angular<br/>node:24-slim<br/>SERVE_STATIC=true<br/>HOST_PORT:8090 → :3000]
     REDIS[(Redis 8 alpine)]
     SQLITE[(SQLite volumen)]
   end
@@ -456,11 +456,11 @@ graph TB
 ```mermaid
 graph TB
   subgraph Internet
-    USER[👤 Javier]
+    USER[👤 Usuario]
   end
 
   subgraph RPi - Docker portal-net
-    NGINX[nginx:alpine<br/>HOST_PORT:80<br/>perfil nginx]
+    NGINX[nginx:alpine<br/>HOST_PORT:8090 → :80<br/>perfil nginx]
     NESTJS[NestJS<br/>:3000 interno<br/>SERVE_STATIC=false]
     REDIS[(Redis 8 alpine)]
     SQLITE[(SQLite volumen)]
@@ -653,9 +653,9 @@ REDIS_URL=redis://redis:6379
 TELEGRAM_BOT_TOKEN=          # @BotFather → /newbot
 TELEGRAM_CHAT_ID=            # @userinfobot para obtenerlo
 
-# ── Jira (Tempus) ────────────────────────────────
+# ── Jira (workspace configurado) ────────────────────────────────
 JIRA_BASE_URL=https://tu-org.atlassian.net
-JIRA_EMAIL=fjbatresv@gmail.com
+JIRA_EMAIL=you@example.com
 JIRA_API_TOKEN=              # id.atlassian.com → Security → API Tokens
 JIRA_PROJECT_KEY=            # Ej: TEMP
 
@@ -667,12 +667,12 @@ GITHUB_USERNAME=             # Tu username
 GOOGLE_CLIENT_ID=
 GOOGLE_CLIENT_SECRET=
 GOOGLE_REFRESH_TOKEN=        # OAuth2 Playground — scope: calendar.readonly
-GOOGLE_CALENDAR_IDS=primary,calendario-tempus@group.calendar.google.com
+GOOGLE_CALENDAR_IDS=primary,work@example.com
 
 # ── Slack (User Token — sin bot) ─────────────────
 # Crear una Slack App en api.slack.com/apps
 # OAuth Scopes (User Token): search:read, channels:history, im:history, users:read
-# Instalar la app en tu workspace → copiar "User OAuth Token" (xoxp-...)
+# Instalar la app en tu workspace de Slack → copiar "User OAuth Token" (xoxp-...)
 SLACK_USER_TOKEN=            # xoxp-...
 SLACK_USER_ID=               # Tu Slack User ID (Settings → Profile → ...)
 
@@ -839,7 +839,7 @@ docker compose up -d --build
 docker compose logs -f backend
 
 # El cron corre a las 8 AM automáticamente
-# Cloudflare ya apunta a localhost:8080 — el portal ya es accesible
+# Cloudflare Tunnel o tu proxy apunta a localhost:8090 — el portal ya es accesible
 ```
 
 ### 4. Formato del mensaje Telegram (8 AM)
@@ -848,7 +848,7 @@ docker compose logs -f backend
 📋 *Daily Digest — Lunes 29 Jun*
 
 📅 *Calendario* (3 eventos)
-• 09:00 Stand-up Tempus
+• 09:00 Stand-up del equipo
 • 11:00 Design Review
 • 15:00 1:1 con manager
 
@@ -860,7 +860,7 @@ docker compose logs -f backend
 • ⚠️ [api-gateway] Comentarios nuevos
 • 🔴 [frontend-app] Checks fallando
 
-💬 *Slack Tempus* (3 menciones)
+💬 *Slack* (3 menciones)
 • #backend: "¿cuándo estará el endpoint?"
 
 📌 *Recordatorios de hoy* (1)
