@@ -1,4 +1,4 @@
-import { AfterViewInit, Component, effect, inject, OnInit } from '@angular/core';
+import { AfterViewInit, Component, effect, inject, OnInit, signal } from '@angular/core';
 import { ThemeService } from '../../core/services/theme.service';
 import { AppIconComponent } from '../../shared/app-icon.component';
 import { SourcesComponent } from '../sources/sources.component';
@@ -24,11 +24,15 @@ export class DashboardComponent implements OnInit, AfterViewInit {
     year: 'numeric',
   }).format(new Date());
 
-  private viewReady = false;
+  private readonly viewReady = signal(false);
 
   constructor() {
     effect(() => {
-      if (this.viewReady && this.store.activeTab() === 'fuentes' && this.store.reminderFormOpen()) {
+      if (
+        this.viewReady() &&
+        this.store.activeTab() === 'fuentes' &&
+        this.store.reminderFormOpen()
+      ) {
         window.setTimeout(() =>
           document.getElementById('recordatorios')?.scrollIntoView({ behavior: 'smooth' }),
         );
@@ -47,6 +51,6 @@ export class DashboardComponent implements OnInit, AfterViewInit {
    * Enables scroll effects after the dashboard view exists.
    */
   ngAfterViewInit(): void {
-    this.viewReady = true;
+    this.viewReady.set(true);
   }
 }

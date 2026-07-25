@@ -1,4 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { fakeAsync, tick } from '@angular/core/testing';
 import { signal } from '@angular/core';
 import axe from 'axe-core';
 import { DashboardComponent } from './dashboard.component';
@@ -85,6 +86,18 @@ describe('DashboardComponent', () => {
 
     expect(store.openReminderForm).toHaveBeenCalledTimes(1);
   });
+
+  it('scrolls to the reminders section after opening the reminder form in sources', fakeAsync(() => {
+    const scrollSpy = spyOn(Element.prototype, 'scrollIntoView');
+
+    store.activeTab.set('fuentes');
+    store.reminderFormOpen.set(true);
+    fixture.detectChanges();
+    TestBed.flushEffects();
+    tick();
+
+    expect(scrollSpy).toHaveBeenCalledOnceWith({ behavior: 'smooth' });
+  }));
 
   it('has no detectable accessibility violations in the dashboard shell', async () => {
     const results = await axe.run(fixture.nativeElement, {

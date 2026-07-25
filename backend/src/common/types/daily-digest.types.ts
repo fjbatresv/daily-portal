@@ -56,6 +56,7 @@ export interface Reminder {
 }
 
 export interface TodoItem {
+  id?: string;
   source: 'jira' | 'github' | 'calendar' | 'slack' | 'reminder';
   priority: Priority;
   text: string;

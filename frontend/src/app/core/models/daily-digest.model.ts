@@ -94,6 +94,7 @@ export interface Reminder {
  * Generated daily action item shown in the Hoy tab.
  */
 export interface TodoItem {
+  id?: string;
   dueTime?: string;
   url?: WebUrl;
   text: string;

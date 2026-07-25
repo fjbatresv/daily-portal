@@ -145,6 +145,7 @@ export class DailyAggregatorService {
     return reminders
       .filter((reminder) => !reminder.completed)
       .map((reminder) => ({
+        id: reminder.id,
         source: 'reminder',
         priority: getEffectivePriority(reminder.priority, reminder.date),
         text: reminder.text,

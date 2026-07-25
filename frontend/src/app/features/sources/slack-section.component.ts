@@ -13,6 +13,7 @@ import { AppIconComponent } from '../../shared/app-icon.component';
       <button
         type="button"
         class="flex w-full items-center justify-between px-4 py-3"
+        [attr.aria-expanded]="open()"
         (click)="toggleOpen()"
       >
         <span class="flex items-center gap-2 text-sm font-semibold">

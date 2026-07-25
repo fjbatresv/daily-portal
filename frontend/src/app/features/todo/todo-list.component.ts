@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, computed, inject } from '@angular/core';
 import { DashboardStore } from '../dashboard/dashboard.store';
 import { TodoItemComponent } from './todo-item.component';
 
@@ -18,16 +18,16 @@ export class TodoListComponent {
   /**
    * Returns TODO entries that still need attention.
    */
-  pendingItems(): TodoEntry[] {
-    return this.store.todoItems().filter((item) => !item.acknowledged);
-  }
+  readonly pendingItems = computed<TodoEntry[]>(() =>
+    this.store.todoItems().filter((item) => !item.acknowledged),
+  );
 
   /**
    * Returns locally acknowledged entries for the undo section.
    */
-  acknowledgedItems(): TodoEntry[] {
-    return this.store.todoItems().filter((item) => item.acknowledged);
-  }
+  readonly acknowledgedItems = computed<TodoEntry[]>(() =>
+    this.store.todoItems().filter((item) => item.acknowledged),
+  );
 
   /**
    * Marks a TODO entry as acknowledged and completes reminders through the store.

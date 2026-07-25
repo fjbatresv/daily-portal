@@ -1,5 +1,5 @@
 import { computed, inject, Injectable, signal } from '@angular/core';
-import { finalize, Observable, tap } from 'rxjs';
+import { finalize, Observable, Subscription, tap } from 'rxjs';
 import { DailyDigest, Priority, Reminder, TodoItem } from '../../core/models/daily-digest.model';
 import { DashboardService } from '../../core/services/dashboard.service';
 import { RemindersService } from '../../core/services/reminders.service';
@@ -31,6 +31,7 @@ function createEmptyDigest(date = new Date().toISOString().slice(0, 10)): DailyD
 export class DashboardStore {
   private readonly dashboard = inject(DashboardService);
   private readonly reminders = inject(RemindersService);
+  private loadSubscription?: Subscription;
 
   readonly digest = signal<DailyDigest | null>(null);
   readonly loading = signal(false);
@@ -77,8 +78,9 @@ export class DashboardStore {
    * Starts the dashboard auto-refresh stream and keeps local acknowledgement state date scoped.
    */
   load(): void {
+    this.loadSubscription?.unsubscribe();
     this.loading.set(true);
-    this.dashboard
+    this.loadSubscription = this.dashboard
       .autoRefresh()
       .pipe(
         tap((digest) => this.applyDigest(digest)),
@@ -171,6 +173,7 @@ export class DashboardStore {
         : [
             ...digest.todoList,
             {
+              id: reminder.id,
               source: 'reminder',
               priority: reminder.escalatedPriority,
               text: reminder.text,
@@ -183,8 +186,12 @@ export class DashboardStore {
    * Creates a stable local id for TODO acknowledgement persistence.
    */
   todoId(item: TodoItem, index: number, reminderId?: string): string {
-    if (item.source === 'reminder' && reminderId !== undefined) {
-      return `reminder:${reminderId}`;
+    if (item.source === 'reminder' && (item.id !== undefined || reminderId !== undefined)) {
+      return `reminder:${item.id ?? reminderId}`;
+    }
+
+    if (item.id !== undefined) {
+      return `${item.source}:${item.id}`;
     }
 
     return `${item.source}:${item.url ?? item.dueTime ?? index}:${item.text}`;
@@ -207,7 +214,7 @@ export class DashboardStore {
 
   private findReminderForTodo(item: TodoItem): Reminder | undefined {
     const digest = this.digest();
-    return digest?.reminders.find((reminder) => !reminder.completed && reminder.text === item.text);
+    return digest?.reminders.find((reminder) => !reminder.completed && reminder.id === item.id);
   }
 
   private loadAcknowledged(date: string): void {

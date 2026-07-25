@@ -17,6 +17,7 @@ import { ReminderItemComponent } from './reminder-item.component';
         <button
           type="button"
           class="flex items-center gap-2 text-sm font-semibold"
+          [attr.aria-expanded]="open()"
           (click)="toggleOpen()"
         >
           <app-icon name="bell" className="h-4 w-4 text-aurora-primary" />
@@ -32,7 +33,7 @@ import { ReminderItemComponent } from './reminder-item.component';
         <button
           type="button"
           class="inline-flex items-center gap-1 rounded-md border border-aurora-border px-3 py-2 text-sm text-aurora-muted hover:border-aurora-primary hover:text-aurora-text"
-          (click)="store.reminderFormOpen.set(true)"
+          (click)="openReminderForm()"
         >
           <app-icon name="plus" className="h-4 w-4" />
           Nuevo
@@ -67,6 +68,14 @@ export class RemindersSectionComponent {
    */
   toggleOpen(): void {
     this.open.update((value) => !value);
+  }
+
+  /**
+   * Opens the collapsed section before showing the creation form.
+   */
+  openReminderForm(): void {
+    this.open.set(true);
+    this.store.reminderFormOpen.set(true);
   }
 
   /**

@@ -191,6 +191,7 @@ describe('DailyAggregatorService', () => {
     const todoList = service.buildTodoList([jiraTask], [], [], [], [reminder]);
 
     expect(todoList[0]).toMatchObject({
+      id: 'reminder-1',
       source: 'reminder',
       priority: 'high',
       text: 'Enviar seguimiento',

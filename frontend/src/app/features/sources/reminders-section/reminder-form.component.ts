@@ -130,6 +130,9 @@ export class ReminderFormComponent {
   private tomorrowIso(): string {
     const tomorrow = new Date();
     tomorrow.setDate(tomorrow.getDate() + 1);
-    return tomorrow.toISOString().slice(0, 10);
+    const year = tomorrow.getFullYear();
+    const month = `${tomorrow.getMonth() + 1}`.padStart(2, '0');
+    const day = `${tomorrow.getDate()}`.padStart(2, '0');
+    return `${year}-${month}-${day}`;
   }
 }
