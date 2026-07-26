@@ -43,22 +43,31 @@ TZ=America/Guatemala               # timezone del cron
 ## SchedulerService
 
 ```typescript
-import { Injectable, Logger } from '@nestjs/common';
-import { Cron, CronExpression } from '@nestjs/schedule';
+import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import { CronJob } from 'cron';
+import { SchedulerRegistry } from '@nestjs/schedule';
 
 @Injectable()
-export class SchedulerService {
+export class SchedulerService implements OnModuleInit {
   private readonly logger = new Logger(SchedulerService.name);
 
   constructor(
     private readonly aggregator: DailyAggregatorService,
     private readonly telegram: TelegramService,
     private readonly config: ConfigService,
+    private readonly schedulerRegistry: SchedulerRegistry,
   ) {}
 
-  @Cron(process.env.MORNING_DIGEST_CRON ?? '0 8 * * *', {
-    timeZone: process.env.TZ ?? 'America/Guatemala',
-  })
+  onModuleInit(): void {
+    const cron = this.config.get<string>('scheduler.cron') ?? '0 8 * * *';
+    const timeZone = this.config.get<string>('scheduler.timezone') ?? 'America/Guatemala';
+    const job = new CronJob(cron, () => void this.runMorningDigest(), null, false, timeZone);
+
+    this.schedulerRegistry.addCronJob('morning-digest', job);
+    job.start();
+  }
+
   async runMorningDigest(): Promise<void> {
     this.logger.log('Starting morning digest...');
 
@@ -73,8 +82,6 @@ export class SchedulerService {
   }
 }
 ```
-
-**Nota importante:** el decorador `@Cron` acepta el cron string directamente (no via ConfigService en tiempo de definición del decorador). Por eso se usa `process.env` directamente aquí, que es la única excepción permitida a la regla de usar ConfigService.
 
 ## SchedulerModule
 

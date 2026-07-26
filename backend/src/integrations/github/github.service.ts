@@ -37,7 +37,7 @@ export class GitHubService {
   ) {}
 
   /**
-   * Returns authored open pull requests, falling back to an empty list when GitHub is unavailable.
+   * Returns open pull requests authored by the configured user or requesting their review.
    */
   async getPRs(): Promise<GitHubPR[]> {
     const cachedPRs = await this.cache.get<GitHubPR[]>(this.cacheKey);

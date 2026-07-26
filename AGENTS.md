@@ -453,12 +453,12 @@ El formulario tiene: texto (required, maxLength 500), fecha (default: mañana), 
 
 En el tab Hoy, cada ítem tiene un checkbox. El comportamiento varía según la fuente:
 
-| Fuente                                | Efecto en backend                                        |
-| ------------------------------------- | -------------------------------------------------------- |
-| `reminder`                            | `PATCH /api/reminders/:id/complete` → persiste en SQLite |
-| `jira`, `github`, `calendar`, `slack` | Solo estado visual (session-only, no llamada al backend) |
+| Fuente                                | Efecto en backend                                                                 |
+| ------------------------------------- | --------------------------------------------------------------------------------- |
+| `reminder`                            | `PATCH /api/reminders/:id/complete` → persiste en SQLite                          |
+| `jira`, `github`, `calendar`, `slack` | Frontend-only, sin llamada al backend; persiste localmente hasta el día siguiente |
 
-El frontend guarda los IDs de ítems no-reminder atendidos en `localStorage` con key `portal:acknowledged:{YYYY-MM-DD}`. Se limpia automáticamente al día siguiente (comparar fecha al cargar).
+El frontend guarda solo los IDs de ítems no-reminder atendidos en `localStorage` con key `portal:acknowledged:{YYYY-MM-DD}`. Ese estado se conserva durante el día del digest y se limpia automáticamente al día siguiente (comparar fecha al cargar).
 
 Al marcar un ítem:
 
@@ -647,70 +647,3 @@ Arquitectura completa: `daily-portal-architecture.md`
 ADRs: `docs/adr/`
 Layout y comportamiento UI: `docs/layout.md`
 Tokens de diseño: `docs/design-tokens.md`
-
-<claude-mem-context>
-# Memory Context
-
-## [Personal StandUP] recent context, 2026-07-25 5:29pm CST
-
-Legend: 🎯session 🔴bugfix 🟣feature 🔄refactor ✅change 🔵discovery ⚖️decision 🚨security_alert 🔐security_note
-Format: ID TIME TYPE TITLE
-Fetch details: get_observations([IDs]) | Search: mem-search skill
-
-Stats: 50 obs (21,806t read) | 2,338,264t work | 99% savings
-
-### Jul 25, 2026
-
-544 1:05p 🟣 T22 Subagent Creates `docs-site/` Directory Scaffold for Astro Starlight
-545 " 🔵 Aurora Design System: Violet + Sky Blue, Dark-First, CSS Custom Properties
-547 1:06p 🟣 @compodoc/compodoc v2.0.0 instalado como devDependency raíz (T23)
-548 " 🟣 T23 completado: Compodoc configurado y generando documentación del frontend Angular
-549 " 🔵 Compodoc coverage ≠ check-docstrings.cjs: 35% vs 100% — métricas distintas
-550 " 🔵 Compodoc mide cobertura a nivel de propiedad/campo — 35% requiere JSDoc en ~65 símbolos adicionales
-552 " 🟣 JSDoc inline en propiedades de interfaces y tipos privados de daily-digest.model.ts
-551 1:07p 🟣 T22 + T26 Implemented: Astro Starlight Site Fully Scaffolded with All Content Pages
-558 1:16p 🟣 GitHub Pages Documentation Deployment Workflow Requested
-559 1:18p 🟣 Source Docs Copied to Public as .txt for GitHub Pages Compatibility
-560 " 🟣 Astro Config Made GitHub Pages-Compatible via DOCS_SITE_URL and DOCS_BASE_PATH Env Vars
-561 " 🔵 Docs Build Passes Clean: 17 Pages, 0 Errors, Pagefind Indexes 16 Pages
-562 1:22p 🟣 GitHub Pages Documentation Deployment Workflow Created
-563 " 🔴 RapiDoc Script and OpenAPI URLs Fixed to Use Relative Paths
-564 1:23p 🔴 Sidebar Links Double-Prefixing Base Path Fixed in astro.config.mjs
-565 " 🔴 Docs Build Passes End-to-End with GitHub Pages Env Vars (Exit 0)
-566 " 🔴 Git Status: All Phase-8 Docs Portal Changes Uncommitted on Current Branch
-567 " 🔴 Sidebar Double-Prefix Bug Confirmed Fixed After astro.config.mjs Patch
-568 " 🔴 README.md Project Structure Section Does Not Yet Include docs-site or New Scripts
-569 " ⚖️ Open Source Project Documentation and Architecture Strategy
-570 1:40p 🟣 Documentation Portal Verified: Full Build Pipeline Passes
-571 " 🟣 ADR Directory Created with 4 Initial Architecture Decision Records
-572 " ✅ README and CONTRIBUTING Updated for Open-Source Public Release
-573 " 🔵 Architecture Doc Contains Stale Port Reference and Redundant .env.example Section
-574 " ✅ Final Documentation De-personalization Pass Completed
-580 1:43p ✅ AGENTS.md Patched: Agent Rules, Docs Infrastructure, and ADR References Added
-581 " ✅ Documentation Branch Ready for Commit, Push, and PR
-582 2:05p 🔵 Command Runner Returns Cached Results for Identical Commands — Verification Reads Show Stale Data
-583 " 🔵 "yeet" Skill Loaded for Commit/Push/PR Workflow
-584 " 🔵 Branch Is `codex/phase-8-docs-portal` on `git@github.com:fjbatresv/daily-portal.git`
-585 " 🔵 npm run ci Partial Result: format, docstrings (100%), lint All Pass
-586 2:06p 🔵 npm run ci — Tests and Builds Passing: Backend 145/145, Frontend 51/51
-587 2:30p 🔵 npm run ci Completed — Full Pipeline Green (Exit 0)
-588 " ✅ Commit fb7d2cfb — Phase 8 Documentation Portal Shipped to Branch
-589 2:31p 🟣 PR #17 Opened — Phase 8 Documentation Portal Published to GitHub
-590 " 🔵 PR #17 Branch Is Conflict-Free Against develop
-591 2:32p 🔵 Open PRs in daily-portal: PR #17 (docs portal) + PR #13 (Dependabot GitHub Actions)
-592 " 🔵 Dependabot PR #13 actual diff: only 6 GitHub Actions workflow files (13 line changes)
-596 " 🔵 git diff AGENTS.md returns cached result again (Chunk ID d0d85b) — actual removed lines still unknown
-628 2:55p ✅ Code Review Verification Task Initiated on PR #17
-629 " 🔵 Code Review Findings: 14 Issues Identified for Verification on PR #17
-630 " 🔵 GitHub Actions Resolved SHAs for Immutable Action Pinning
-631 " 🔵 dashboard.store.ts createEmptyDigest Uses UTC Date (Bug Still Present)
-632 " 🔵 docs-release.yml Has Broad Workflow-Level Permissions and Missing persist-credentials
-633 3:52p 🔴 Code Review Fixes Applied: 12 of 14 Findings Patched Across 12 Files
-634 3:55p 🔴 All 14 Code Review Findings Fixed — Full CI Suite Passes (52/52 Frontend, 0 Errors)
-635 " ⚖️ Code Review Fix Session Complete — Ready for Commit/Push
-637 " 🔴 exec_command Cache Hit at 22:00:10 — Returns Stale Session 95524 Output
-636 3:59p 🔴 Commit 1ea05752 Pushed — All Code Review Fixes Shipped to PR #17 Branch
-638 4:01p 🔴 Full Validation + Commit Loop at 22:00:10 Returns All Cached Results — No New Commit Created
-
-Access 2338k tokens of past work via get_observations([IDs]) or mem-search skill.
-</claude-mem-context>

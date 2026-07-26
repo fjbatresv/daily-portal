@@ -104,7 +104,7 @@ La variable `query` se construye con el usuario configurado, por ejemplo: `is:pr
 
 ```typescript
 @Injectable()
-export class GitHubService {
+export abstract class GitHubService {
   private readonly logger = new Logger(GitHubService.name);
   private readonly CACHE_KEY = 'github:prs';
   private readonly CACHE_TTL = 5 * 60; // 5 minutos
@@ -114,14 +114,14 @@ export class GitHubService {
     private readonly cache: CacheService,
   ) {}
 
-  async getPRs(): Promise<GitHubPR[]>;
+  abstract getPRs(): Promise<GitHubPR[]>;
   // 1. cache.get(CACHE_KEY)
   // 2. POST a GraphQL con SEARCH_PRS_QUERY
   // 3. Mapear nodos a GitHubPR[]
   // 4. cache.set(CACHE_KEY, prs, CACHE_TTL)
   // 5. Si falla: log + retornar []
 
-  private mapPR(node: GitHubPRNode, username: string): GitHubPR;
+  protected abstract mapPR(node: GitHubPRNode, username: string): GitHubPR;
 }
 ```
 

@@ -377,7 +377,7 @@ const html = `<!doctype html>
       <h2>Selected</h2>
       <p id="details">Click a node.</p>
     </aside>
-    <svg id="graph" role="img" aria-label="Daily Portal knowledge graph"></svg>
+    <svg id="graph" aria-label="Daily Portal knowledge graph"></svg>
   </main>
   <script>
     const graph = ${escapeScriptJson(graph)};

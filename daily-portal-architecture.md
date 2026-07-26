@@ -552,6 +552,8 @@ services:
       - '${HOST_PORT:-8090}:80'
     depends_on:
       - backend
+    networks:
+      - portal-net
 ```
 
 El override evita que backend y nginx intenten publicar el mismo `HOST_PORT`. El target `nginx-static` copia el build Angular en la imagen nginx durante el build, por lo que no se necesita un named volume para poblar `/usr/share/nginx/html`.

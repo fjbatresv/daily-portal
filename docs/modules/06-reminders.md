@@ -69,10 +69,7 @@ Instalar: `npm install better-sqlite3 && npm install -D @types/better-sqlite3`
 ## RemindersRepository
 
 ```typescript
-@Injectable()
-export class RemindersRepository {
-  constructor(private readonly db: DatabaseService) {}
-
+export interface RemindersRepository {
   findByDate(date: string): ReminderRow[];
   findAll(): ReminderRow[];
   findById(id: string): ReminderRow | undefined;

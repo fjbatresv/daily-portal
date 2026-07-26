@@ -62,7 +62,7 @@ document.documentElement.setAttribute('data-theme', stored ?? (systemDark ? 'dar
   // Texto
   --color-text-primary: #f0eef8; // Cuerpo, títulos
   --color-text-secondary: #9a8fb8; // Labels, metadatos
-  --color-text-tertiary: #5d5480; // Placeholders, hints
+  --color-text-tertiary: #9a8fb8; // Placeholders, hints
   --color-text-disabled: #3d3560;
 
   // Semánticos
@@ -129,7 +129,7 @@ document.documentElement.setAttribute('data-theme', stored ?? (systemDark ? 'dar
   // Texto
   --color-text-primary: #1a1333;
   --color-text-secondary: #5b4f7a;
-  --color-text-tertiary: #9b8eb8;
+  --color-text-tertiary: #6a5f85;
   --color-text-disabled: #c4bae8;
 
   // Semánticos (más saturados para legibilidad sobre blanco)
