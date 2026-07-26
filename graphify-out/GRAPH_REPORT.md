@@ -6,8 +6,8 @@ This repository could not use the external Graphify Python runtime in the local 
 
 ## Corpus
 
-- Files indexed: 213
-- Nodes: 273
+- Files indexed: 214
+- Nodes: 274
 - Edges: 405
 - Communities: 22
 
@@ -17,7 +17,7 @@ This repository could not use the external Graphify Python runtime in the local 
 | --- |---: |
 | Package Dependencies |60 |
 | Repository Root |25 |
-| Documentation Portal |21 |
+| Documentation Portal |22 |
 | Frontend Application |21 |
 | Backend Application |15 |
 | Automation and Release |14 |

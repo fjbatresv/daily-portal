@@ -72,7 +72,7 @@ maxResults=20
 ```typescript
 // jira.service.ts
 @Injectable()
-export abstract class JiraService {
+export class JiraService {
   private readonly logger = new Logger(JiraService.name);
   private readonly CACHE_KEY = 'jira:tasks';
   private readonly CACHE_TTL = 15 * 60; // 15 minutos
@@ -82,16 +82,27 @@ export abstract class JiraService {
     private readonly cache: CacheService,
   ) {}
 
-  abstract getTasks(): Promise<JiraTask[]>;
-  // 1. cache.get(CACHE_KEY) → si hit, retornar
-  // 2. Llamar GET /rest/api/3/search con JQL
-  // 3. Mapear issues a JiraTask[]
-  // 4. cache.set(CACHE_KEY, tasks, CACHE_TTL)
-  // 5. Si falla la API: log error, retornar []
+  async getTasks(): Promise<JiraTask[]> {
+    // 1. cache.get(CACHE_KEY) → si hit, retornar
+    // 2. Llamar GET /rest/api/3/search con JQL
+    // 3. Mapear issues a JiraTask[]
+    // 4. cache.set(CACHE_KEY, tasks, CACHE_TTL)
+    // 5. Si falla la API: log error, retornar []
+    return [];
+  }
 
-  protected abstract mapIssue(issue: JiraApiIssue): JiraTask;
-  // Mapea el objeto crudo de Jira al tipo JiraTask
-  // URL construida como: `${baseUrl}/browse/${issue.key}`
+  protected mapIssue(issue: JiraApiIssue): JiraTask {
+    const baseUrl = this.config.get<string>('jira.baseUrl') ?? '';
+
+    return {
+      id: issue.id,
+      key: issue.key,
+      summary: issue.fields.summary,
+      status: issue.fields.status.name,
+      priority: issue.fields.priority.name,
+      url: `${baseUrl}/browse/${issue.key}`,
+    };
+  }
 }
 ```
 

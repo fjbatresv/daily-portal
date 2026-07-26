@@ -104,7 +104,7 @@ La variable `query` se construye con el usuario configurado, por ejemplo: `is:pr
 
 ```typescript
 @Injectable()
-export abstract class GitHubService {
+export class GitHubService {
   private readonly logger = new Logger(GitHubService.name);
   private readonly CACHE_KEY = 'github:prs';
   private readonly CACHE_TTL = 5 * 60; // 5 minutos
@@ -114,14 +114,29 @@ export abstract class GitHubService {
     private readonly cache: CacheService,
   ) {}
 
-  abstract getPRs(): Promise<GitHubPR[]>;
-  // 1. cache.get(CACHE_KEY)
-  // 2. POST a GraphQL con SEARCH_PRS_QUERY
-  // 3. Mapear nodos a GitHubPR[]
-  // 4. cache.set(CACHE_KEY, prs, CACHE_TTL)
-  // 5. Si falla: log + retornar []
+  async getPRs(): Promise<GitHubPR[]> {
+    // 1. cache.get(CACHE_KEY)
+    // 2. POST a GraphQL con SEARCH_PRS_QUERY
+    // 3. Mapear nodos a GitHubPR[]
+    // 4. cache.set(CACHE_KEY, prs, CACHE_TTL)
+    // 5. Si falla: log + retornar []
+    return [];
+  }
 
-  protected abstract mapPR(node: GitHubPRNode, username: string): GitHubPR;
+  protected mapPR(node: GitHubPRNode, username: string): GitHubPR {
+    return {
+      id: node.number,
+      title: node.title,
+      url: node.url,
+      repo: node.repository.nameWithOwner,
+      status: node.state.toLowerCase() as PRStatus,
+      isDraft: node.isDraft,
+      hasNewComments: node.comments.nodes.some((comment) => comment.author?.login !== username),
+      checkStatus: 'pending',
+      hasConflicts: node.mergeable === 'CONFLICTING',
+      updatedAt: node.updatedAt,
+    };
+  }
 }
 ```
 

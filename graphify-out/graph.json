@@ -798,6 +798,13 @@
       "community": "Deployment Runtime"
     },
     {
+      "id": "file:docs-site/.snyk",
+      "label": "docs-site/.snyk",
+      "file_type": "asset",
+      "source_file": "docs-site/.snyk",
+      "community": "Documentation Portal"
+    },
+    {
       "id": "file:docs-site/astro.config.mjs",
       "label": "docs-site/astro.config.mjs",
       "file_type": "code",
@@ -5717,6 +5724,7 @@
       "file:nginx/nginx.conf"
     ],
     "Documentation Portal": [
+      "file:docs-site/.snyk",
       "file:docs-site/astro.config.mjs",
       "file:docs-site/package.json",
       "file:docs-site/src/content.config.ts",
