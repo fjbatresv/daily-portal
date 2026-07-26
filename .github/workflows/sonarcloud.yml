@@ -20,13 +20,13 @@ jobs:
 
     steps:
       - name: Checkout (full history)
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           # SonarCloud needs full git history to compute blame annotations and new-code detection
           fetch-depth: 0
 
       - name: Setup Node.js
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
           node-version: '24'
           cache: 'npm'
@@ -46,7 +46,7 @@ jobs:
 
       - name: SonarCloud Scan
         id: sonar
-        uses: SonarSource/sonarqube-scan-action@59db25f34e16620e48ab4bb9e4a5dce155cb5432
+        uses: SonarSource/sonarqube-scan-action@22918119ff8e1ca75a623e15c8296b6ea4fbe28f
         continue-on-error: true
         with:
           args: >

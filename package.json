@@ -7,17 +7,28 @@
     "npm": ">=10"
   },
   "scripts": {
-    "format": "prettier --write \"{backend,frontend,scripts}/**/*.{ts,html,css,mjs,cjs,json,js}\" \"*.json\" \".github/**/*.yml\" \"docker-compose*.yml\"",
-    "format:check": "prettier --check \"{backend,frontend,scripts}/**/*.{ts,html,css,mjs,cjs,json,js}\" \"*.json\" \".github/**/*.yml\" \"docker-compose*.yml\"",
+    "format": "prettier --write \"{backend,frontend,docs-site,scripts}/**/*.{ts,html,css,mjs,cjs,json,js,md}\" \"docs/**/*.md\" \"*.md\" \"*.json\" \".github/**/*.yml\" \"docker-compose*.yml\"",
+    "format:check": "prettier --check \"{backend,frontend,docs-site,scripts}/**/*.{ts,html,css,mjs,cjs,json,js,md}\" \"docs/**/*.md\" \"*.md\" \"*.json\" \".github/**/*.yml\" \"docker-compose*.yml\"",
     "docstrings:check": "node scripts/check-docstrings.cjs",
+    "docs:frontend": "compodoc -c .compodocrc.json",
+    "docs:frontend:coverage": "compodoc -c .compodocrc.json --coverageTest 80 --coverageTestThresholdFail true --coverageTestShowOnlyFailed --output /tmp/daily-portal-compodoc-frontend --silent",
+    "docs:frontend:check": "npm run docs:frontend:coverage",
+    "docs:backend": "typedoc --options typedoc.json",
+    "docs:backend:check": "typedoc --options typedoc.json --emit none --treatWarningsAsErrors",
+    "docs:dev": "npm run dev --workspace docs-site",
+    "docs:build": "npm run docs:frontend && npm run docs:backend && npm run build --workspace docs-site",
+    "docs:preview": "npm run preview --workspace docs-site",
+    "docs:check": "npm run docs:frontend:check && npm run docs:backend:check && npm run check --workspace docs-site",
+    "graphify:repo": "node scripts/generate-agent-graph.cjs",
     "lint": "npm run lint --workspace backend && npm run lint --workspace frontend",
     "test": "npm run test --workspace backend && npm run test --workspace frontend",
     "build": "npm run build --workspace backend && npm run build --workspace frontend",
-    "ci": "npm run format:check && npm run docstrings:check && npm run lint && npm run test:cov --workspace backend && npm run test --workspace frontend && npm run build"
+    "ci": "npm run format:check && npm run docstrings:check && npm run lint && npm run test:cov --workspace backend && npm run test --workspace frontend && npm run build && npm run docs:check && npm run docs:build && npm run graphify:repo && git diff --exit-code -- graphify-out"
   },
   "workspaces": [
     "backend",
-    "frontend"
+    "frontend",
+    "docs-site"
   ],
   "overrides": {
     "@angular/build": {
@@ -28,6 +39,8 @@
     }
   },
   "devDependencies": {
-    "prettier": "3.9.4"
+    "@compodoc/compodoc": "^2.0.0",
+    "prettier": "3.9.4",
+    "typedoc": "^0.28.20"
   }
 }

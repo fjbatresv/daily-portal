@@ -2,6 +2,7 @@
 
 [![CI](https://github.com/fjbatresv/daily-portal/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/fjbatresv/daily-portal/actions/workflows/ci.yml)
 [![Docker Image](https://github.com/fjbatresv/daily-portal/actions/workflows/docker-image.yml/badge.svg?branch=main)](https://github.com/fjbatresv/daily-portal/actions/workflows/docker-image.yml)
+[![Documentation Release](https://github.com/fjbatresv/daily-portal/actions/workflows/docs-release.yml/badge.svg)](https://github.com/fjbatresv/daily-portal/actions/workflows/docs-release.yml)
 [![Snyk Security](https://github.com/fjbatresv/daily-portal/actions/workflows/snyk.yml/badge.svg?branch=main)](https://github.com/fjbatresv/daily-portal/actions/workflows/snyk.yml)
 [![Quality gate status](https://sonarcloud.io/api/project_badges/measure?project=fjbatresv_daily-portal&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=fjbatresv_daily-portal)
 [![Bugs](https://sonarcloud.io/api/project_badges/measure?project=fjbatresv_daily-portal&metric=bugs)](https://sonarcloud.io/summary/new_code?id=fjbatresv_daily-portal)
@@ -26,7 +27,7 @@
 
 A self-hosted personal dashboard that aggregates your daily tasks from multiple sources and sends a morning briefing via Telegram.
 
-Runs containerized on a Raspberry Pi, exposed via Cloudflare Tunnel. Built with NestJS + Angular.
+Daily Portal is designed as free software that can be forked, self-hosted, and adapted to different personal workflows. It runs containerized on a Raspberry Pi or any Docker host, and can be exposed through Cloudflare Tunnel, Caddy, nginx, or another reverse proxy.
 
 ---
 
@@ -59,14 +60,53 @@ Runs containerized on a Raspberry Pi, exposed via Cloudflare Tunnel. Built with 
 
 ## Architecture
 
-See [`daily-portal-architecture.md`](./daily-portal-architecture.md) for C4 diagrams (L1/L2/L3), UML sequence diagrams and infrastructure layout.
+See [`daily-portal-architecture.md`](./daily-portal-architecture.md) for C4 diagrams, sequence diagrams and infrastructure layout.
 
 The full REST API spec is in [`openapi.yaml`](./openapi.yaml).
+
+Architecture decisions are recorded in [`docs/adr/`](./docs/adr/). Start there before changing deployment topology, persistence, integration boundaries, or documentation tooling.
+
+## Documentation
+
+The documentation portal lives in [`docs-site/`](./docs-site) and is built with Astro Starlight.
+
+```bash
+source ~/.nvm/nvm.sh
+nvm use
+npm run docs:dev
+npm run docs:check
+npm run docs:build
+```
+
+The portal includes:
+
+- curated setup and deployment guides in English and Spanish
+- links to existing module specs under `docs/`
+- Compodoc frontend reference
+- TypeDoc backend reference
+- OpenAPI reference and playground generated from `openapi.yaml`
+
+Documentation releases are deployed to GitHub Pages through [`.github/workflows/docs-release.yml`](./.github/workflows/docs-release.yml).
+
+For forks, enable GitHub Pages with **Source: GitHub Actions** in the repository settings. The workflow builds the docs with the correct base path for `https://OWNER.github.io/REPO/`.
+
+## Agent Context
+
+AI coding agents should start with [`AGENTS.md`](./AGENTS.md) and [`docs/agent-context.md`](./docs/agent-context.md). The repository includes a generated knowledge graph in [`graphify-out/`](./graphify-out/) with an audit report, raw graph JSON, and an interactive HTML view.
+
+Regenerate it with:
+
+```bash
+source ~/.nvm/nvm.sh
+nvm use
+npm run graphify:repo
+```
 
 ---
 
 ## Prerequisites
 
+- Node.js 24 LTS managed with `nvm` for local development
 - Docker and Docker Compose v2+
 - A Cloudflare Tunnel (or any reverse proxy) pointing to the configured host port
 - API credentials for each integration you want to enable (all optional)
@@ -85,6 +125,14 @@ cp .env.example .env
 
 Edit `.env` with your credentials. At minimum set `TELEGRAM_BOT_TOKEN` and `TELEGRAM_CHAT_ID` to receive the morning digest.
 
+For local development, install dependencies from the repository root:
+
+```bash
+source ~/.nvm/nvm.sh
+nvm use
+npm install
+```
+
 ### 2. Start (without nginx)
 
 ```bash
@@ -96,7 +144,7 @@ The portal will be available at `http://localhost:8090` (or whatever `HOST_PORT`
 ### 3. Start (with nginx)
 
 ```bash
-docker compose --profile nginx up -d
+SERVE_STATIC=false docker compose -f docker-compose.yml -f docker-compose.nginx-override.yml --profile nginx up -d
 ```
 
 In this mode, nginx serves the Angular frontend and proxies `/api/*` to NestJS.
@@ -132,7 +180,7 @@ See `.env.example` for the full list with comments.
 
 ## Deployment on Raspberry Pi
 
-This project is designed to run on a Raspberry Pi (aarch64). The Docker image is built multi-stage and embeds the Angular SPA inside the NestJS image — no separate frontend container.
+This project is designed to run on a Raspberry Pi (aarch64), but it also works on a regular Linux Docker host. The Docker image is built multi-stage and embeds the Angular SPA inside the NestJS image, so the default mode does not need a separate frontend container.
 
 Tested on:
 
@@ -149,6 +197,14 @@ newgrp docker
 
 SQLite data persists in `./data/portal.db` (volume-mounted). Cloudflare Tunnel should point to `localhost:${HOST_PORT}`.
 
+The default homelab mode is:
+
+```bash
+SERVE_STATIC=true HOST_PORT=8090 docker compose up -d --build
+```
+
+Point your reverse proxy or Cloudflare Tunnel to `http://localhost:8090`.
+
 ---
 
 ## Project structure
@@ -159,7 +215,9 @@ daily-portal/
 ├── PLAN.md                      ← phased implementation plan
 ├── openapi.yaml                 ← REST API spec
 ├── daily-portal-architecture.md ← C4 + UML diagrams
+├── docs-site/                   ← Astro Starlight documentation portal
 ├── docs/
+│   ├── adr/                     ← architecture decision records
 │   ├── layout.md                ← UI layout spec
 │   ├── design-tokens.md         ← Aurora color system
 │   └── modules/                 ← per-module implementation specs

@@ -33,6 +33,7 @@ CREATE TABLE IF NOT EXISTS reminders (
 ## DatabaseModule / DatabaseService
 
 Crear en `src/common/database/`:
+
 ```typescript
 // database.service.ts
 import Database from 'better-sqlite3';
@@ -43,7 +44,7 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
 
   onModuleInit(): void {
     this.db = new Database(this.config.get('sqlite.path'));
-    this.db.pragma('journal_mode = WAL');   // mejor performance en lecturas concurrentes
+    this.db.pragma('journal_mode = WAL'); // mejor performance en lecturas concurrentes
     this.runMigrations();
   }
 
@@ -68,17 +69,14 @@ Instalar: `npm install better-sqlite3 && npm install -D @types/better-sqlite3`
 ## RemindersRepository
 
 ```typescript
-@Injectable()
-export class RemindersRepository {
-  constructor(private readonly db: DatabaseService) {}
-
-  findByDate(date: string): ReminderRow[]
-  findAll(): ReminderRow[]
-  findById(id: string): ReminderRow | undefined
-  create(dto: CreateReminderDto): ReminderRow
-  update(id: string, dto: Partial<UpdateReminderDto>): ReminderRow | undefined
-  complete(id: string): ReminderRow | undefined
-  delete(id: string): boolean    // retorna true si existía
+export interface RemindersRepository {
+  findByDate(date: string): ReminderRow[];
+  findAll(): ReminderRow[];
+  findById(id: string): ReminderRow | undefined;
+  create(dto: CreateReminderDto): ReminderRow;
+  update(id: string, dto: Partial<UpdateReminderDto>): ReminderRow | undefined;
+  complete(id: string): ReminderRow | undefined;
+  delete(id: string): boolean; // retorna true si existía
 }
 ```
 
@@ -87,19 +85,28 @@ export class RemindersRepository {
 ```typescript
 // findByDate
 const stmt = this.db.instance.prepare(
-  `SELECT * FROM reminders WHERE date = ? AND completed = 0 ORDER BY priority DESC, created_at ASC`
+  `SELECT * FROM reminders
+   WHERE date = ? AND completed = 0
+   ORDER BY
+     CASE priority
+       WHEN 'high' THEN 3
+       WHEN 'medium' THEN 2
+       WHEN 'low' THEN 1
+       ELSE 0
+     END DESC,
+     created_at ASC`,
 );
 return stmt.all(date) as ReminderRow[];
 
 // create
 const stmt = this.db.instance.prepare(
-  `INSERT INTO reminders (text, date, priority) VALUES (?, ?, ?) RETURNING *`
+  `INSERT INTO reminders (text, date, priority) VALUES (?, ?, ?) RETURNING *`,
 );
 return stmt.get(dto.text, dto.date, dto.priority ?? 'medium') as ReminderRow;
 
 // complete
 const stmt = this.db.instance.prepare(
-  `UPDATE reminders SET completed = 1, updated_at = datetime('now') WHERE id = ? RETURNING *`
+  `UPDATE reminders SET completed = 1, updated_at = datetime('now') WHERE id = ? RETURNING *`,
 );
 
 // delete
@@ -118,8 +125,9 @@ export class CreateReminderDto {
   @MaxLength(500)
   text: string;
 
-  @IsDateString()
-  date: string;   // YYYY-MM-DD
+  @Matches(/^\d{4}-\d{2}-\d{2}$/)
+  @IsDateString({ strict: true })
+  date: string; // YYYY-MM-DD
 
   @IsOptional()
   @IsEnum(['low', 'medium', 'high'])
@@ -135,7 +143,8 @@ export class UpdateReminderDto {
   text?: string;
 
   @IsOptional()
-  @IsDateString()
+  @Matches(/^\d{4}-\d{2}-\d{2}$/)
+  @IsDateString({ strict: true })
   date?: string;
 
   @IsOptional()
@@ -158,25 +167,25 @@ Habilitar en `main.ts`: `app.useGlobalPipes(new ValidationPipe({ whitelist: true
 export class RemindersService {
   constructor(private readonly repo: RemindersRepository) {}
 
-  getTodayReminders(): Reminder[]
+  getTodayReminders(): Reminder[];
   // repo.findByDate(today)  → mapear ReminderRow → Reminder
 
-  listReminders(date?: string, all?: boolean): Reminder[]
+  listReminders(date?: string, all?: boolean): Reminder[];
   // all=true → repo.findAll()
   // date → repo.findByDate(date)
   // sin params → repo.findByDate(today)
 
-  getById(id: string): Reminder
+  getById(id: string): Reminder;
   // repo.findById(id) ?? throw NotFoundException
 
-  create(dto: CreateReminderDto): Reminder
+  create(dto: CreateReminderDto): Reminder;
 
-  update(id: string, dto: UpdateReminderDto): Reminder
+  update(id: string, dto: UpdateReminderDto): Reminder;
   // verificar que existe antes de actualizar
 
-  complete(id: string): Reminder
+  complete(id: string): Reminder;
 
-  delete(id: string): void
+  delete(id: string): void;
   // repo.delete(id) === false → throw NotFoundException
 }
 ```
@@ -196,6 +205,7 @@ export class RemindersController {
 ```
 
 Respuestas HTTP según openapi.yaml:
+
 - GET list → 200
 - POST → 201
 - GET by id → 200 / 404
@@ -225,7 +235,7 @@ private mapRow(row: ReminderRow): Reminder {
   imports: [DatabaseModule],
   controllers: [RemindersController],
   providers: [RemindersService, RemindersRepository],
-  exports: [RemindersService],   // exportado para DailyAggregatorService
+  exports: [RemindersService], // exportado para DailyAggregatorService
 })
 export class RemindersModule {}
 ```
@@ -254,7 +264,7 @@ export function getEffectivePriority(reminder: Reminder): Priority {
   const reminderDate = new Date(reminder.date + 'T00:00:00');
   const daysPending = Math.floor((today.getTime() - reminderDate.getTime()) / 86_400_000);
 
-  if (daysPending <= 0) return reminder.priority;  // mismo día o futuro → sin cambio
+  if (daysPending <= 0) return reminder.priority; // mismo día o futuro → sin cambio
 
   if (reminder.priority === 'low') {
     if (daysPending >= 5) return 'high';
@@ -267,7 +277,7 @@ export function getEffectivePriority(reminder: Reminder): Priority {
     return 'medium';
   }
 
-  return 'high';  // alta nunca baja
+  return 'high'; // alta nunca baja
 }
 
 /** Número de días que lleva pendiente (negativo = todavía futuro) */
@@ -282,21 +292,21 @@ export function getDaysPending(reminder: Reminder): number {
 ### Tabla de escalación
 
 | Prioridad original | Días pendiente | Prioridad efectiva |
-|---|---|---|
-| baja | 0–1 | baja |
-| baja | 2–4 | media ↑ |
-| baja | 5+ | alta ↑↑ |
-| media | 0–2 | media |
-| media | 3+ | alta ↑ |
-| alta | cualquiera | alta |
+| ------------------ | -------------- | ------------------ |
+| baja               | 0–1            | baja               |
+| baja               | 2–4            | media ↑            |
+| baja               | 5+             | alta ↑↑            |
+| media              | 0–2            | media              |
+| media              | 3+             | alta ↑             |
+| alta               | cualquiera     | alta               |
 
 ### Dónde se usa
 
-| Punto de uso | Propósito |
-|---|---|
-| `DailyAggregatorService.buildTodoList()` | Ordenar ítems de reminders por prioridad efectiva |
-| `TelegramFormatter` | Ordenar y mostrar prioridad en el mensaje matutino |
-| Frontend `reminder-item.component.ts` | Mostrar badge con prioridad efectiva + indicador de escalación |
+| Punto de uso                             | Propósito                                                      |
+| ---------------------------------------- | -------------------------------------------------------------- |
+| `DailyAggregatorService.buildTodoList()` | Ordenar ítems de reminders por prioridad efectiva              |
+| `TelegramFormatter`                      | Ordenar y mostrar prioridad en el mensaje matutino             |
+| Frontend `reminder-item.component.ts`    | Mostrar badge con prioridad efectiva + indicador de escalación |
 
 `RemindersService.getTodayReminders()` retorna la prioridad **original** del campo `priority`.
 Los consumidores llaman `getEffectivePriority(reminder)` cuando necesitan la prioridad real.
@@ -324,6 +334,7 @@ El frontend usa `escalatedPriority` para el badge y `daysOverdue` para el subtex
 ## Test unitario
 
 Casos a cubrir:
+
 - `getTodayReminders` → solo los de hoy, no completados
 - `create` con datos válidos → Reminder con id generado
 - `update` de reminder inexistente → NotFoundException

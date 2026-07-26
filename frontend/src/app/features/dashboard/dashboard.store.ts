@@ -4,12 +4,40 @@ import { DailyDigest, Priority, Reminder, TodoItem } from '../../core/models/dai
 import { DashboardService } from '../../core/services/dashboard.service';
 import { RemindersService } from '../../core/services/reminders.service';
 
+/**
+ * Top-level dashboard tabs exposed by the store.
+ */
 type DashboardTab = 'hoy' | 'fuentes';
 
+/**
+ * Storage key prefix for date-scoped non-reminder acknowledgements.
+ */
 const acknowledgedPrefix = 'portal:acknowledged:';
+
+/**
+ * Sorting rank that keeps high-priority TODO entries first.
+ */
 const priorityOrder: Record<Priority, number> = { high: 0, medium: 1, low: 2 };
 
-function createEmptyDigest(date = new Date().toISOString().slice(0, 10)): DailyDigest {
+/**
+ * Formats the current portal-local day for fallback digests and acknowledgement keys.
+ */
+function formatPortalDate(date = new Date()): string {
+  const parts = new Intl.DateTimeFormat('en', {
+    day: '2-digit',
+    month: '2-digit',
+    timeZone: 'America/Guatemala',
+    year: 'numeric',
+  }).formatToParts(date);
+  const value = (type: string) => parts.find((part) => part.type === type)?.value ?? '';
+
+  return `${value('year')}-${value('month')}-${value('day')}`;
+}
+
+/**
+ * Builds an empty digest fallback when the API cannot be reached.
+ */
+function createEmptyDigest(date = formatPortalDate()): DailyDigest {
   const generatedAt = new Date().toISOString();
 
   return {
@@ -33,18 +61,56 @@ export class DashboardStore {
   private readonly reminders = inject(RemindersService);
   private loadSubscription?: Subscription;
 
+  /**
+   * Latest digest loaded from the dashboard API.
+   */
   readonly digest = signal<DailyDigest | null>(null);
+
+  /**
+   * Initial load indicator.
+   */
   readonly loading = signal(false);
+
+  /**
+   * Manual refresh indicator.
+   */
   readonly refreshing = signal(false);
+
+  /**
+   * User-facing load or refresh error message.
+   */
   readonly error = signal<string | null>(null);
+
+  /**
+   * Active tab selected in the dashboard shell.
+   */
   readonly activeTab = signal<DashboardTab>('hoy');
+
+  /**
+   * Locally acknowledged non-reminder TODO ids for the digest date.
+   */
   readonly acknowledged = signal<Set<string>>(new Set());
+
+  /**
+   * Optimistic acknowledgement state for reminder TODOs completed through the API.
+   */
   readonly reminderAcknowledged = signal<Set<string>>(new Set());
+
+  /**
+   * Whether the inline reminder creation form is open.
+   */
   readonly reminderFormOpen = signal(false);
 
+  /**
+   * Count of visible TODO entries that still need action.
+   */
   readonly pendingTodoCount = computed(
     () => this.todoItems().filter((item) => !item.acknowledged).length,
   );
+
+  /**
+   * Daily TODO entries enriched with ids, reminder records, and acknowledgement state.
+   */
   readonly todoItems = computed(() => {
     const digest = this.digest();
     if (digest === null) {

@@ -8,6 +8,17 @@ dist/
 coverage/
 .angular/
 .turbo/
+.astro/
+
+docs-site/dist/
+docs-site/.astro/
+docs-site/public/openapi.yaml
+docs-site/public/vendor/
+docs-site/public/reference/api/
+docs-site/public/reference/api-playground/
+docs-site/public/reference/backend/
+docs-site/public/reference/frontend/
+docs-site/public/source-docs/
 
 data/
 *.db

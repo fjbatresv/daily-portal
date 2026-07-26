@@ -7,23 +7,21 @@ La identidad de color es violeta + sky blue en ambos modos; solo varía el stop 
 
 ## Estrategia de modos
 
-| Aspecto | Dark (default) | Light |
-|---|---|---|
-| Activación | `[data-theme="dark"]` o sin atributo | `[data-theme="light"]` |
-| Detección inicial | `prefers-color-scheme: dark` | `prefers-color-scheme: light` |
-| Override manual | Toggle en el portal → guarda en `localStorage` | ídem |
-| Primary violeta | Stop claro `#A78BFA` (legible sobre fondo oscuro) | Stop oscuro `#7C3AED` (legible sobre fondo claro) |
-| Semánticos | Saturación alta para contraste sobre oscuro | Saturación reducida, más sobrios |
+| Aspecto           | Dark (default)                                    | Light                                             |
+| ----------------- | ------------------------------------------------- | ------------------------------------------------- |
+| Activación        | `[data-theme="dark"]` o sin atributo              | `[data-theme="light"]`                            |
+| Detección inicial | `prefers-color-scheme: dark`                      | `prefers-color-scheme: light`                     |
+| Override manual   | Toggle en el portal → guarda en `localStorage`    | ídem                                              |
+| Primary violeta   | Stop claro `#A78BFA` (legible sobre fondo oscuro) | Stop oscuro `#7C3AED` (legible sobre fondo claro) |
+| Semánticos        | Saturación alta para contraste sobre oscuro       | Saturación reducida, más sobrios                  |
 
 Angular lee la preferencia del sistema al iniciar y escucha cambios:
+
 ```typescript
 // app.component.ts
-const stored = localStorage.getItem('theme');
+const stored = localStorage.getItem('aurora-theme');
 const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-document.documentElement.setAttribute(
-  'data-theme',
-  stored ?? (systemDark ? 'dark' : 'light')
-);
+document.documentElement.setAttribute('data-theme', stored ?? (systemDark ? 'dark' : 'light'));
 ```
 
 ---
@@ -37,135 +35,135 @@ document.documentElement.setAttribute(
 // AURORA — Dark mode (default)
 // ─────────────────────────────────────────────────────────────
 :root,
-[data-theme="dark"] {
+[data-theme='dark'] {
   // Fondos
-  --color-bg-base:     #120F1E;   // Página
-  --color-bg-surface:  #1E1830;   // Tarjetas, paneles
-  --color-bg-elevated: #252040;   // Dropdowns, tooltips, modales
-  --color-bg-subtle:   #1A1530;   // Filas hover, inputs
+  --color-bg-base: #120f1e; // Página
+  --color-bg-surface: #1e1830; // Tarjetas, paneles
+  --color-bg-elevated: #252040; // Dropdowns, tooltips, modales
+  --color-bg-subtle: #1a1530; // Filas hover, inputs
 
   // Bordes
-  --color-border:        #2D2545;  // Bordes estándar
-  --color-border-subtle: #231D3B;  // Separadores sutiles
-  --color-border-strong: #3D3560;  // Énfasis, selección
+  --color-border: #2d2545; // Bordes estándar
+  --color-border-subtle: #231d3b; // Separadores sutiles
+  --color-border-strong: #3d3560; // Énfasis, selección
 
   // Primario (violeta)
-  --color-primary:         #A78BFA;  // violet-400
-  --color-primary-hover:   #C4B5FD;  // violet-300
-  --color-primary-active:  #8B6FE8;  // violet-500
-  --color-primary-muted:   #A78BFA1A;
-  --color-primary-subtle:  #A78BFA0D;
+  --color-primary: #a78bfa; // violet-400
+  --color-primary-hover: #c4b5fd; // violet-300
+  --color-primary-active: #8b6fe8; // violet-500
+  --color-primary-muted: #a78bfa1a;
+  --color-primary-subtle: #a78bfa0d;
 
   // Acento (sky blue — para Slack, Calendar)
-  --color-accent:        #38BDF8;  // sky-400
-  --color-accent-hover:  #7DD3FC;  // sky-300
-  --color-accent-muted:  #38BDF81A;
+  --color-accent: #38bdf8; // sky-400
+  --color-accent-hover: #7dd3fc; // sky-300
+  --color-accent-muted: #38bdf81a;
 
   // Texto
-  --color-text-primary:   #F0EEF8;  // Cuerpo, títulos
-  --color-text-secondary: #9A8FB8;  // Labels, metadatos
-  --color-text-tertiary:  #5D5480;  // Placeholders, hints
-  --color-text-disabled:  #3D3560;
+  --color-text-primary: #f0eef8; // Cuerpo, títulos
+  --color-text-secondary: #9a8fb8; // Labels, metadatos
+  --color-text-tertiary: #9a8fb8; // Placeholders, hints
+  --color-text-disabled: #3d3560;
 
   // Semánticos
-  --color-success:        #34D399;  // emerald-400
-  --color-success-text:   #6EE7B7;  // emerald-300
-  --color-success-muted:  #34D3991A;
-  --color-success-subtle: #34D3990D;
+  --color-success: #34d399; // emerald-400
+  --color-success-text: #6ee7b7; // emerald-300
+  --color-success-muted: #34d3991a;
+  --color-success-subtle: #34d3990d;
 
-  --color-warning:        #FBBF24;  // amber-400
-  --color-warning-text:   #FCD34D;  // amber-300
-  --color-warning-muted:  #FBBF241A;
-  --color-warning-subtle: #FBBF240D;
+  --color-warning: #fbbf24; // amber-400
+  --color-warning-text: #fcd34d; // amber-300
+  --color-warning-muted: #fbbf241a;
+  --color-warning-subtle: #fbbf240d;
 
-  --color-error:          #F87171;  // red-400
-  --color-error-text:     #FCA5A5;  // red-300
-  --color-error-muted:    #F871711A;
-  --color-error-subtle:   #F871710D;
+  --color-error: #f87171; // red-400
+  --color-error-text: #fca5a5; // red-300
+  --color-error-muted: #f871711a;
+  --color-error-subtle: #f871710d;
 
-  --color-info:           #38BDF8;  // = accent en dark
-  --color-info-text:      #7DD3FC;
-  --color-info-muted:     #38BDF81A;
-  --color-info-subtle:    #38BDF80D;
+  --color-info: #38bdf8; // = accent en dark
+  --color-info-text: #7dd3fc;
+  --color-info-muted: #38bdf81a;
+  --color-info-subtle: #38bdf80d;
 
   // Fuentes específicas por integración
-  --color-jira:           #A78BFA;  // = primary (violeta)
-  --color-github:         #9A8FB8;  // = text-secondary (neutro)
-  --color-calendar:       #38BDF8;  // = accent (sky)
-  --color-slack:          #C084FC;  // violet más claro / pink-ish
-  --color-telegram:       #38BDF8;  // = accent
+  --color-jira: #a78bfa; // = primary (violeta)
+  --color-github: #9a8fb8; // = text-secondary (neutro)
+  --color-calendar: #38bdf8; // = accent (sky)
+  --color-slack: #c084fc; // violet más claro / pink-ish
+  --color-telegram: #38bdf8; // = accent
 
   // Sombras
-  --shadow-sm:  0 1px 3px rgba(0,0,0,.4);
-  --shadow-md:  0 4px 12px rgba(0,0,0,.5);
-  --shadow-lg:  0 8px 24px rgba(0,0,0,.6);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.5);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.6);
 }
 
 // ─────────────────────────────────────────────────────────────
 // AURORA — Light mode
 // ─────────────────────────────────────────────────────────────
-[data-theme="light"] {
+[data-theme='light'] {
   // Fondos
-  --color-bg-base:     #FAF9FE;   // Muy sutilmente violeta, casi blanco
-  --color-bg-surface:  #FFFFFF;
-  --color-bg-elevated: #F3F0FD;   // Violeta muy suave
-  --color-bg-subtle:   #F8F6FD;
+  --color-bg-base: #faf9fe; // Muy sutilmente violeta, casi blanco
+  --color-bg-surface: #ffffff;
+  --color-bg-elevated: #f3f0fd; // Violeta muy suave
+  --color-bg-subtle: #f8f6fd;
 
   // Bordes
-  --color-border:        #E2DBF5;
-  --color-border-subtle: #EDE8F9;
-  --color-border-strong: #C4BAE8;
+  --color-border: #e2dbf5;
+  --color-border-subtle: #ede8f9;
+  --color-border-strong: #c4bae8;
 
   // Primario (violeta oscuro — contraste sobre blanco)
-  --color-primary:         #7C3AED;  // violet-600
-  --color-primary-hover:   #6D28D9;  // violet-700
-  --color-primary-active:  #5B21B6;  // violet-800
-  --color-primary-muted:   #7C3AED14;
-  --color-primary-subtle:  #7C3AED0A;
+  --color-primary: #7c3aed; // violet-600
+  --color-primary-hover: #6d28d9; // violet-700
+  --color-primary-active: #5b21b6; // violet-800
+  --color-primary-muted: #7c3aed14;
+  --color-primary-subtle: #7c3aed0a;
 
   // Acento (sky oscuro)
-  --color-accent:        #0284C7;  // sky-600
-  --color-accent-hover:  #0369A1;  // sky-700
-  --color-accent-muted:  #0284C714;
+  --color-accent: #0284c7; // sky-600
+  --color-accent-hover: #0369a1; // sky-700
+  --color-accent-muted: #0284c714;
 
   // Texto
-  --color-text-primary:   #1A1333;
-  --color-text-secondary: #5B4F7A;
-  --color-text-tertiary:  #9B8EB8;
-  --color-text-disabled:  #C4BAE8;
+  --color-text-primary: #1a1333;
+  --color-text-secondary: #5b4f7a;
+  --color-text-tertiary: #6a5f85;
+  --color-text-disabled: #c4bae8;
 
   // Semánticos (más saturados para legibilidad sobre blanco)
-  --color-success:        #059669;  // emerald-600
-  --color-success-text:   #047857;  // emerald-700
-  --color-success-muted:  #05966914;
+  --color-success: #059669; // emerald-600
+  --color-success-text: #047857; // emerald-700
+  --color-success-muted: #05966914;
   --color-success-subtle: #05966908;
 
-  --color-warning:        #D97706;  // amber-600
-  --color-warning-text:   #B45309;  // amber-700
-  --color-warning-muted:  #D9770614;
-  --color-warning-subtle: #D9770608;
+  --color-warning: #d97706; // amber-600
+  --color-warning-text: #b45309; // amber-700
+  --color-warning-muted: #d9770614;
+  --color-warning-subtle: #d9770608;
 
-  --color-error:          #DC2626;  // red-600
-  --color-error-text:     #B91C1C;  // red-700
-  --color-error-muted:    #DC262614;
-  --color-error-subtle:   #DC262608;
+  --color-error: #dc2626; // red-600
+  --color-error-text: #b91c1c; // red-700
+  --color-error-muted: #dc262614;
+  --color-error-subtle: #dc262608;
 
-  --color-info:           #0284C7;
-  --color-info-text:      #0369A1;
-  --color-info-muted:     #0284C714;
-  --color-info-subtle:    #0284C708;
+  --color-info: #0284c7;
+  --color-info-text: #0369a1;
+  --color-info-muted: #0284c714;
+  --color-info-subtle: #0284c708;
 
   // Fuentes por integración
-  --color-jira:           #7C3AED;
-  --color-github:         #5B4F7A;
-  --color-calendar:       #0284C7;
-  --color-slack:          #9333EA;  // violet-600 ajustado
-  --color-telegram:       #0284C7;
+  --color-jira: #7c3aed;
+  --color-github: #5b4f7a;
+  --color-calendar: #0284c7;
+  --color-slack: #9333ea; // violet-600 ajustado
+  --color-telegram: #0284c7;
 
   // Sombras
-  --shadow-sm:  0 1px 3px rgba(74,48,128,.08);
-  --shadow-md:  0 4px 12px rgba(74,48,128,.12);
-  --shadow-lg:  0 8px 24px rgba(74,48,128,.16);
+  --shadow-sm: 0 1px 3px rgba(74, 48, 128, 0.08);
+  --shadow-md: 0 4px 12px rgba(74, 48, 128, 0.12);
+  --shadow-lg: 0 8px 24px rgba(74, 48, 128, 0.16);
 }
 ```
 
@@ -185,28 +183,28 @@ module.exports = {
       colors: {
         // Todos los colores del portal como tokens Tailwind
         // Apuntan a las CSS vars para respetar el modo activo
-        'aurora': {
-          bg:        'var(--color-bg-base)',
-          surface:   'var(--color-bg-surface)',
-          elevated:  'var(--color-bg-elevated)',
-          border:    'var(--color-border)',
-          primary:   'var(--color-primary)',
-          accent:    'var(--color-accent)',
-          text:      'var(--color-text-primary)',
-          muted:     'var(--color-text-secondary)',
-          subtle:    'var(--color-text-tertiary)',
+        aurora: {
+          bg: 'var(--color-bg-base)',
+          surface: 'var(--color-bg-surface)',
+          elevated: 'var(--color-bg-elevated)',
+          border: 'var(--color-border)',
+          primary: 'var(--color-primary)',
+          accent: 'var(--color-accent)',
+          text: 'var(--color-text-primary)',
+          muted: 'var(--color-text-secondary)',
+          subtle: 'var(--color-text-tertiary)',
         },
-        'status': {
-          success:  'var(--color-success)',
-          warning:  'var(--color-warning)',
-          error:    'var(--color-error)',
-          info:     'var(--color-info)',
+        status: {
+          success: 'var(--color-success)',
+          warning: 'var(--color-warning)',
+          error: 'var(--color-error)',
+          info: 'var(--color-info)',
         },
-        'integration': {
-          jira:     'var(--color-jira)',
-          github:   'var(--color-github)',
+        integration: {
+          jira: 'var(--color-jira)',
+          github: 'var(--color-github)',
           calendar: 'var(--color-calendar)',
-          slack:    'var(--color-slack)',
+          slack: 'var(--color-slack)',
           telegram: 'var(--color-telegram)',
         },
       },
@@ -215,15 +213,15 @@ module.exports = {
         mono: ['JetBrains Mono', 'Fira Code', 'monospace'],
       },
       borderRadius: {
-        'sm':  '4px',
-        'md':  '6px',
-        'lg':  '10px',
-        'xl':  '14px',
+        sm: '4px',
+        md: '6px',
+        lg: '10px',
+        xl: '14px',
       },
       boxShadow: {
-        'sm':  'var(--shadow-sm)',
-        'md':  'var(--shadow-md)',
-        'lg':  'var(--shadow-lg)',
+        sm: 'var(--shadow-sm)',
+        md: 'var(--shadow-md)',
+        lg: 'var(--shadow-lg)',
       },
     },
   },
@@ -292,7 +290,9 @@ export class ThemeService {
 })
 export class AppComponent implements OnInit {
   constructor(readonly theme: ThemeService) {}
-  ngOnInit(): void { this.theme.init(); }
+  ngOnInit(): void {
+    this.theme.init();
+  }
 }
 ```
 
@@ -301,6 +301,7 @@ export class AppComponent implements OnInit {
 ## Uso de tokens en componentes
 
 ### Regla principal
+
 **Nunca usar colores hardcodeados** en templates o estilos de componentes.
 Siempre usar los CSS custom properties o las clases Tailwind mapeadas.
 
@@ -317,13 +318,34 @@ Siempre usar los CSS custom properties o las clases Tailwind mapeadas.
 
 ### Badges de prioridad
 
+```typescript
+// En un pipe o componente PriorityBadgeComponent
+const priorityTokens = {
+  error: {
+    background: 'var(--color-error-subtle)',
+    color: 'var(--color-error-text)',
+    border: 'var(--color-error-muted)',
+  },
+  warning: {
+    background: 'var(--color-warning-subtle)',
+    color: 'var(--color-warning-text)',
+    border: 'var(--color-warning-muted)',
+  },
+  'text-tertiary': {
+    background: 'transparent',
+    color: 'var(--color-text-tertiary)',
+    border: 'var(--color-border-subtle)',
+  },
+};
+```
+
 ```html
-<!-- En un pipe o componente PriorityBadgeComponent -->
 <span
   class="badge"
-  [style.background]="'var(--color-' + priority + '-subtle)'"
-  [style.color]="'var(--color-' + priority + '-text)'"
-  [style.border-color]="'var(--color-' + priority + '-muted)'">
+  [style.background]="priorityTokens[priority].background"
+  [style.color]="priorityTokens[priority].color"
+  [style.border-color]="priorityTokens[priority].border"
+>
   {{ label }}
 </span>
 ```
@@ -346,37 +368,51 @@ Cada sección del dashboard usa su color de integración para el borde izquierdo
 
 ```scss
 // Usar solo estas clases — no definir tamaños ad-hoc
-.text-xs    { font-size: 11px; }   // Labels, metadata, timestamps
-.text-sm    { font-size: 12px; }   // Badges, subtítulos de tarjeta
-.text-base  { font-size: 14px; }   // Cuerpo principal
-.text-md    { font-size: 15px; }   // Títulos de sección
-.text-lg    { font-size: 18px; }   // Títulos de página
-.text-xl    { font-size: 22px; }   // Hero, contador grande
+.text-xs {
+  font-size: 11px;
+} // Labels, metadata, timestamps
+.text-sm {
+  font-size: 12px;
+} // Badges, subtítulos de tarjeta
+.text-base {
+  font-size: 14px;
+} // Cuerpo principal
+.text-md {
+  font-size: 15px;
+} // Títulos de sección
+.text-lg {
+  font-size: 18px;
+} // Títulos de página
+.text-xl {
+  font-size: 22px;
+} // Hero, contador grande
 
 // Pesos
-font-weight: 400;  // Cuerpo
-font-weight: 500;  // Labels, botones, badges
-font-weight: 600;  // Títulos de sección (solo h2/h3)
+:root {
+  --font-weight-body: 400; // Cuerpo
+  --font-weight-medium: 500; // Labels, botones, badges
+  --font-weight-semibold: 600; // Títulos de sección (solo h2/h3)
+}
 ```
 
 ---
 
 ## Referencia rápida — tokens semánticos
 
-| Token | Dark | Light | Uso |
-|---|---|---|---|
-| `--color-bg-base` | #120F1E | #FAF9FE | Fondo de página |
-| `--color-bg-surface` | #1E1830 | #FFFFFF | Tarjetas |
-| `--color-bg-elevated` | #252040 | #F3F0FD | Modales, dropdowns |
-| `--color-border` | #2D2545 | #E2DBF5 | Bordes generales |
-| `--color-primary` | #A78BFA | #7C3AED | Acciones, links, focus |
-| `--color-accent` | #38BDF8 | #0284C7 | Calendario, Slack, info |
-| `--color-text-primary` | #F0EEF8 | #1A1333 | Texto principal |
-| `--color-text-secondary` | #9A8FB8 | #5B4F7A | Labels, metadata |
-| `--color-success` | #34D399 | #059669 | Checks passing, OK |
-| `--color-warning` | #FBBF24 | #D97706 | Prioridad media, atención |
-| `--color-error` | #F87171 | #DC2626 | Checks fallando, alta prioridad |
-| `--color-jira` | #A78BFA | #7C3AED | = primary |
-| `--color-github` | #9A8FB8 | #5B4F7A | Neutro |
-| `--color-calendar` | #38BDF8 | #0284C7 | = accent |
-| `--color-slack` | #C084FC | #9333EA | Violeta más cálido |
+| Token                    | Dark    | Light   | Uso                             |
+| ------------------------ | ------- | ------- | ------------------------------- |
+| `--color-bg-base`        | #120F1E | #FAF9FE | Fondo de página                 |
+| `--color-bg-surface`     | #1E1830 | #FFFFFF | Tarjetas                        |
+| `--color-bg-elevated`    | #252040 | #F3F0FD | Modales, dropdowns              |
+| `--color-border`         | #2D2545 | #E2DBF5 | Bordes generales                |
+| `--color-primary`        | #A78BFA | #7C3AED | Acciones, links, focus          |
+| `--color-accent`         | #38BDF8 | #0284C7 | Calendario, Slack, info         |
+| `--color-text-primary`   | #F0EEF8 | #1A1333 | Texto principal                 |
+| `--color-text-secondary` | #9A8FB8 | #5B4F7A | Labels, metadata                |
+| `--color-success`        | #34D399 | #059669 | Checks passing, OK              |
+| `--color-warning`        | #FBBF24 | #D97706 | Prioridad media, atención       |
+| `--color-error`          | #F87171 | #DC2626 | Checks fallando, alta prioridad |
+| `--color-jira`           | #A78BFA | #7C3AED | = primary                       |
+| `--color-github`         | #9A8FB8 | #5B4F7A | Neutro                          |
+| `--color-calendar`       | #38BDF8 | #0284C7 | = accent                        |
+| `--color-slack`          | #C084FC | #9333EA | Violeta más cálido              |

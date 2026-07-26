@@ -1,5 +1,8 @@
 import { Component, computed, input } from '@angular/core';
 
+/**
+ * Names in the local SVG icon registry.
+ */
 type IconName =
   | 'bell'
   | 'calendar'
@@ -16,6 +19,9 @@ type IconName =
   | 'trending-up'
   | 'video';
 
+/**
+ * SVG path data keyed by the icon names used in dashboard controls.
+ */
 const iconPaths: Record<IconName, string> = {
   bell: 'M10 5a2 2 0 0 1 4 0 7 7 0 0 1 4 6v3l2 2H4l2-2v-3a7 7 0 0 1 4-6Zm0 14a2 2 0 0 0 4 0',
   calendar:
@@ -58,11 +64,30 @@ const iconPaths: Record<IconName, string> = {
   `,
 })
 export class AppIconComponent {
+  /**
+   * Icon name to render from the local path registry.
+   */
   readonly name = input.required<IconName>();
+
+  /**
+   * CSS classes applied to the SVG element.
+   */
   readonly className = input('h-4 w-4');
+
+  /**
+   * Whether the icon should use the shared spin animation.
+   */
   readonly spin = input(false);
+
+  /**
+   * Final SVG class string including optional animation.
+   */
   readonly iconClass = computed(() =>
     `${this.className()} ${this.spin() ? 'animate-spin' : ''}`.trim(),
   );
+
+  /**
+   * Path data resolved for the selected icon.
+   */
   readonly path = computed(() => iconPaths[this.name()]);
 }

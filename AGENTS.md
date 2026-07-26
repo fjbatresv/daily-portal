@@ -17,15 +17,15 @@ El usuario accede al portal desde internet mediante Cloudflare Tunnel → puerto
 
 ## Stack
 
-| Capa | Tecnología | Versión |
-|---|---|---|
-| Backend | NestJS | 11.x |
-| Runtime | Node.js | 24 LTS |
-| Frontend | Angular | 22.x (standalone components) |
-| Base de datos | SQLite | via `better-sqlite3` (sin ORM) |
-| Cache | Redis | 8 alpine |
-| Contenedores | Docker Compose | v5.x |
-| Lenguaje | TypeScript | 5.x estricto |
+| Capa          | Tecnología     | Versión                        |
+| ------------- | -------------- | ------------------------------ |
+| Backend       | NestJS         | 11.x                           |
+| Runtime       | Node.js        | 24 LTS                         |
+| Frontend      | Angular        | 22.x (standalone components)   |
+| Base de datos | SQLite         | via `better-sqlite3` (sin ORM) |
+| Cache         | Redis          | 8 alpine                       |
+| Contenedores  | Docker Compose | v5.x                           |
+| Lenguaje      | TypeScript     | estricto                       |
 
 **Runtime local obligatorio:** usar siempre el Node.js gestionado por `nvm` para comandos locales (`npm install`, `npm test`, `npm run build`, `ng`, etc.). Antes de ejecutar comandos Node/NPM, cargar `nvm` si hace falta:
 
@@ -33,6 +33,18 @@ El usuario accede al portal desde internet mediante Cloudflare Tunnel → puerto
 source ~/.nvm/nvm.sh
 nvm use
 ```
+
+---
+
+## Reglas para agentes — OBLIGATORIAS
+
+1. Lee este archivo completo antes de escribir código.
+2. Lee `README.md`, `CONTRIBUTING.md` y los ADRs en `docs/adr/` antes de cambios amplios de arquitectura, despliegue, persistencia, API pública o documentación.
+3. No publiques ni inventes secretos. Usa placeholders como `you@example.com`, `primary` o `work@example.com`.
+4. No hagas commits, pushes ni abras PRs salvo que el usuario lo pida explícitamente.
+5. No reviertas cambios ajenos en el working tree. Si encuentras cambios no relacionados, déjalos intactos.
+6. Para cambios que afecten el contrato HTTP, actualiza `openapi.yaml`, tipos compartidos, frontend y documentación correspondiente.
+7. Para decisiones de arquitectura nuevas o cambios de despliegue, crea o actualiza un ADR en `docs/adr/` y enlázalo desde `docs/adr/README.md`.
 
 ---
 
@@ -49,7 +61,8 @@ nvm use
 9. **Barrel exports** en cada módulo (`index.ts`).
 10. **Tests unitarios** para cada Service con Jest. Mockear dependencias externas.
 11. **Coverage unitario mínimo 80%.** Cada cambio debe mantener al menos 80% de cobertura global en unit tests (`statements`, `branches`, `functions` y `lines`) para el área afectada.
-12. **Coverage de docstrings mínimo 80%.** Al menos 80% de clases, servicios, controladores, funciones y métodos exportados o públicos deben tener docstrings útiles que expliquen intención, entradas/salidas o comportamiento relevante.
+12. **Coverage de docstrings mínimo 80%.** Al menos 80% de clases, servicios, controladores, funciones, métodos exportados o públicos y símbolos relevantes de frontend deben tener docstrings útiles que expliquen intención, entradas/salidas o comportamiento relevante.
+13. **Documentación como producto.** Cambios en setup, despliegue, arquitectura, API o contribución deben actualizar `README.md`, `CONTRIBUTING.md`, `docs/`, `docs-site/` u `openapi.yaml` según corresponda.
 
 ## Reglas de Pull Request — OBLIGATORIAS
 
@@ -75,6 +88,8 @@ daily-portal/
 ├── nginx/
 │   └── nginx.conf               ← solo para el perfil nginx
 ├── docs/
+│   ├── adr/
+│   │   └── *.md                 ← Architecture Decision Records
 │   └── modules/
 │       ├── 01-jira.md
 │       ├── 02-github.md
@@ -84,6 +99,10 @@ daily-portal/
 │       ├── 06-reminders.md
 │       ├── 07-scheduler.md
 │       └── 08-daily-aggregator.md
+├── docs-site/                   ← Astro Starlight, Compodoc, TypeDoc y OpenAPI docs
+│   ├── astro.config.mjs
+│   ├── package.json
+│   └── src/content/docs/
 │
 ├── backend/                     ← NestJS API
 │   ├── Dockerfile               ← multi-stage: Angular + NestJS, build context=raíz
@@ -151,11 +170,11 @@ daily-portal/
 El sistema soporta dos modos controlados por variables de entorno y Docker Compose profiles.
 **No hay contenedor de frontend separado.** El build de Angular siempre va embebido en la imagen del backend (multi-stage Dockerfile desde la raíz del repo).
 
-| Variable | Valor | Efecto |
-|---|---|---|
+| Variable       | Valor            | Efecto                                                                         |
+| -------------- | ---------------- | ------------------------------------------------------------------------------ |
 | `SERVE_STATIC` | `true` (default) | NestJS sirve Angular via `ServeStaticModule`. Backend expuesto en `HOST_PORT`. |
-| `SERVE_STATIC` | `false` | NestJS solo expone `/api/*`. Nginx (perfil) sirve el frontend. |
-| `HOST_PORT` | `8090` (default) | Puerto expuesto al host Docker. Cloudflare Tunnel o Caddy apuntan aquí. |
+| `SERVE_STATIC` | `false`          | NestJS solo expone `/api/*`. Nginx (perfil) sirve el frontend.                 |
+| `HOST_PORT`    | `8090` (default) | Puerto expuesto al host Docker. Cloudflare Tunnel o Caddy apuntan aquí.        |
 
 ### Modos de arranque
 
@@ -164,7 +183,7 @@ El sistema soporta dos modos controlados por variables de entorno y Docker Compo
 docker compose up -d
 
 # Modo con nginx (standalone, sin proxy externo)
-docker compose --profile nginx up -d
+SERVE_STATIC=false docker compose -f docker-compose.yml -f docker-compose.nginx-override.yml --profile nginx up -d
 ```
 
 ### ServeStaticModule en NestJS
@@ -183,8 +202,8 @@ const imports: any[] = [
 if (process.env.SERVE_STATIC === 'true') {
   imports.unshift(
     ServeStaticModule.forRoot({
-      rootPath: join(__dirname, '..', 'public'),  // Angular dist embebido
-      exclude: ['/api/(.*)'],                      // no interceptar rutas de API
+      rootPath: join(__dirname, 'public'), // Angular dist embebido
+      exclude: ['/api/(.*)'], // no interceptar rutas de API
     }),
   );
 }
@@ -208,6 +227,7 @@ backend:
 ```
 
 Stages:
+
 1. `frontend-builder` → `npm run build` del Angular app → `/frontend/dist/`
 2. `backend-builder` → `npm run build` del NestJS → `/app/dist/`
 3. `final` → copia ambos. Angular queda en `/app/public/`
@@ -271,7 +291,7 @@ export type CheckStatus = 'success' | 'failure' | 'pending' | 'error';
 
 export interface JiraTask {
   id: string;
-  key: string;           // e.g. TEMP-123
+  key: string; // e.g. TEMP-123
   summary: string;
   status: string;
   priority: string;
@@ -294,7 +314,7 @@ export interface GitHubPR {
 export interface CalendarEvent {
   id: string;
   title: string;
-  startTime: string;     // ISO datetime
+  startTime: string; // ISO datetime
   endTime: string;
   calendarId: string;
   calendarName: string;
@@ -313,7 +333,7 @@ export interface SlackMention {
 export interface Reminder {
   id: string;
   text: string;
-  date: string;          // YYYY-MM-DD
+  date: string; // YYYY-MM-DD
   priority: Priority;
   completed: boolean;
   createdAt: string;
@@ -335,7 +355,7 @@ export interface DailyDigest {
   events: CalendarEvent[];
   slackMentions: SlackMention[];
   reminders: Reminder[];
-  generatedAt: string;   // ISO datetime
+  generatedAt: string; // ISO datetime
 }
 
 // Resultado de una integración que puede fallar sin romper el digest
@@ -373,7 +393,7 @@ Regla: **todos los métodos de integración** deben llamar `cache.get()` primero
   imports: [
     ConfigModule.forRoot({ load: [configuration], isGlobal: true }),
     CacheModule,
-    DatabaseModule,     // inicializa SQLite y crea schema
+    DatabaseModule, // inicializa SQLite y crea schema
     DashboardModule,
     JiraModule,
     GitHubModule,
@@ -392,17 +412,17 @@ export class AppModule {}
 
 ## Módulos — resumen de responsabilidades
 
-| Módulo | Lee de | Escribe en | Cache TTL |
-|---|---|---|---|
-| JiraModule | Jira REST API | — | 15 min |
-| GitHubModule | GitHub GraphQL | — | 5 min |
-| GoogleCalendarModule | Google Calendar API v3 | — | 10 min |
-| SlackModule | Slack Web API (xoxp-) | — | 5 min |
-| RemindersModule | SQLite | SQLite | sin cache |
-| TelegramModule | — | Telegram Bot API, SQLite (logs) | — |
-| SchedulerModule | — (llama Aggregator) | — | — |
-| DailyAggregatorService | todos los módulos | — | — |
-| ClickUpModule | ClickUp API | — | 15 min |
+| Módulo                 | Lee de                 | Escribe en                      | Cache TTL |
+| ---------------------- | ---------------------- | ------------------------------- | --------- |
+| JiraModule             | Jira REST API          | —                               | 15 min    |
+| GitHubModule           | GitHub GraphQL         | —                               | 5 min     |
+| GoogleCalendarModule   | Google Calendar API v3 | —                               | 10 min    |
+| SlackModule            | Slack Web API (xoxp-)  | —                               | 5 min     |
+| RemindersModule        | SQLite                 | SQLite                          | sin cache |
+| TelegramModule         | —                      | Telegram Bot API, SQLite (logs) | —         |
+| SchedulerModule        | — (llama Aggregator)   | —                               | —         |
+| DailyAggregatorService | todos los módulos      | —                               | —         |
+| ClickUpModule          | ClickUp API            | —                               | 15 min    |
 
 Ver specs detalladas en `docs/modules/`.
 
@@ -423,6 +443,7 @@ Tab Fuentes: secciones por integración (Jira, GitHub, Calendar, Slack, Recordat
 ### Botón "Crear recordatorio"
 
 Dos puntos de entrada que abren el mismo formulario en el tab Fuentes:
+
 - **Header global** → botón "+ Recordatorio" (siempre visible, abre tab Fuentes si el usuario está en Hoy)
 - **Sección Recordatorios** → botón "+ Nuevo" en el header de la sección
 
@@ -432,14 +453,15 @@ El formulario tiene: texto (required, maxLength 500), fecha (default: mañana), 
 
 En el tab Hoy, cada ítem tiene un checkbox. El comportamiento varía según la fuente:
 
-| Fuente | Efecto en backend |
-|---|---|
-| `reminder` | `PATCH /api/reminders/:id/complete` → persiste en SQLite |
-| `jira`, `github`, `calendar`, `slack` | Solo estado visual (session-only, no llamada al backend) |
+| Fuente                                | Efecto en backend                                                                 |
+| ------------------------------------- | --------------------------------------------------------------------------------- |
+| `reminder`                            | `PATCH /api/reminders/:id/complete` → persiste en SQLite                          |
+| `jira`, `github`, `calendar`, `slack` | Frontend-only, sin llamada al backend; persiste localmente hasta el día siguiente |
 
-El frontend guarda los IDs de ítems no-reminder atendidos en `localStorage` con key `portal:acknowledged:{YYYY-MM-DD}`. Se limpia automáticamente al día siguiente (comparar fecha al cargar).
+El frontend guarda solo los IDs de ítems no-reminder atendidos en `localStorage` con key `portal:acknowledged:{YYYY-MM-DD}`. Ese estado se conserva durante el día del digest y se limpia automáticamente al día siguiente (comparar fecha al cargar).
 
 Al marcar un ítem:
+
 1. Ítem recibe `line-through` + `opacity: 0.4`
 2. Se mueve al fondo de la lista (sección "N atendidos")
 3. El badge de conteo del tab decrementa
@@ -454,10 +476,10 @@ La prioridad stored en DB no se modifica. `getEffectivePriority()` en `src/commo
 ```typescript
 // frontend/src/app/features/dashboard/dashboard.store.ts
 export class DashboardStore {
-  digest      = signal<DailyDigest | null>(null);
-  loading     = signal(false);
-  activeTab   = signal<'hoy' | 'fuentes'>('hoy');
-  acknowledged = signal<Set<string>>(new Set());  // localStorage:portal:acknowledged:{date}
+  digest = signal<DailyDigest | null>(null);
+  loading = signal(false);
+  activeTab = signal<'hoy' | 'fuentes'>('hoy');
+  acknowledged = signal<Set<string>>(new Set()); // localStorage:portal:acknowledged:{date}
 }
 ```
 
@@ -510,12 +532,13 @@ frontend/src/app/core/services/
 ```html
 <!-- ✅ Siempre tokens -->
 <div class="bg-aurora-surface border border-aurora-border rounded-lg">
-
-<!-- ❌ Nunca hardcode -->
-<div style="background: #1E1830">
+  <!-- ❌ Nunca hardcode -->
+  <div style="background: #1E1830"></div>
+</div>
 ```
 
 Colores semánticos por caso de uso:
+
 - PR con error / prioridad alta → `--color-error` / `--color-error-muted`
 - PR con warning / prioridad media → `--color-warning` / `--color-warning-muted`
 - Jira → `--color-jira` (= primary violeta)
@@ -537,21 +560,50 @@ Colores semánticos por caso de uso:
 
 ---
 
+## Documentación pública
+
+El proyecto tiene un portal de documentación en `docs-site/`:
+
+- Starlight: sitio principal.
+- Compodoc: referencia del frontend en `docs-site/public/reference/frontend`.
+- TypeDoc: referencia del backend en `docs-site/public/reference/backend`.
+- RapiDoc/OpenAPI: referencia y playground derivados de `openapi.yaml`.
+
+Las salidas generadas en `docs-site/public/` y `docs-site/dist/` no se versionan. Se regeneran con scripts.
+
+GitHub Pages se despliega mediante `.github/workflows/docs-release.yml`. Para forks, Pages debe configurarse con **Source: GitHub Actions**.
+
+---
+
 ## Comandos de desarrollo
 
 ```bash
-# Backend
-cd backend
+# Instalar dependencias desde la raíz
+source ~/.nvm/nvm.sh
+nvm use
 npm install
-npm run start:dev       # watch mode
+
+# Backend
+npm run start:dev --workspace backend
 
 # Frontend
-cd frontend
-npm install
-ng serve               # http://localhost:4200
+npm run start --workspace frontend
 
 # Docker (producción en RPi)
 docker compose up -d --build
+
+# Docs
+npm run docs:dev
+npm run docs:check
+npm run docs:build
+
+# Checks principales
+npm run format:check
+npm run docstrings:check
+npm run lint
+npm run test
+npm run build
+npm run ci
 
 # Migraciones SQLite (solo primer boot)
 # Se ejecutan automáticamente via DatabaseModule al iniciar
@@ -579,69 +631,19 @@ Implementar en este orden para poder validar end-to-end cuanto antes:
 
 ## Referencia de specs por módulo
 
-| Archivo | Módulo |
-|---|---|
-| `docs/modules/01-jira.md` | JiraModule |
-| `docs/modules/02-github.md` | GitHubModule |
-| `docs/modules/03-google-calendar.md` | GoogleCalendarModule |
-| `docs/modules/04-slack.md` | SlackModule |
-| `docs/modules/05-telegram.md` | TelegramModule |
-| `docs/modules/06-reminders.md` | RemindersModule |
-| `docs/modules/07-scheduler.md` | SchedulerModule |
+| Archivo                               | Módulo                 |
+| ------------------------------------- | ---------------------- |
+| `docs/modules/01-jira.md`             | JiraModule             |
+| `docs/modules/02-github.md`           | GitHubModule           |
+| `docs/modules/03-google-calendar.md`  | GoogleCalendarModule   |
+| `docs/modules/04-slack.md`            | SlackModule            |
+| `docs/modules/05-telegram.md`         | TelegramModule         |
+| `docs/modules/06-reminders.md`        | RemindersModule        |
+| `docs/modules/07-scheduler.md`        | SchedulerModule        |
 | `docs/modules/08-daily-aggregator.md` | DailyAggregatorService |
 
 Spec del API REST: `openapi.yaml`
 Arquitectura completa: `daily-portal-architecture.md`
+ADRs: `docs/adr/`
 Layout y comportamiento UI: `docs/layout.md`
 Tokens de diseño: `docs/design-tokens.md`
-
-## Imported Claude Cowork project instructions
-
-
-<claude-mem-context>
-# Memory Context
-
-# [Personal StandUP] recent context, 2026-07-22 11:11pm CST
-
-Legend: 🎯session 🔴bugfix 🟣feature 🔄refactor ✅change 🔵discovery ⚖️decision 🚨security_alert 🔐security_note
-Format: ID TIME TYPE TITLE
-Fetch details: get_observations([IDs]) | Search: mem-search skill
-
-Stats: 32 obs (10,120t read) | 589,508t work | 98% savings
-
-### Jul 20, 2026
-405 5:38p ⚖️ Task Completion Convention: Strike-Through Completed Tasks in PLAN.md
-406 7:02p 🟣 Slack Integration Module Implemented
-407 " 🔴 Slack Spec Timestamp Corrected
-408 " ⚖️ Branch-First Git Workflow Enforced for Task 11
-409 7:12p 🔵 Task 11 Staged on `develop` Branch — Feature Branch Missing
-410 " ✅ Feature Branch `codex/t11-slack-module` Created and Staged
-411 " ✅ Task 11 Committed and Marked Complete in PLAN.md
-412 7:13p 🔵 Repo Default Branch is `main`; Feature Branches Target `develop`
-413 " 🟣 PR #9 Opened for Task 11 Slack Integration
-414 " 🔵 daily-portal CI Pipeline Has 5 Required Checks on PRs
-415 7:24p ✅ Task 12 Backend Work Initiated — Branch Creation
-416 " 🔵 Project State Confirmed — T01–T11 Complete, T12 Is Next
-417 " ⚖️ T12 Implementation Spec: DailyAggregatorService + DashboardController
-418 7:25p 🔵 Critical Interface Details Found Before T12 Implementation
-419 7:26p 🟣 T12: DashboardModule + DailyAggregatorService Created
-420 " 🟣 T12 Unit Tests Added for DailyAggregatorService and DashboardController
-421 " 🔴 Prettier Format Check Fails on Two New Dashboard Files
-423 7:27p ✅ User Confirmed T12 Commit and Push ("Hazlo")
-424 7:35p 🟣 supertest and @types/supertest Installed for Dashboard E2E Tests
-426 " 🔵 Primary Session Restarted — Re-reading Module Files Before Writing Integration Tests
-425 " 🔵 DashboardModule Dependency Graph for Integration Testing
-428 7:36p 🔵 Completed file changes in this batch — summary of all successful patches
-430 7:39p 🔵 tsconfig.json exclude updated — e2e-spec excluded from main build
-432 " 🔵 Two test fixes applied — root cause of reminders failure was timezone mismatch
-437 7:43p 🔵 Ready to commit and push — gh authenticated, 16 files staged, AGENTS.md has unstaged changes
-442 7:47p 🔵 SonarCloud quality gate failed on coverage for PR #10
-443 " 🔵 PR #10 final CI check results — only SonarCloud failed
-444 7:48p 🔵 SonarCloud quality gate root cause: new-code coverage below threshold
-445 " 🔴 SonarCloud new-code coverage 63% fixed by adding e2e-spec to exclusions and test inclusions
-446 " ✅ Local CI pipeline re-run after sonar-project.properties fix — passing so far
-447 " ✅ Local CI fully passes after sonar-project.properties fix — ready to commit
-448 7:49p 🔴 SonarCloud fix committed and pushed — commit 840c57c4
-
-Access 590k tokens of past work via get_observations([IDs]) or mem-search skill.
-</claude-mem-context>

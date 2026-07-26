@@ -1,5 +1,5 @@
 /**
- * GraphQL query that finds open pull requests authored by the configured user.
+ * GraphQL query that finds open pull requests matching the configured search.
  */
 export const SEARCH_PRS_QUERY = `
   query SearchAssignedPRs($query: String!) {

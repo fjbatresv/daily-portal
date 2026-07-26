@@ -8,6 +8,8 @@
   },
   "scripts": {
     "build": "nest build",
+    "docs": "cd .. && typedoc --options typedoc.json",
+    "docs:check": "cd .. && typedoc --options typedoc.json --emit none --treatWarningsAsErrors",
     "docstrings:check": "node scripts/check-docstrings.cjs",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "format:check": "prettier --check --no-error-on-unmatched-pattern \"src/**/*.ts\" \"test/**/*.ts\"",

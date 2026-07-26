@@ -96,4 +96,16 @@ describe('RemindersController', () => {
     await expect(validate(createDto)).resolves.toHaveLength(1);
     await expect(validate(updateDto)).resolves.toHaveLength(1);
   });
+
+  it('rejects full ISO timestamps for date-only reminder fields', async () => {
+    const createDto = new CreateReminderDto();
+    createDto.text = 'Follow up';
+    createDto.date = '2026-06-30T00:00:00.000Z';
+
+    const updateDto = new UpdateReminderDto();
+    updateDto.date = '2026-06-30T00:00:00.000Z';
+
+    await expect(validate(createDto)).resolves.toHaveLength(1);
+    await expect(validate(updateDto)).resolves.toHaveLength(1);
+  });
 });
