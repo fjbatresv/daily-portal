@@ -16,8 +16,8 @@ backend/src/telegram/
 ## Configuración requerida
 
 ```typescript
-telegram.botToken   // Token del bot (de @BotFather)
-telegram.chatId     // Chat ID del usuario (de @userinfobot)
+telegram.botToken; // Token del bot (de @BotFather)
+telegram.chatId; // Chat ID del usuario (de @userinfobot)
 ```
 
 ## Cómo crear el bot (una sola vez)
@@ -49,6 +49,7 @@ Content-Type: application/json
 `. ! - ( ) [ ] { } # + = | ~ >`
 
 Escapar con backslash en el texto antes de enviar:
+
 ```typescript
 private escape(text: string): string {
   return text.replace(/[_*[\]()~`>#+\-=|{}.!]/g, '\\$&');
@@ -65,17 +66,17 @@ export class TelegramService {
   constructor(
     private readonly config: ConfigService,
     private readonly formatter: TelegramFormatter,
-    private readonly db: DatabaseService,   // para logs
+    private readonly db: DatabaseService, // para logs
   ) {}
 
-  async sendMorningDigest(digest: DailyDigest): Promise<void>
+  async sendMorningDigest(digest: DailyDigest): Promise<void>;
   // 1. Llamar formatter.format(digest)
   // 2. POST a /sendMessage
   // 3. INSERT en notification_logs (status: 'success' o 'error')
   // 4. Si falla el envío: log error + INSERT con status 'error'
   // 5. NO relanzar la excepción (el scheduler no debe fallar)
 
-  async sendTestMessage(text: string): Promise<void>
+  async sendTestMessage(text: string): Promise<void>;
   // Útil para verificar que el bot funciona en el primer boot
 }
 ```
@@ -85,16 +86,16 @@ export class TelegramService {
 ```typescript
 @Injectable()
 export class TelegramFormatter {
-  format(digest: DailyDigest): string
+  format(digest: DailyDigest): string;
   // Retorna el mensaje completo en MarkdownV2 escapado
 
-  private formatTasks(tasks: JiraTask[]): string
-  private formatPRs(prs: GitHubPR[]): string
-  private formatEvents(events: CalendarEvent[]): string
-  private formatMentions(mentions: SlackMention[]): string
-  private formatReminders(reminders: Reminder[]): string
-  private formatTodoList(items: TodoItem[]): string
-  private escape(text: string): string
+  private formatTasks(tasks: JiraTask[]): string;
+  private formatPRs(prs: GitHubPR[]): string;
+  private formatEvents(events: CalendarEvent[]): string;
+  private formatMentions(mentions: SlackMention[]): string;
+  private formatReminders(reminders: Reminder[]): string;
+  private formatTodoList(items: TodoItem[]): string;
+  private escape(text: string): string;
 }
 ```
 
@@ -104,7 +105,7 @@ export class TelegramFormatter {
 📋 *Daily Digest — Lunes 29 Jun 2026*
 
 📅 *Calendario* \(3 eventos\)
-• 09:00 Stand\-up Tempus
+• 09:00 Stand\-up del equipo
 • 11:00 Design Review
 • 15:00 1:1 con manager
 
@@ -116,7 +117,7 @@ export class TelegramFormatter {
 • ⚠️ \[api\-gateway\] Comentarios nuevos
 • 🔴 \[frontend\-app\] Checks fallando
 
-💬 *Slack Tempus* \(3 menciones\)
+💬 *Slack* \(3 menciones\)
 • \#backend: "¿cuándo estará el endpoint?"
 
 📌 *Recordatorios de hoy* \(1\)
@@ -171,6 +172,7 @@ VALUES ('error', 'mensaje del error');
 ## Test unitario
 
 Casos a cubrir:
+
 - `TelegramFormatter.format()` con digest completo → string no vacío con todas las secciones
 - Sección vacía → aparece con `_Sin elementos_`
 - Texto con caracteres especiales → correctamente escapados

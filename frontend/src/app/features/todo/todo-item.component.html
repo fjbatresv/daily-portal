@@ -1,0 +1,48 @@
+@let current = entry();
+
+<article
+  class="group flex gap-3 rounded-md border border-aurora-border bg-aurora-surface p-4 transition hover:border-aurora-primary"
+  [class.opacity-40]="current.acknowledged"
+  [class.opacity-60]="!current.acknowledged && current.item.priority === 'low'"
+>
+  <input
+    type="checkbox"
+    class="mt-1 h-4 w-4 accent-[var(--color-primary)]"
+    [checked]="current.acknowledged"
+    (change)="checkedChange.emit()"
+    [attr.aria-label]="current.acknowledged ? 'Desmarcar atendido' : 'Marcar como atendido'"
+  />
+
+  <div class="min-w-0 flex-1">
+    <div class="mb-2 flex flex-wrap items-center gap-2">
+      <span [class]="sourceBadgeClass(current.item.source)">
+        {{ sourceLabel(current.item.source) }}
+      </span>
+      <span class="rounded-full bg-aurora-elevated px-2 py-0.5 text-xs text-aurora-muted">
+        {{ priorityLabel(current.item.priority) }}
+      </span>
+      @if (current.item.dueTime) {
+        <span class="text-xs text-aurora-muted">{{ current.item.dueTime }}</span>
+      }
+    </div>
+
+    @if (current.item.url) {
+      <a
+        class="block truncate text-sm font-medium text-aurora-text hover:text-aurora-primary"
+        [class.line-through]="current.acknowledged"
+        [href]="current.item.url"
+        target="_blank"
+        rel="noreferrer"
+      >
+        {{ current.item.text }}
+      </a>
+    } @else {
+      <p
+        class="truncate text-sm font-medium text-aurora-text"
+        [class.line-through]="current.acknowledged"
+      >
+        {{ current.item.text }}
+      </p>
+    }
+  </div>
+</article>

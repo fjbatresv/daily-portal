@@ -2,7 +2,7 @@
 
 ## Responsabilidad
 
-Obtener las tareas de Jira (proyecto Tempus) asignadas al usuario autenticado con estado `In Progress` o `To Do`.
+Obtener las tareas de Jira del proyecto configurado asignadas al usuario autenticado con estado `In Progress` o `To Do`.
 
 ## Archivos a crear
 
@@ -16,10 +16,10 @@ backend/src/integrations/jira/
 ## Configuración requerida (via ConfigService)
 
 ```typescript
-jira.baseUrl      // https://tu-org.atlassian.net
-jira.email        // fjbatresv@gmail.com
-jira.apiToken     // token de API de Atlassian
-jira.projectKey   // ej: TEMP
+jira.baseUrl; // https://tu-org.atlassian.net
+jira.email; // you@example.com
+jira.apiToken; // token de API de Atlassian
+jira.projectKey; // ej: TEMP
 ```
 
 ## Autenticación
@@ -42,13 +42,15 @@ GET /rest/api/3/search
 ```
 
 **Query params:**
-```
+
+```text
 jql=project={projectKey} AND assignee=currentUser() AND statusCategory in ("In Progress","To Do") ORDER BY updated DESC
 fields=summary,status,priority,assignee
 maxResults=20
 ```
 
 **Respuesta esperada (simplificada):**
+
 ```json
 {
   "issues": [
@@ -80,16 +82,27 @@ export class JiraService {
     private readonly cache: CacheService,
   ) {}
 
-  async getTasks(): Promise<JiraTask[]>
-  // 1. cache.get(CACHE_KEY) → si hit, retornar
-  // 2. Llamar GET /rest/api/3/search con JQL
-  // 3. Mapear issues a JiraTask[]
-  // 4. cache.set(CACHE_KEY, tasks, CACHE_TTL)
-  // 5. Si falla la API: log error, retornar []
+  async getTasks(): Promise<JiraTask[]> {
+    // 1. cache.get(CACHE_KEY) → si hit, retornar
+    // 2. Llamar GET /rest/api/3/search con JQL
+    // 3. Mapear issues a JiraTask[]
+    // 4. cache.set(CACHE_KEY, tasks, CACHE_TTL)
+    // 5. Si falla la API: log error, retornar []
+    return [];
+  }
 
-  private mapIssue(issue: JiraApiIssue): JiraTask
-  // Mapea el objeto crudo de Jira al tipo JiraTask
-  // URL construida como: `${baseUrl}/browse/${issue.key}`
+  protected mapIssue(issue: JiraApiIssue): JiraTask {
+    const baseUrl = this.config.get<string>('jira.baseUrl') ?? '';
+
+    return {
+      id: issue.id,
+      key: issue.key,
+      summary: issue.fields.summary,
+      status: issue.fields.status.name,
+      priority: issue.fields.priority.name,
+      url: `${baseUrl}/browse/${issue.key}`,
+    };
+  }
 }
 ```
 
@@ -98,12 +111,12 @@ export class JiraService {
 ```typescript
 // Desde daily-digest.types.ts (NO redefinir aquí)
 interface JiraTask {
-  id: string;       // issue.id
-  key: string;      // issue.key  →  "TEMP-123"
-  summary: string;  // issue.fields.summary
-  status: string;   // issue.fields.status.name
+  id: string; // issue.id
+  key: string; // issue.key  →  "TEMP-123"
+  summary: string; // issue.fields.summary
+  status: string; // issue.fields.status.name
   priority: string; // issue.fields.priority.name
-  url: string;      // `${baseUrl}/browse/${issue.key}`
+  url: string; // `${baseUrl}/browse/${issue.key}`
 }
 ```
 
@@ -128,6 +141,7 @@ export class JiraModule {}
 ## Test unitario (jira.service.spec.ts)
 
 Casos a cubrir:
+
 - Cache hit → retorna datos sin llamar HTTP
 - Cache miss + API OK → retorna tareas mapeadas y cachea
 - Cache miss + API falla → retorna `[]` y loguea el error

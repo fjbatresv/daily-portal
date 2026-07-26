@@ -3,8 +3,11 @@ import { ConfigService } from '@nestjs/config';
 import { CacheService } from '../../common/cache';
 import { SlackMention } from '../../common/types/daily-digest.types';
 import { AppConfiguration } from '../../config/configuration';
+import { AxiosGetMock, axiosResponse, getAxiosMock } from '../../../test/axios-test-utils';
 import { SlackApiMatch, SlackSearchResponse } from './slack.types';
 import { SlackService } from './slack.service';
+
+jest.mock('axios');
 
 const mappedMention: SlackMention = {
   ts: '1784561400.000000',
@@ -35,7 +38,7 @@ const slackResponse: SlackSearchResponse = {
 describe('SlackService', () => {
   let cache: jest.Mocked<CacheService>;
   let config: ConfigService<AppConfiguration, true>;
-  let fetchMock: jest.MockedFunction<typeof fetch>;
+  let axiosGetMock: AxiosGetMock;
   let loggerErrorSpy: jest.SpiedFunction<Logger['error']>;
   let service: SlackService;
 
@@ -53,8 +56,8 @@ describe('SlackService', () => {
         return undefined;
       }),
     } as unknown as ConfigService<AppConfiguration, true>;
-    fetchMock = jest.fn<ReturnType<typeof fetch>, Parameters<typeof fetch>>();
-    global.fetch = fetchMock;
+    axiosGetMock = getAxiosMock('get').get;
+    axiosGetMock.mockReset();
     loggerErrorSpy = jest.spyOn(Logger.prototype, 'error').mockImplementation(() => undefined);
     service = new SlackService(config, cache);
   });
@@ -69,31 +72,27 @@ describe('SlackService', () => {
 
     await expect(service.getMentions()).resolves.toEqual([mappedMention]);
 
-    expect(fetchMock).not.toHaveBeenCalled();
+    expect(axiosGetMock).not.toHaveBeenCalled();
     expect(cache.set.mock.calls).toHaveLength(0);
   });
 
   it('fetches, maps, filters, and caches Slack mentions on cache miss', async () => {
     cache.get.mockResolvedValue(null);
-    fetchMock.mockResolvedValue({
-      ok: true,
-      status: 200,
-      json: jest.fn().mockResolvedValue(slackResponse),
-    } as unknown as Response);
+    axiosGetMock.mockResolvedValue(axiosResponse(200, slackResponse));
 
     await expect(service.getMentions()).resolves.toEqual([mappedMention]);
 
-    expect(fetchMock).toHaveBeenCalledWith(
+    expect(axiosGetMock).toHaveBeenCalledWith(
       expect.stringContaining('https://slack.com/api/search.messages?'),
       expect.objectContaining({
-        method: 'GET',
         headers: {
           Authorization: 'Bearer xoxp-token',
           'Content-Type': 'application/json',
         },
+        timeout: 10_000,
       }),
     );
-    const [url] = fetchMock.mock.calls[0];
+    const [url] = axiosGetMock.mock.calls[0];
     if (typeof url !== 'string') {
       throw new Error('Expected Slack URL to be a string');
     }
@@ -107,10 +106,8 @@ describe('SlackService', () => {
 
   it('filters out messages older than 24 hours', async () => {
     cache.get.mockResolvedValue(null);
-    fetchMock.mockResolvedValue({
-      ok: true,
-      status: 200,
-      json: jest.fn().mockResolvedValue({
+    axiosGetMock.mockResolvedValue(
+      axiosResponse(200, {
         ok: true,
         messages: {
           matches: [
@@ -122,17 +119,15 @@ describe('SlackService', () => {
           ],
         },
       } satisfies SlackSearchResponse),
-    } as unknown as Response);
+    );
 
     await expect(service.getMentions()).resolves.toEqual([mappedMention]);
   });
 
   it('maps missing optional Slack fields to fallback labels', async () => {
     cache.get.mockResolvedValue(null);
-    fetchMock.mockResolvedValue({
-      ok: true,
-      status: 200,
-      json: jest.fn().mockResolvedValue({
+    axiosGetMock.mockResolvedValue(
+      axiosResponse(200, {
         ok: true,
         messages: {
           matches: [
@@ -144,7 +139,7 @@ describe('SlackService', () => {
           ],
         },
       } satisfies SlackSearchResponse),
-    } as unknown as Response);
+    );
 
     await expect(service.getMentions()).resolves.toEqual([
       {
@@ -159,14 +154,12 @@ describe('SlackService', () => {
 
   it('returns an empty list and logs when Slack returns ok false', async () => {
     cache.get.mockResolvedValue(null);
-    fetchMock.mockResolvedValue({
-      ok: true,
-      status: 200,
-      json: jest.fn().mockResolvedValue({
+    axiosGetMock.mockResolvedValue(
+      axiosResponse(200, {
         ok: false,
         error: 'missing_scope',
       } satisfies SlackSearchResponse),
-    } as unknown as Response);
+    );
 
     await expect(service.getMentions()).resolves.toEqual([]);
 
@@ -176,13 +169,11 @@ describe('SlackService', () => {
 
   it('uses a fallback Slack error label when ok false has no error', async () => {
     cache.get.mockResolvedValue(null);
-    fetchMock.mockResolvedValue({
-      ok: true,
-      status: 200,
-      json: jest.fn().mockResolvedValue({
+    axiosGetMock.mockResolvedValue(
+      axiosResponse(200, {
         ok: false,
       } satisfies SlackSearchResponse),
-    } as unknown as Response);
+    );
 
     await expect(service.getMentions()).resolves.toEqual([]);
 
@@ -192,11 +183,7 @@ describe('SlackService', () => {
 
   it('returns an empty list and logs when the Slack API fails', async () => {
     cache.get.mockResolvedValue(null);
-    fetchMock.mockResolvedValue({
-      ok: false,
-      status: 500,
-      text: jest.fn().mockResolvedValue('Internal error'),
-    } as unknown as Response);
+    axiosGetMock.mockResolvedValue(axiosResponse(500, 'Internal error'));
 
     await expect(service.getMentions()).resolves.toEqual([]);
 
@@ -204,25 +191,19 @@ describe('SlackService', () => {
     expect(cache.set.mock.calls).toEqual([['slack:mentions', [], 30]]);
   });
 
-  it('uses a fallback message when the Slack error body cannot be read', async () => {
+  it('logs serialized Slack error bodies', async () => {
     cache.get.mockResolvedValue(null);
-    fetchMock.mockResolvedValue({
-      ok: false,
-      status: 503,
-      text: jest.fn().mockRejectedValue(new Error('Body stream failed')),
-    } as unknown as Response);
+    axiosGetMock.mockResolvedValue(axiosResponse(503, { error: 'unavailable' }));
 
     await expect(service.getMentions()).resolves.toEqual([]);
 
-    expect(loggerErrorSpy).toHaveBeenCalledWith(
-      'Slack API returned 503: Unable to read Slack error response',
-    );
+    expect(loggerErrorSpy).toHaveBeenCalledWith('Slack API returned 503: {"error":"unavailable"}');
     expect(cache.set.mock.calls).toEqual([['slack:mentions', [], 30]]);
   });
 
   it('returns an empty list when the Slack request rejects with an Error', async () => {
     cache.get.mockResolvedValue(null);
-    fetchMock.mockRejectedValue(new Error('Network failed'));
+    axiosGetMock.mockRejectedValue(new Error('Network failed'));
 
     await expect(service.getMentions()).resolves.toEqual([]);
 
@@ -232,7 +213,7 @@ describe('SlackService', () => {
 
   it('uses a fallback message when the Slack request rejects with a non-Error value', async () => {
     cache.get.mockResolvedValue(null);
-    fetchMock.mockRejectedValue('boom');
+    axiosGetMock.mockRejectedValue('boom');
 
     await expect(service.getMentions()).resolves.toEqual([]);
 
@@ -252,7 +233,7 @@ describe('SlackService', () => {
 
     await expect(service.getMentions()).resolves.toEqual([]);
 
-    expect(fetchMock).not.toHaveBeenCalled();
+    expect(axiosGetMock).not.toHaveBeenCalled();
     expect(loggerErrorSpy).toHaveBeenCalledWith('Slack: configuration is incomplete');
     expect(cache.set.mock.calls).toEqual([['slack:mentions', [], 30]]);
   });

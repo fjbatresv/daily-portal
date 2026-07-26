@@ -1,7 +1,9 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import axios, { AxiosResponse } from 'axios';
 import { CacheService } from '../../common/cache';
 import { JiraTask } from '../../common/types/daily-digest.types';
+import { stringifyIntegrationResponseData } from '../../common/utils/http-response.util';
 import { AppConfiguration } from '../../config/configuration';
 import { JiraApiIssue, JiraSearchResponse } from './jira.types';
 
@@ -47,21 +49,20 @@ export class JiraService {
     }
 
     try {
-      const response = await fetch(this.buildSearchUrl(jiraConfig), {
-        method: 'GET',
+      const response = await axios.get<JiraSearchResponse>(this.buildSearchUrl(jiraConfig), {
         headers: {
           Authorization: `Basic ${this.encodeBasicAuth(jiraConfig.email, jiraConfig.apiToken)}`,
           'Content-Type': 'application/json',
         },
-        signal: AbortSignal.timeout(this.requestTimeoutMs),
+        timeout: this.requestTimeoutMs,
+        validateStatus: () => true,
       });
 
-      if (!response.ok) {
+      if (response.status < 200 || response.status >= 300) {
         return await this.handleHttpError(response);
       }
 
-      const payload = (await response.json()) as JiraSearchResponse;
-      const tasks = payload.issues.map((issue) => this.mapIssue(issue, jiraConfig.baseUrl));
+      const tasks = response.data.issues.map((issue) => this.mapIssue(issue, jiraConfig.baseUrl));
       await this.cache.set(this.cacheKey, tasks, this.cacheTtlSeconds);
       await this.cache.set(this.fallbackCacheKey, tasks, this.fallbackCacheTtlSeconds);
 
@@ -109,7 +110,7 @@ export class JiraService {
     return searchUrl.toString();
   }
 
-  private async handleHttpError(response: Response): Promise<JiraTask[]> {
+  private async handleHttpError(response: AxiosResponse<JiraSearchResponse>): Promise<JiraTask[]> {
     if (response.status === 401) {
       this.logger.error('Jira: credenciales inválidas');
       await this.cacheEmptyTasks();
@@ -121,6 +122,7 @@ export class JiraService {
       const fallbackTasks = await this.cache.get<JiraTask[]>(this.fallbackCacheKey);
 
       if (fallbackTasks) {
+        await this.cache.set(this.cacheKey, fallbackTasks, this.negativeCacheTtlSeconds);
         return fallbackTasks;
       }
 
@@ -129,7 +131,10 @@ export class JiraService {
     }
 
     this.logger.error(
-      `Jira API returned ${response.status}: ${await this.readResponseText(response)}`,
+      `Jira API returned ${response.status}: ${stringifyIntegrationResponseData(
+        response.data,
+        'Jira',
+      )}`,
     );
     await this.cacheEmptyTasks();
     return [];
@@ -152,14 +157,6 @@ export class JiraService {
 
   private encodeBasicAuth(email: string, apiToken: string): string {
     return Buffer.from(`${email}:${apiToken}`).toString('base64');
-  }
-
-  private async readResponseText(response: Response): Promise<string> {
-    try {
-      return await response.text();
-    } catch {
-      return 'Unable to read Jira error response';
-    }
   }
 
   private getErrorMessage(error: unknown): string {

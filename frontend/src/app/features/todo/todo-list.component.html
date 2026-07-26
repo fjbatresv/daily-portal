@@ -1,0 +1,27 @@
+@let pending = pendingItems();
+@let done = acknowledgedItems();
+
+<section class="space-y-3">
+  @if (pending.length === 0) {
+    <div
+      class="rounded-md border border-aurora-border bg-aurora-surface p-6 text-sm text-aurora-muted"
+    >
+      No hay pendientes para hoy.
+    </div>
+  } @else {
+    @for (entry of pending; track entry.id) {
+      <app-todo-item [entry]="entry" (checkedChange)="acknowledge(entry.id)" />
+    }
+  }
+
+  @if (done.length > 0) {
+    <div class="pt-5">
+      <h2 class="mb-3 text-sm font-medium text-aurora-muted">{{ done.length }} atendidos</h2>
+      <div class="space-y-3">
+        @for (entry of done; track entry.id) {
+          <app-todo-item [entry]="entry" (checkedChange)="store.undo(entry.id)" />
+        }
+      </div>
+    </div>
+  }
+</section>

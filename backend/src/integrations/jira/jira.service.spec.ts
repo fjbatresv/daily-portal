@@ -3,8 +3,11 @@ import { ConfigService } from '@nestjs/config';
 import { CacheService } from '../../common/cache';
 import { JiraTask } from '../../common/types/daily-digest.types';
 import { AppConfiguration } from '../../config/configuration';
+import { AxiosGetMock, axiosResponse, getAxiosMock } from '../../../test/axios-test-utils';
 import { JiraSearchResponse } from './jira.types';
 import { JiraService } from './jira.service';
+
+jest.mock('axios');
 
 const mappedTask: JiraTask = {
   id: '10001',
@@ -32,7 +35,7 @@ const jiraResponse: JiraSearchResponse = {
 describe('JiraService', () => {
   let cache: jest.Mocked<CacheService>;
   let config: ConfigService<AppConfiguration, true>;
-  let fetchMock: jest.MockedFunction<typeof fetch>;
+  let axiosGetMock: AxiosGetMock;
   let loggerErrorSpy: jest.SpiedFunction<Logger['error']>;
   let service: JiraService;
 
@@ -51,8 +54,8 @@ describe('JiraService', () => {
         return undefined;
       }),
     } as unknown as ConfigService<AppConfiguration, true>;
-    fetchMock = jest.fn<ReturnType<typeof fetch>, Parameters<typeof fetch>>();
-    global.fetch = fetchMock;
+    axiosGetMock = getAxiosMock('get').get;
+    axiosGetMock.mockReset();
     loggerErrorSpy = jest.spyOn(Logger.prototype, 'error').mockImplementation(() => undefined);
     service = new JiraService(config, cache);
   });
@@ -66,31 +69,27 @@ describe('JiraService', () => {
 
     await expect(service.getTasks()).resolves.toEqual([mappedTask]);
 
-    expect(fetchMock).not.toHaveBeenCalled();
+    expect(axiosGetMock).not.toHaveBeenCalled();
     expect(cache.set.mock.calls).toHaveLength(0);
   });
 
   it('fetches, maps, and caches Jira tasks on cache miss', async () => {
     cache.get.mockResolvedValue(null);
-    fetchMock.mockResolvedValue({
-      ok: true,
-      status: 200,
-      json: jest.fn().mockResolvedValue(jiraResponse),
-    } as unknown as Response);
+    axiosGetMock.mockResolvedValue(axiosResponse(200, jiraResponse));
 
     await expect(service.getTasks()).resolves.toEqual([mappedTask]);
 
-    expect(fetchMock).toHaveBeenCalledWith(
+    expect(axiosGetMock).toHaveBeenCalledWith(
       expect.stringContaining('https://example.atlassian.net/rest/api/3/search?'),
       expect.objectContaining({
-        method: 'GET',
         headers: {
           Authorization: `Basic ${Buffer.from('user@example.com:api-token').toString('base64')}`,
           'Content-Type': 'application/json',
         },
+        timeout: 10_000,
       }),
     );
-    const [url] = fetchMock.mock.calls[0];
+    const [url] = axiosGetMock.mock.calls[0];
     if (typeof url !== 'string') {
       throw new Error('Expected Jira URL to be a string');
     }
@@ -108,11 +107,7 @@ describe('JiraService', () => {
 
   it('returns an empty list and logs when the Jira API fails', async () => {
     cache.get.mockResolvedValue(null);
-    fetchMock.mockResolvedValue({
-      ok: false,
-      status: 500,
-      text: jest.fn().mockResolvedValue('Internal error'),
-    } as unknown as Response);
+    axiosGetMock.mockResolvedValue(axiosResponse(500, 'Internal error'));
 
     await expect(service.getTasks()).resolves.toEqual([]);
 
@@ -120,25 +115,21 @@ describe('JiraService', () => {
     expect(cache.set.mock.calls).toEqual([['jira:tasks', [], 30]]);
   });
 
-  it('uses a fallback message when the Jira error body cannot be read', async () => {
+  it('logs serialized Jira error bodies', async () => {
     cache.get.mockResolvedValue(null);
-    fetchMock.mockResolvedValue({
-      ok: false,
-      status: 503,
-      text: jest.fn().mockRejectedValue(new Error('Body stream failed')),
-    } as unknown as Response);
+    axiosGetMock.mockResolvedValue(axiosResponse(503, { error: 'Service unavailable' }));
 
     await expect(service.getTasks()).resolves.toEqual([]);
 
     expect(loggerErrorSpy).toHaveBeenCalledWith(
-      'Jira API returned 503: Unable to read Jira error response',
+      'Jira API returned 503: {"error":"Service unavailable"}',
     );
     expect(cache.set.mock.calls).toEqual([['jira:tasks', [], 30]]);
   });
 
   it('returns an empty list when the Jira request rejects with an Error', async () => {
     cache.get.mockResolvedValue(null);
-    fetchMock.mockRejectedValue(new Error('Network failed'));
+    axiosGetMock.mockRejectedValue(new Error('Network failed'));
 
     await expect(service.getTasks()).resolves.toEqual([]);
 
@@ -148,7 +139,7 @@ describe('JiraService', () => {
 
   it('uses a fallback message when the Jira request rejects with a non-Error value', async () => {
     cache.get.mockResolvedValue(null);
-    fetchMock.mockRejectedValue('boom');
+    axiosGetMock.mockRejectedValue('boom');
 
     await expect(service.getTasks()).resolves.toEqual([]);
 
@@ -158,10 +149,8 @@ describe('JiraService', () => {
 
   it('maps missing priority to an explicit fallback value', async () => {
     cache.get.mockResolvedValue(null);
-    fetchMock.mockResolvedValue({
-      ok: true,
-      status: 200,
-      json: jest.fn().mockResolvedValue({
+    axiosGetMock.mockResolvedValue(
+      axiosResponse(200, {
         issues: [
           {
             id: '10002',
@@ -174,7 +163,7 @@ describe('JiraService', () => {
           },
         ],
       } satisfies JiraSearchResponse),
-    } as unknown as Response);
+    );
 
     await expect(service.getTasks()).resolves.toEqual([
       {
@@ -190,7 +179,7 @@ describe('JiraService', () => {
 
   it('returns an empty list for invalid credentials', async () => {
     cache.get.mockResolvedValue(null);
-    fetchMock.mockResolvedValue({ ok: false, status: 401 } as Response);
+    axiosGetMock.mockResolvedValue(axiosResponse(401, undefined));
 
     await expect(service.getTasks()).resolves.toEqual([]);
 
@@ -200,17 +189,18 @@ describe('JiraService', () => {
 
   it('returns fallback cached data on rate limit when available', async () => {
     cache.get.mockResolvedValueOnce(null).mockResolvedValueOnce([mappedTask]);
-    fetchMock.mockResolvedValue({ ok: false, status: 429 } as Response);
+    axiosGetMock.mockResolvedValue(axiosResponse(429, undefined));
 
     await expect(service.getTasks()).resolves.toEqual([mappedTask]);
 
     expect(loggerErrorSpy).toHaveBeenCalledWith('Jira: rate limit');
     expect(cache.get.mock.calls).toEqual([['jira:tasks'], ['jira:tasks:last-success']]);
+    expect(cache.set.mock.calls).toEqual([['jira:tasks', [mappedTask], 30]]);
   });
 
   it('negative-caches an empty result when rate limit has no fallback data', async () => {
     cache.get.mockResolvedValueOnce(null).mockResolvedValueOnce(null);
-    fetchMock.mockResolvedValue({ ok: false, status: 429 } as Response);
+    axiosGetMock.mockResolvedValue(axiosResponse(429, undefined));
 
     await expect(service.getTasks()).resolves.toEqual([]);
 
@@ -230,7 +220,7 @@ describe('JiraService', () => {
 
     await expect(service.getTasks()).resolves.toEqual([]);
 
-    expect(fetchMock).not.toHaveBeenCalled();
+    expect(axiosGetMock).not.toHaveBeenCalled();
     expect(loggerErrorSpy).toHaveBeenCalledWith('Jira: configuration is incomplete');
     expect(cache.set.mock.calls).toEqual([['jira:tasks', [], 30]]);
   });

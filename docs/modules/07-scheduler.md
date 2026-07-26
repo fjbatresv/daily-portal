@@ -20,6 +20,7 @@ npm install -D @types/cron
 ```
 
 Registrar en `AppModule`:
+
 ```typescript
 import { ScheduleModule } from '@nestjs/schedule';
 
@@ -34,31 +35,39 @@ export class AppModule {}
 
 ## Configuración
 
-```typescript
-scheduler.cron     // default: '0 8 * * *'  (8:00 AM todos los días)
-scheduler.timezone // default: 'America/Guatemala'
+```text
+MORNING_DIGEST_CRON=0 8 * * *      # 8:00 AM todos los días
+TZ=America/Guatemala               # timezone del cron
 ```
 
 ## SchedulerService
 
 ```typescript
-import { Injectable, Logger } from '@nestjs/common';
-import { Cron, CronExpression } from '@nestjs/schedule';
+import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import { CronJob } from 'cron';
+import { SchedulerRegistry } from '@nestjs/schedule';
 
 @Injectable()
-export class SchedulerService {
+export class SchedulerService implements OnModuleInit {
   private readonly logger = new Logger(SchedulerService.name);
 
   constructor(
     private readonly aggregator: DailyAggregatorService,
     private readonly telegram: TelegramService,
     private readonly config: ConfigService,
+    private readonly schedulerRegistry: SchedulerRegistry,
   ) {}
 
-  @Cron(
-    process.env.MORNING_DIGEST_CRON ?? '0 8 * * *',
-    { timeZone: process.env.TZ ?? 'America/Guatemala' }
-  )
+  onModuleInit(): void {
+    const cron = this.config.get<string>('scheduler.cron') ?? '0 8 * * *';
+    const timeZone = this.config.get<string>('scheduler.timezone') ?? 'America/Guatemala';
+    const job = new CronJob(cron, () => void this.runMorningDigest(), null, false, timeZone);
+
+    this.schedulerRegistry.addCronJob('morning-digest', job);
+    job.start();
+  }
+
   async runMorningDigest(): Promise<void> {
     this.logger.log('Starting morning digest...');
 
@@ -74,15 +83,13 @@ export class SchedulerService {
 }
 ```
 
-**Nota importante:** el decorador `@Cron` acepta el cron string directamente (no via ConfigService en tiempo de definición del decorador). Por eso se usa `process.env` directamente aquí, que es la única excepción permitida a la regla de usar ConfigService.
-
 ## SchedulerModule
 
 ```typescript
 @Module({
   imports: [
-    DashboardModule,   // exporta DailyAggregatorService
-    TelegramModule,    // exporta TelegramService
+    DashboardModule, // exporta DailyAggregatorService
+    TelegramModule, // exporta TelegramService
   ],
   providers: [SchedulerService],
 })
@@ -91,19 +98,19 @@ export class SchedulerModule {}
 
 ## Cron expressions de referencia
 
-| Expression | Cuándo |
-|---|---|
-| `0 8 * * *` | 8:00 AM todos los días (default) |
-| `0 8 * * 1-5` | 8:00 AM solo lunes a viernes |
-| `0 7 * * 1-5` | 7:00 AM lunes a viernes |
-| `*/5 * * * *` | Cada 5 minutos (para pruebas) |
+| Expression    | Cuándo                           |
+| ------------- | -------------------------------- |
+| `0 8 * * *`   | 8:00 AM todos los días (default) |
+| `0 8 * * 1-5` | 8:00 AM solo lunes a viernes     |
+| `0 7 * * 1-5` | 7:00 AM lunes a viernes          |
+| `*/5 * * * *` | Cada 5 minutos (para pruebas)    |
 
 ## Test del cron en desarrollo
 
 Para verificar que el mensaje llega sin esperar las 8 AM, cambiar temporalmente el cron a cada minuto:
 
 ```bash
-MORNING_DIGEST_CRON="* * * * *"  # en .env local
+MORNING_DIGEST_CRON="* * * * *" TZ="America/Guatemala" # en .env local
 ```
 
 O exponer un endpoint de disparo manual (solo en desarrollo):
@@ -121,6 +128,7 @@ async triggerManual(): Promise<DailyDigest> {
 ## Test unitario (scheduler.service.spec.ts)
 
 Casos a cubrir:
+
 - `runMorningDigest` llama a `aggregator.buildDailyDigest()` y luego `telegram.sendMorningDigest()`
 - Si `aggregator` lanza error → el método no relanza (catch interno)
 - Si `telegram` lanza error → el método no relanza

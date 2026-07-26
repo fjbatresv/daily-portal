@@ -9,17 +9,16 @@ Cada fase produce código funcional y testeable antes de avanzar a la siguiente.
 
 ## Índice de fases
 
-
-| Fase | Nombre                 | Tasks   |
-| ---- | ---------------------- | ------- |
-| 1    | Infraestructura base   | T01–T04 |
-| 2    | Módulos core (sin red) | T05–T07 |
-| 3    | Integraciones externas | T08–T11 |
-| 4    | Agregación y API       | T12     |
-| 5    | Frontend Angular       | T13–T18 |
-| 6    | Docker y despliegue    | T19–T20 |
-| 7    | Refactors técnicos     | T21     |
-
+| Fase | Nombre                  | Tasks   |
+| ---- | ----------------------- | ------- |
+| 1    | Infraestructura base    | T01–T04 |
+| 2    | Módulos core (sin red)  | T05–T07 |
+| 3    | Integraciones externas  | T08–T11 |
+| 4    | Agregación y API        | T12     |
+| 5    | Frontend Angular        | T13–T18 |
+| 6    | Docker y despliegue     | T19–T20 |
+| 7    | Refactors técnicos      | T21     |
+| 8    | Portal de documentación | T22–T26 |
 
 ---
 
@@ -53,8 +52,6 @@ Cada fase produce código funcional y testeable antes de avanzar a la siguiente.
 
 ---
 
-
-
 ### ~~T02 · DatabaseModule~~
 
 **Objetivo:** Módulo de base de datos con better-sqlite3, modo WAL y migración automática del schema.
@@ -75,8 +72,6 @@ Cada fase produce código funcional y testeable antes de avanzar a la siguiente.
 
 ---
 
-
-
 ### ~~T03 · CacheModule~~
 
 **Objetivo:** Wrapper de Redis con métodos `get`, `set`, `del` y TTL configurable por clave.
@@ -96,8 +91,6 @@ Cada fase produce código funcional y testeable antes de avanzar a la siguiente.
 - `cache.del('test')` elimina la clave
 
 ---
-
-
 
 ### ~~T04 · ConfigModule y tipos centrales~~
 
@@ -124,11 +117,7 @@ Cada fase produce código funcional y testeable antes de avanzar a la siguiente.
 
 ---
 
-
-
 ## Fase 2 — Módulos core (sin red)
-
-
 
 ### ~~T05 · RemindersModule~~
 
@@ -160,8 +149,6 @@ Cada fase produce código funcional y testeable antes de avanzar a la siguiente.
 
 ---
 
-
-
 ### ~~T06 · TelegramModule~~
 
 **Objetivo:** Enviar mensajes por Telegram con formato MarkdownV2 y registrar notificaciones en SQLite.
@@ -189,8 +176,6 @@ Cada fase produce código funcional y testeable antes de avanzar a la siguiente.
 
 ---
 
-
-
 ### ~~T07 · SchedulerModule~~
 
 **Objetivo:** Cron a las 8 AM (configurable) que dispara el digest diario.
@@ -212,16 +197,12 @@ Cada fase produce código funcional y testeable antes de avanzar a la siguiente.
 
 ---
 
-
-
 ## Fase 3 — Integraciones externas
 
 > Cada integración sigue el mismo patrón: **1) verificar cache → 2) llamar API → 3) guardar en cache → 4) retornar datos**.
 > Ante cualquier error (401, 429, timeout, etc.), retornar `[]` y loguear.
 
 ---
-
-
 
 ### ~~T08 · JiraModule~~
 
@@ -247,8 +228,6 @@ Cada fase produce código funcional y testeable antes de avanzar a la siguiente.
 
 ---
 
-
-
 ### ~~T09 · GitHubModule~~
 
 **Objetivo:** Obtener PRs abiertos del usuario con estado de checks, conflictos y comentarios recientes.
@@ -270,8 +249,6 @@ Cada fase produce código funcional y testeable antes de avanzar a la siguiente.
 - Test unitario: respuesta GraphQL mockeada → mapeo correcto a `GitHubPR[]`
 
 ---
-
-
 
 ### ~~T10 · GoogleCalendarModule~~
 
@@ -296,8 +273,6 @@ Cada fase produce código funcional y testeable antes de avanzar a la siguiente.
 
 ---
 
-
-
 ### ~~T11 · SlackModule~~
 
 **Objetivo:** Obtener menciones del usuario en los últimos 24h usando User OAuth Token.
@@ -320,11 +295,7 @@ Cada fase produce código funcional y testeable antes de avanzar a la siguiente.
 
 ---
 
-
-
 ## Fase 4 — Agregación y API
-
-
 
 ### ~~T12 · DailyAggregatorService + DashboardController~~
 
@@ -355,16 +326,12 @@ Cada fase produce código funcional y testeable antes de avanzar a la siguiente.
 
 ---
 
-
-
 ## Fase 5 — Frontend Angular
 
 > Cada componente es standalone. Sin NgModules. Usar signals para estado. No usar NgRx.
 > Todos los colores via tokens Aurora — nunca hardcodeados.
 
 ---
-
-
 
 ### ~~T13 · Scaffolding Angular + ThemeService + tokens~~
 
@@ -390,8 +357,6 @@ Cada fase produce código funcional y testeable antes de avanzar a la siguiente.
 
 ---
 
-
-
 ### T14 · DashboardService + RemindersService (HTTP)
 
 **Objetivo:** Servicios Angular para comunicarse con el backend.
@@ -414,9 +379,7 @@ Cada fase produce código funcional y testeable antes de avanzar a la siguiente.
 
 ---
 
-
-
-### T15 · DashboardComponent + DashboardStore + Header + Tabs
+### ~~T15 · DashboardComponent + DashboardStore + Header + Tabs~~
 
 **Objetivo:** Shell del portal con header siempre visible y dos tabs (Hoy / Fuentes).
 
@@ -439,9 +402,7 @@ Cada fase produce código funcional y testeable antes de avanzar a la siguiente.
 
 ---
 
-
-
-### T16 · TodoListComponent (tab Hoy)
+### ~~T16 · TodoListComponent (tab Hoy)~~
 
 **Objetivo:** Lista de tareas del día con checkboxes, movimiento a sección "atendidos" y persistencia.
 
@@ -467,9 +428,7 @@ Cada fase produce código funcional y testeable antes de avanzar a la siguiente.
 
 ---
 
-
-
-### T17 · SourcesComponent (tab Fuentes — secciones sin Recordatorios)
+### ~~T17 · SourcesComponent (tab Fuentes — secciones sin Recordatorios)~~
 
 **Objetivo:** Vista detallada de Jira, GitHub, Calendar y Slack.
 
@@ -494,9 +453,7 @@ Cada fase produce código funcional y testeable antes de avanzar a la siguiente.
 
 ---
 
-
-
-### T18 · RemindersSectionComponent + ReminderFormComponent
+### ~~T18 · RemindersSectionComponent + ReminderFormComponent~~
 
 **Objetivo:** Sección de recordatorios con escalación visual y formulario de creación inline.
 
@@ -520,11 +477,7 @@ Cada fase produce código funcional y testeable antes de avanzar a la siguiente.
 
 ---
 
-
-
 ## Fase 6 — Docker y despliegue
-
-
 
 ### ~~T19 · Dockerfile multi-stage~~
 
@@ -549,8 +502,6 @@ Cada fase produce código funcional y testeable antes de avanzar a la siguiente.
 
 ---
 
-
-
 ### ~~T20 · Docker Compose + nginx + .env.example~~
 
 **Objetivo:** Configuración completa de despliegue para RPi con soporte de perfil nginx.
@@ -567,7 +518,7 @@ Cada fase produce código funcional y testeable antes de avanzar a la siguiente.
 **Criterios de aceptación:**
 
 - `docker compose up -d` levanta backend + redis; Angular servido por NestJS (SERVE_STATIC=true)
-- `docker compose --profile nginx up -d` levanta backend + redis + nginx; Angular servido por nginx (SERVE_STATIC=false)
+- `SERVE_STATIC=false docker compose -f docker-compose.yml -f docker-compose.nginx-override.yml --profile nginx up -d` levanta backend + redis + nginx; Angular servido por nginx
 - El volumen `./data:/app/data` persiste la base de datos SQLite entre reinicios
 - El volumen `redis-data` persiste el cache de Redis
 - El puerto expuesto es `${HOST_PORT:-8090}:3000`
@@ -575,13 +526,9 @@ Cada fase produce código funcional y testeable antes de avanzar a la siguiente.
 
 ---
 
-
-
 ## Fase 7 — Refactors técnicos
 
-
-
-### T21 · Migrar HTTP client de integraciones a axios
+### ~~T21 · Migrar HTTP client de integraciones a axios~~
 
 **Objetivo:** Reemplazar el uso directo de `fetch` en servicios de integración por `axios` con manejo consistente de timeout, headers, errores HTTP y errores de red.
 
@@ -604,7 +551,104 @@ Cada fase produce código funcional y testeable antes de avanzar a la siguiente.
 
 ---
 
+## Fase 8 — Portal de documentación
 
+> Referencia de enfoque: `fjbatresv/sdg19-final` usa Starlight como sitio principal, Compodoc para frontend, TypeDoc para backend y una API reference/playground generado desde OpenAPI.
+
+---
+
+### ~~T22 · Sitio principal de documentación con Astro Starlight~~
+
+**Objetivo:** Crear un sitio estático de documentación en `docs-site/` que sirva como entrada principal para arquitectura, módulos, operación local y despliegue.
+
+**Archivos a crear/modificar:**
+
+- `docs-site/` — proyecto Astro Starlight
+- `docs-site/src/content/docs/` — páginas iniciales del portal
+- `package.json` — scripts `docs:dev`, `docs:build`, `docs:preview` y `docs:check`
+- `.gitignore` — ignorar artefactos generados de documentación
+
+**Criterios de aceptación:**
+
+- `npm run docs:dev` levanta Starlight localmente.
+- `npm run docs:build` genera un sitio estático sin errores.
+- El sidebar enlaza las guías principales, Compodoc, TypeDoc y API reference/playground.
+- La documentación existente en `docs/` queda enlazada o migrada sin duplicar contenido innecesario.
+
+---
+
+### ~~T23 · Compodoc para documentación del frontend Angular~~
+
+**Objetivo:** Integrar Compodoc para generar documentación del frontend Angular standalone.
+
+**Archivos a crear/modificar:**
+
+- `.compodocrc.json`
+- `frontend/tsconfig.compodoc.json` si hace falta aislar el scope documental
+- `package.json` — scripts `docs:frontend`, `docs:frontend:coverage` y `docs:frontend:check`
+
+**Criterios de aceptación:**
+
+- Compodoc genera documentación en un directorio estático enlazable desde Starlight.
+- El comando de coverage documental falla si baja del 80%.
+- Standalone components, services, stores y modelos públicos relevantes tienen docstrings útiles.
+
+---
+
+### ~~T24 · TypeDoc para documentación del backend NestJS~~
+
+**Objetivo:** Integrar TypeDoc para generar referencia técnica del backend.
+
+**Archivos a crear/modificar:**
+
+- `typedoc.json`
+- `typedoc.tsconfig.json`
+- `package.json` — scripts `docs:backend` y `docs:backend:check`
+
+**Criterios de aceptación:**
+
+- TypeDoc genera documentación del backend excluyendo tests, dist y dependencias externas.
+- La salida queda enlazada desde Starlight.
+- La configuración respeta TypeScript estricto y no requiere relajar tipos.
+
+---
+
+### ~~T25 · API reference y playground desde OpenAPI~~
+
+**Objetivo:** Publicar una referencia navegable y playground de API usando `openapi.yaml` como contrato fuente.
+
+**Archivos a crear/modificar:**
+
+- `docs-site/src/content/docs/api-reference.*`
+- `docs-site/src/content/docs/api-playground.*`
+- Script de sincronización si el sitio necesita copiar o transformar `openapi.yaml`
+
+**Criterios de aceptación:**
+
+- El contrato publicado se deriva de `openapi.yaml`, sin duplicar endpoints manualmente.
+- El sitio permite inspeccionar endpoints, schemas, request bodies y responses.
+- El playground puede configurarse para apuntar a una URL base local o desplegada.
+
+---
+
+### ~~T26 · Guías de setup y operación en español e inglés~~
+
+**Objetivo:** Agregar guías bilingües para desarrollo local, variables de entorno, Docker, Raspberry Pi y Cloudflare Tunnel.
+
+**Archivos a crear/modificar:**
+
+- `docs-site/src/content/docs/setup/es.md`
+- `docs-site/src/content/docs/setup/en.md`
+- `docs-site/src/content/docs/deploy/es.md`
+- `docs-site/src/content/docs/deploy/en.md`
+
+**Criterios de aceptación:**
+
+- Las guías cubren prerequisitos, instalación con `nvm`, configuración de `.env`, ejecución local y despliegue Docker.
+- Las guías explican los modos `SERVE_STATIC=true` y `SERVE_STATIC=false` con nginx.
+- La documentación no incluye secretos reales ni valores privados.
+
+---
 
 ## Notas generales para Codex
 

@@ -18,13 +18,13 @@
 
 ## Header (siempre visible)
 
-| Elemento | Posición | Comportamiento |
-|---|---|---|
-| Logo + nombre "Daily Portal" | Izquierda | Estático |
-| Fecha actual | Bajo el nombre | Formato: "Lunes 29 de junio, 2026" |
-| Botón "+ Recordatorio" | Derecha | Abre el formulario de crear recordatorio en tab Fuentes |
-| Botón Refrescar | Derecha | Llama `POST /api/dashboard/refresh` → invalida cache |
-| Botón Tema | Derecha | Toggle dark/light via `ThemeService` |
+| Elemento                     | Posición       | Comportamiento                                          |
+| ---------------------------- | -------------- | ------------------------------------------------------- |
+| Logo + nombre "Daily Portal" | Izquierda      | Estático                                                |
+| Fecha actual                 | Bajo el nombre | Formato: "Lunes 29 de junio, 2026"                      |
+| Botón "+ Recordatorio"       | Derecha        | Abre el formulario de crear recordatorio en tab Fuentes |
+| Botón Refrescar              | Derecha        | Llama `POST /api/dashboard/refresh` → invalida cache    |
+| Botón Tema                   | Derecha        | Toggle dark/light via `ThemeService`                    |
 
 ---
 
@@ -35,6 +35,7 @@ Vista principal. Lista de tareas del día, ordenada por prioridad. **Cada ítem 
 ### Summary chips
 
 Fila de contadores al tope. Solo muestra categorías con al menos 1 ítem:
+
 - 🔴 N urgentes (PRs con conflictos o checks fallando)
 - Tareas (Jira activas)
 - Eventos (Calendar)
@@ -43,12 +44,14 @@ Fila de contadores al tope. Solo muestra categorías con al menos 1 ítem:
 ### Lista TODO
 
 Cada ítem tiene:
+
 - **Checkbox** a la izquierda — marca el ítem como atendido
 - **Badge de fuente** — color diferenciado por integración
 - **Texto** de la tarea
 - **Metadata** — hora, tiempo relativo o estado
 
 **Comportamiento al marcar:**
+
 1. El ítem recibe tachado + opacidad reducida
 2. Se mueve al fondo de la lista en una sección "N atendidos"
 3. El contador del tab se decrementa
@@ -56,13 +59,13 @@ Cada ítem tiene:
 
 **Qué significa "marcar como atendido" por fuente:**
 
-| Fuente | Efecto en backend |
-|---|---|
-| Reminder | `PATCH /api/reminders/:id/complete` → marca en SQLite |
-| Jira | Solo visual (no modifica Jira). El ítem desaparece si el cache se refresca y el estado cambió. |
-| GitHub | Solo visual. El PR seguirá apareciendo mientras esté abierto. |
-| Calendar | Solo visual. El evento es pasado, no hay acción. |
-| Slack | Solo visual. Marca como "leído localmente". |
+| Fuente   | Efecto en backend                                                                              |
+| -------- | ---------------------------------------------------------------------------------------------- |
+| Reminder | `PATCH /api/reminders/:id/complete` → marca en SQLite                                          |
+| Jira     | Solo visual (no modifica Jira). El ítem desaparece si el cache se refresca y el estado cambió. |
+| GitHub   | Solo visual. El PR seguirá apareciendo mientras esté abierto.                                  |
+| Calendar | Solo visual. El evento es pasado, no hay acción.                                               |
+| Slack    | Solo visual. Marca como "leído localmente".                                                    |
 
 El frontend guarda el estado "atendido" de ítems no-reminder en `localStorage` con key `portal:acknowledged:{date}`. Se limpia automáticamente al día siguiente.
 
@@ -102,6 +105,7 @@ Vista detallada organizada por integración. Orden de secciones:
 ### Sección Recordatorios
 
 Es la única sección con acción de escritura. Tiene:
+
 - Botón "+ Nuevo" en el header de la sección (igual que el del header global)
 - Lista de recordatorios pendientes con badge de prioridad actual
 - Indicador de escalación cuando la prioridad fue subida automáticamente
@@ -112,12 +116,14 @@ Es la única sección con acción de escritura. Tiene:
 ## Formulario de crear recordatorio
 
 Se abre desde dos puntos:
+
 - Botón "+ Recordatorio" en el header global
 - Botón "+ Nuevo" en el header de la sección Recordatorios en tab Fuentes
 
 Ambos abren el mismo formulario en tab Fuentes (si el usuario está en Hoy, cambia el tab).
 
 **Campos:**
+
 - Texto (input libre, required, maxLength 500)
 - Fecha (date picker, default: mañana)
 - Prioridad inicial (select: baja / media / alta, default: media)
@@ -136,7 +142,7 @@ La prioridad de un recordatorio sube automáticamente según los días que lleva
 function getEffectivePriority(reminder: Reminder): Priority {
   const daysPending = differenceInDays(new Date(), parseISO(reminder.date));
 
-  if (daysPending <= 0) return reminder.priority;      // mismo día o futuro → sin cambio
+  if (daysPending <= 0) return reminder.priority; // mismo día o futuro → sin cambio
 
   if (reminder.priority === 'low') {
     if (daysPending >= 5) return 'high';
@@ -149,24 +155,25 @@ function getEffectivePriority(reminder: Reminder): Priority {
     return 'medium';
   }
 
-  return 'high';    // alta nunca baja
+  return 'high'; // alta nunca baja
 }
 ```
 
 ### Tabla de escalación
 
 | Prioridad original | Días pendiente | Prioridad efectiva |
-|---|---|---|
-| baja | 0–1 | baja |
-| baja | 2–4 | media ↑ |
-| baja | 5+ | alta ↑↑ |
-| media | 0–2 | media |
-| media | 3+ | alta ↑ |
-| alta | cualquiera | alta |
+| ------------------ | -------------- | ------------------ |
+| baja               | 0–1            | baja               |
+| baja               | 2–4            | media ↑            |
+| baja               | 5+             | alta ↑↑            |
+| media              | 0–2            | media              |
+| media              | 3+             | alta ↑             |
+| alta               | cualquiera     | alta               |
 
 ### Display en UI
 
 Cuando la prioridad escaló (efectiva > original), mostrar el badge con:
+
 - Ícono `ti-trending-up`
 - Color de la prioridad **efectiva** (no la original)
 - Tooltip o subtexto: "hace N días · prioridad original: baja"
@@ -213,8 +220,8 @@ features/
 ```typescript
 // dashboard.store.ts  (signal-based, sin NgRx)
 export class DashboardStore {
-  digest    = signal<DailyDigest | null>(null);
-  loading   = signal(false);
+  digest = signal<DailyDigest | null>(null);
+  loading = signal(false);
   activeTab = signal<'hoy' | 'fuentes'>('hoy');
 
   // IDs de ítems marcados como atendidos en esta sesión
