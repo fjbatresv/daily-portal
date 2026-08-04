@@ -36,7 +36,7 @@ jobs:
 
       - name: Snyk — test workspace dependencies
         id: snyk
-        uses: snyk/actions/node@8e119fbb6c251787721d34ba683ed48eba792766
+        uses: snyk/actions/node@12140f4059e244892ae643824a95459a102120dd
         continue-on-error: true
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
@@ -62,7 +62,7 @@ jobs:
 
       - name: Snyk — monitor workspace (main only)
         if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-        uses: snyk/actions/node@8e119fbb6c251787721d34ba683ed48eba792766
+        uses: snyk/actions/node@12140f4059e244892ae643824a95459a102120dd
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         with:
