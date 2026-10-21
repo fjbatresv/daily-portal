@@ -20,7 +20,7 @@
     "@angular/core": "22.0.8",
     "@angular/forms": "22.0.8",
     "@angular/platform-browser": "22.0.8",
-    "@angular/router": "22.0.8",
+    "@angular/router": "22.2.1",
     "@tailwindcss/postcss": "4.3.2",
     "rxjs": "7.8.2",
     "tailwindcss": "4.3.2",
